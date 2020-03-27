@@ -1,0 +1,4 @@
+.ionide
+.vscode
+.idea
+node_modules
