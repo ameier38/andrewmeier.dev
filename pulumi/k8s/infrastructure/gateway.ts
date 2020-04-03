@@ -1,13 +1,11 @@
 import * as pulumi from '@pulumi/pulumi'
 import * as k8s from '@pulumi/kubernetes'
-import * as kq from '@pulumi/query-kubernetes'
 import * as config from '../../config'
 import { removeTests } from '../transformations'
 import { infrastructureNamespaceName } from './namespace'
-import { inlets } from './inlets'
 
 class Gateway extends pulumi.ComponentResource {
-    gatewayIp: string | pulumi.Output<string>
+    endpoint: pulumi.Output<string>
 
     constructor(
             name: string,
@@ -16,16 +14,6 @@ class Gateway extends pulumi.ComponentResource {
         super('infrastructure:Gateway', name, {}, opts)
 
         const chartVersion = '7.0.0'
-
-        const cloudflareSecret = new k8s.core.v1.Secret('cloudflare', {
-            metadata: {
-                namespace: namespace
-            },
-            stringData: {
-                'email': config.cloudflareConfig.email,
-                'api-key': config.cloudflareConfig.apiToken
-            }
-        }, { parent: this })
 
         const traefikCRDs = new k8s.yaml.ConfigGroup('traefik-crds', {
             files: [
@@ -48,47 +36,29 @@ class Gateway extends pulumi.ComponentResource {
                 repo: 'https://containous.github.io/traefik-helm-chart'
             },
             values: {
+                ingressRoute: { dashboard: { enabled: false } },
+                service: { type: 'ClusterIP' },
                 additionalArguments: [
-                    '--log.level=DEBUG',
-                    '--entrypoints.web.http.redirections.entryPoint.to=websecure',
-                    '--entrypoints.web.http.redirections.entryPoint.scheme=https',
-                    '--certificatesResolvers.default.acme.dnsChallenge.provider=cloudflare',
-                    '--certificatesresolvers.default.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory'
+                    // '--log.level=DEBUG',
                 ],
-                service: {
-                    annotations: {
-                        // FIXME: https://github.com/inlets/inlets-operator/issues/70
-                        'pulumi.com/skipAwait': "true"
-                    }
-                },
-                env: [
-                    { 
-                        name: 'CF_API_EMAIL',
-                        valueFrom: {
-                            secretKeyRef: {
-                                name: cloudflareSecret.metadata.name,
-                                key: 'email'
-                            }
-                        }
-                    },
-                    { 
-                        name: 'CF_API_KEY',
-                        valueFrom: {
-                            secretKeyRef: {
-                                name: cloudflareSecret.metadata.name,
-                                key: 'api-key'
-                            }
-                        }
-                    }
-                ]
             }
         }, { parent: this, dependsOn: [traefikCRDs] })
 
-        // FIXME: https://github.com/inlets/inlets-operator/issues/70
-        this.gatewayIp = '161.35.8.149'
+        const serviceName =
+            pulumi.all([namespace, traefikChart])
+            .apply(([ns, chart]) => chart.getResourceProperty('v1/Service', ns, 'traefik', 'metadata'))
+            .apply(meta => meta.name)
+
+        const servicePort =
+            pulumi.all([namespace, traefikChart])
+            .apply(([ns, chart]) => chart.getResourceProperty('v1/Service', ns, 'traefik', 'spec'))
+            .apply(spec => spec.ports.find(port => port!.name === 'web'))
+            .apply(port => port!.port)
+
+        this.endpoint = pulumi.interpolate `${serviceName}.${namespace}.svc.cluster.local:${servicePort}`
 
         this.registerOutputs({
-            gatewayIp: this.gatewayIp,
+            endpoint: this.endpoint
         })
     }
 }
@@ -96,4 +66,4 @@ class Gateway extends pulumi.ComponentResource {
 export const gateway = new Gateway(
     'gateway',
     infrastructureNamespaceName,
-    { provider: config.k8sProvider, dependsOn: [inlets] })
+    { providers: { k8s: config.k8sProvider, digitalocean: config.digitalOceanProvider } })

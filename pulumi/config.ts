@@ -1,5 +1,6 @@
 import * as pulumi from '@pulumi/pulumi'
 import * as cloudflare from '@pulumi/cloudflare'
+import * as digitalocean from '@pulumi/digitalocean'
 import * as k8s from '@pulumi/kubernetes'
 import * as docker from '@pulumi/docker'
 import * as path from 'path'
@@ -9,7 +10,14 @@ export const root = path.dirname(__dirname)
 
 const rawDnsConfig = new pulumi.Config('dns')
 export const dnsConfig = {
-    tld: rawDnsConfig.require('tld')
+    tld: rawDnsConfig.require('tld'),
+    email: rawDnsConfig.require('email'),
+    useStaging: rawDnsConfig.requireBoolean('useStaging')
+}
+
+const rawSshConfig = new pulumi.Config('ssh')
+export const sshConfig = {
+    publicKey: rawSshConfig.require('publicKey')
 }
 
 const rawDockerConfig = new pulumi.Config('docker')
@@ -20,25 +28,22 @@ export const dockerRegistry: docker.ImageRegistry = {
 }
 
 const rawK8sConfig = new pulumi.Config('k8s')
-const k8sConfig = {
-    kubeconfig: rawK8sConfig.require('kubeconfig')
-}
 export const k8sProvider = new k8s.Provider(`${env}-k8s-provider`, {
-    kubeconfig: k8sConfig.kubeconfig
+    kubeconfig: rawK8sConfig.require('kubeconfig')
 })
 
-const rawDigitalOceanConfig = new pulumi.Config('digitalOcean')
-export const digitalOceanConfig = {
-    accessToken: rawDigitalOceanConfig.require('accessToken')
-}
+const rawDigitalOceanConfig = new pulumi.Config('digitalocean')
+export const digitalOceanProvider = new digitalocean.Provider(`${env}-digitalocean-provider`, {
+    token: rawDigitalOceanConfig.require('token')
+})
 
 const rawCloudflareConfig = new pulumi.Config('cloudflare')
-export const cloudflareConfig = {
-    email: rawCloudflareConfig.require('email'),
-    apiToken: rawCloudflareConfig.require('apiToken')
-}
 export const cloudflareProvider = new cloudflare.Provider(`${env}-cloudflare-provider`, {
-    email: cloudflareConfig.email,
-    apiKey: cloudflareConfig.apiToken
+    email: rawCloudflareConfig.require('email'),
+    apiKey: rawCloudflareConfig.require('apiKey')
 })
 
+const rawInletsConfig = new pulumi.Config('inlets')
+export const inletsConfig = {
+    token: rawInletsConfig.require('token')
+}

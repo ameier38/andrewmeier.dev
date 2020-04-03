@@ -5,6 +5,7 @@
     },
     "dependencies": {
         "@pulumi/cloudflare": "^1.8.1",
+        "@pulumi/digitalocean": "^1.8.0",
         "@pulumi/docker": "^1.5.0",
         "@pulumi/kubernetes": "^1.6.0",
         "@pulumi/kubernetesx": "^0.1.2",

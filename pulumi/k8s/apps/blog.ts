@@ -7,6 +7,8 @@ import * as config from '../../config'
 import { appsNamespaceName } from '../infrastructure/namespace'
 
 class Blog extends pulumi.ComponentResource {
+    endpoint: pulumi.Output<string>
+
     constructor(
             name: string,
             namespace: pulumi.Output<string>,
@@ -18,9 +20,6 @@ class Blog extends pulumi.ComponentResource {
             build: {
                 context: path.join(config.root, 'blog'),
                 dockerfile: path.join(config.root, 'blog', 'deploy', 'Dockerfile'),
-                extraOptions: [
-                    '--platform=linux/arm64'
-                ]
             },
             registry: config.dockerRegistry
         }, { parent: this })
@@ -44,8 +43,12 @@ class Blog extends pulumi.ComponentResource {
         }, { parent: this })
 
         const service = deployment.createService({
-            type: kx.types.ServiceType.ClusterIP
+            type: kx.types.ServiceType.ClusterIP,
         })
+
+        const serviceName = service.metadata.name
+        const servicePort = service.spec.ports.apply(ports => ports.find(port => port.name === 'http')!.port)
+        this.endpoint = pulumi.interpolate `${serviceName}.${namespace}.svc.cluster.local:${servicePort}`
 
         const ingressRoute = new k8s.apiextensions.CustomResource('blog', {
             apiVersion: 'traefik.containo.us/v1alpha1',
@@ -55,19 +58,20 @@ class Blog extends pulumi.ComponentResource {
                 namespace: namespace
             },
             spec: {
-                entryPoints: ['websecure'],
+                entryPoints: ['web'],
                 routes: [
                     {
                         match: 'Host(`andrewmeier.dev`)',
                         kind: 'Rule',
                         services: [ { name: service.metadata.name, port: 8080 } ]
-                    }
-                ],
-                tls: {
-                    certResolver: 'default'
-                }
+                    },
+                ]
             }
         }, { parent: this })
+
+        this.registerOutputs({
+            endpoint: this.endpoint
+        })
     }
 }
 

@@ -1,48 +1,154 @@
 import * as pulumi from '@pulumi/pulumi'
 import * as k8s from '@pulumi/kubernetes'
+import * as kx from '@pulumi/kubernetesx'
+import * as digitalocean from '@pulumi/digitalocean'
 import * as config from '../../config'
 import { infrastructureNamespaceName } from './namespace'
+import { blog } from '../apps/blog'
 
-// ref: https://github.com/inlets/inlets-operator/tree/master/chart/inlets-operator
+const letsencryptProdEndpoint = 'https://acme-v02.api.letsencrypt.org/directory'
+const letsencryptStagingEndpoint = 'https://acme-staging-v02.api.letsencrypt.org/directory'
+const letsencryptEndpoint = config.dnsConfig.useStaging ? letsencryptStagingEndpoint : letsencryptProdEndpoint
+
+// ref: https://caddyserver.com/docs/caddyfile/concepts
+const caddyfile = `
+{
+    email ${config.dnsConfig.email}
+    acme_ca ${letsencryptEndpoint}
+}
+
+(proxy) {
+    reverse_proxy 127.0.0.1:8080
+    reverse_proxy /tunnel 127.0.0.1:8080
+}
+
+${config.dnsConfig.tld} {
+    import proxy
+}
+`
+
+// ref: https://caddyserver.com/docs/install#manually-installing-as-a-linux-service
+const userDataScript = `#!/bin/bash
+
+set -e
+
+curl -sL https://github.com/caddyserver/caddy/releases/download/v2.0.0-beta.20/caddy2_beta20_linux_amd64 -o caddy && \
+    mv caddy /usr/bin/caddy && \
+    chmod +x /usr/bin/caddy
+
+groupadd --system caddy
+
+useradd --system \
+    --gid caddy \
+    --create-home \
+    --home-dir /var/lib/caddy \
+    --shell /usr/sbin/nologin \
+    --comment "Caddy web server" \
+    caddy
+
+curl -sLO https://raw.githubusercontent.com/caddyserver/dist/master/init/caddy.service && \
+    mv caddy.service /etc/systemd/system/caddy.service
+
+mkdir -p /etc/caddy
+
+cat << EOF > /etc/caddy/Caddyfile
+${caddyfile}
+EOF
+
+export INLETSTOKEN=${config.inletsConfig.token}
+
+curl -sL https://github.com/inlets/inlets/releases/download/2.7.0/inlets -o inlets && \
+    mv inlets /usr/local/bin/inlets && \
+    chmod +x /usr/local/bin/inlets
+
+curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets.service  && \
+    sed -i s/80/8080/g inlets.service && \
+    mv inlets.service /etc/systemd/system/inlets.service && \
+    echo "AUTHTOKEN=$INLETSTOKEN" > /etc/default/inlets
+
+systemctl daemon-reload
+systemctl enable caddy
+systemctl enable inlets
+systemctl start caddy
+systemctl start inlets
+`
+
 class Inlets extends pulumi.ComponentResource {
+    exitNodeIP: pulumi.Output<string>
+
     constructor(
             name: string,
-            namespace: pulumi.Output<string>,
+            namespace: string | pulumi.Output<string>,
+            remote: string | pulumi.Output<string>,
+            upstream: string | pulumi.Output<string>,
             opts: pulumi.ComponentResourceOptions) {
         super('infrastructure:Inlets', name, {}, opts)
+        
+        const sshKey = new digitalocean.SshKey('default', {
+            name: 'default',
+            publicKey: config.sshConfig.publicKey
+        }, { parent: this })
 
-        const chartVersion = '0.7.0'
+        const exitNode = new digitalocean.Droplet('exit-node', {
+            image: 'ubuntu-18-04-x64',
+            region: digitalocean.Regions.NYC1,
+            size: digitalocean.DropletSlugs.Droplet512mb,
+            sshKeys: [sshKey.fingerprint],
+            userData: userDataScript
+        }, { parent: this })
 
-        const inletsAccessKeySecret = new k8s.core.v1.Secret('inlets-access-key', {
+        this.exitNodeIP = exitNode.ipv4Address
+
+        const inletsTokenSecret = new k8s.core.v1.Secret('inlets-token', {
             metadata: {
                 namespace: namespace,
-                name: 'inlets-access-key'
+                name: 'inlets-token'
             },
             stringData: {
-                'inlets-access-key': config.digitalOceanConfig.accessToken
+                'token': config.inletsConfig.token
             }
         }, { parent: this })
 
-        const inletsCRD = new k8s.yaml.ConfigFile('inlets-crd', {
-            file: `https://raw.githubusercontent.com/inlets/inlets-operator/${chartVersion}/artifacts/crd.yaml`
-        }, { parent: this })
+        const tokenVolumeName = 'inlets-token-volume'
+        const tokenMountPath = '/var/inlets'
 
-        const inletsOperatorChart = new k8s.helm.v3.Chart('inlets-operator', {
-            chart: 'inlets-operator',
-            version: chartVersion,
-            fetchOpts: {
-                repo: 'https://inlets.github.io/inlets-operator'
+        const podBuilder = new kx.PodBuilder({
+            containers: [
+                {
+                    name: 'inlets',
+                    image: 'inlets/inlets:2.6.3',
+                    imagePullPolicy: 'Always',
+                    command: ['inlets'],
+                    args: [
+                        'client',
+                        pulumi.interpolate `--remote=wss://${remote}`,
+                        pulumi.interpolate `--upstream=${upstream}`,
+                        `--token-from=${tokenMountPath}/token`
+                    ],
+                    volumeMounts: [{ name: tokenVolumeName, mountPath: '/var/inlets' }]
+                }
+            ],
+            volumes: [ { name: tokenVolumeName, secret: { secretName: inletsTokenSecret.metadata.name } } ]
+        })
+
+        const deployment = new kx.Deployment('inlets', {
+            metadata: {
+                name: 'inlets',
+                namespace: namespace
             },
-            namespace: namespace,
-            values: {
-                provider: 'digitalocean',
-                region: 'nyc1',
-            }
-        }, { parent: this, dependsOn: [inletsAccessKeySecret, inletsCRD] })
+            spec: podBuilder.asDeploymentSpec()
+        }, { parent: this })
+
+        this.registerOutputs({
+            exitNodeIP: this.exitNodeIP,
+        })
+
     }
 }
 
 export const inlets = new Inlets(
     'inlets',
     infrastructureNamespaceName,
-    { provider: config.k8sProvider })
+    config.dnsConfig.tld,
+    blog.endpoint,
+    { providers: { k8s: config.k8sProvider, digitalocean: config.digitalOceanProvider } })

@@ -1,21 +1,14 @@
 import * as cloudflare from '@pulumi/cloudflare'
 import * as config from '../config'
-import { gateway } from '../k8s/infrastructure/gateway'
+import { inlets } from '../k8s/infrastructure/inlets'
 
 const zone = new cloudflare.Zone(`${config.env}-zone`, {
     zone: config.dnsConfig.tld
 }, { provider: config.cloudflareProvider })
 
-export const gatewayWildcardRecord = new cloudflare.Record('gateway-wildcard', {
-    zoneId: zone.id,
-    name: '*',
-    type: 'A',
-    value: gateway.gatewayIp
-}, { provider: config.cloudflareProvider })
-
-export const gatewayRootRecord = new cloudflare.Record('gateway-root', {
+export const inletsRootRecord = new cloudflare.Record('inlets-root', {
     zoneId: zone.id,
     name: '@',
     type: 'A',
-    value: gateway.gatewayIp
+    value: inlets.exitNodeIP
 }, { provider: config.cloudflareProvider })
