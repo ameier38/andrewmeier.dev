@@ -1,0 +1,6 @@
+FSharp.Data.GraphQL.Server
+Newtonsoft.Json
+Serilog
+Serilog.Sinks.Console
+Serilog.Sinks.Seq
+Suave

@@ -1,0 +1,24 @@
+version: '3.7'
+services: 
+  app:
+    build:
+      context: app
+  graphql:
+    build:
+      context: graphql
+      dockerfile: deploy/alpine.Dockerfile
+    ports:
+      - "4000:4000"
+    environment: 
+      SECRETS_DIR: /var/secrets
+      SEQ_SCHEME: http
+      SEQ_HOST: seq
+      SEQ_PORT: 5341
+    volumes:
+      - c:/dev/secrets/ameier38/airtable:/var/secrets/airtable
+  seq:
+    image: datalust/seq:5.1
+    ports:
+      - "5341:80"
+    environment: 
+      ACCEPT_EULA: "Y"

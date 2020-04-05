@@ -1,0 +1,6 @@
+.vscode
+.fake
+.ionide
+bin
+obj
+out

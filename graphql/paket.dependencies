@@ -1,0 +1,24 @@
+version 5.241.2
+
+storage none
+source https://api.nuget.org/v3/index.json
+
+nuget Expecto
+nuget FSharp.Data
+nuget FSharp.Data.GraphQL.Server
+nuget FSharp.SystemTextJson
+nuget FSharp.UMX
+nuget Newtonsoft.Json
+nuget Serilog
+nuget Serilog.Sinks.Console
+nuget Serilog.Sinks.Seq
+nuget Suave
+
+// [ FAKE GROUP ]
+group Build
+    storage none
+    source https://api.nuget.org/v3/index.json
+    nuget Fake.DotNet.Cli
+    nuget Fake.IO.FileSystem
+    nuget Fake.Core.Target
+    nuget BlackFox.Fake.BuildTask
