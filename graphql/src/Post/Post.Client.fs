@@ -3,9 +3,9 @@ namespace Post
 open FSharp.Data
 open FSharp.UMX
 
-type PostListProvider = JsonProvider<"resources/posts.json">
+type PostListProvider = JsonProvider<Airtable.ListPostsResponse>
 
-type PostProvider = JsonProvider<"resources/post.json">
+type PostProvider = JsonProvider<Airtable.GetPostResponse>
 
 type IPostClient =
     abstract member ListPosts: pageSize:int * pageToken:string option -> ListPostsResponseDto
@@ -13,12 +13,13 @@ type IPostClient =
 
 type PostClient(config:AirtableConfig) =
     let get endpoint query =
+        let auth = sprintf "Bearer %s" config.ApiKey
         Http.RequestString(
             url = sprintf "%s/%s" config.Url endpoint,
             query = query,
             headers = [
-                HttpRequestHeaders.Authorization config.ApiKey
-                HttpRequestHeaders.Accept "application/json"
+                HttpRequestHeaders.Authorization auth
+                HttpRequestHeaders.Accept HttpContentTypes.Json
             ])
 
     interface IPostClient with
@@ -42,12 +43,34 @@ type PostClient(config:AirtableConfig) =
 
         member _.GetPost(postId:string) =
             let endpoint = sprintf "Post/%s" %postId
-            get endpoint []
-            |> PostProvider.Parse
-            |> fun doc ->
-                { PostId = doc.Id
-                  Title = doc.Fields.Title
-                  CreatedAt = doc.Fields.CreatedAt
-                  UpdatedAt = doc.Fields.UpdatedAt
-                  Content = doc.Fields.Content }
+            let res = 
+                get endpoint []
+                |> PostProvider.Parse
+            { PostId = res.Id
+              Title = res.Fields.Title
+              CreatedAt = res.Fields.CreatedAt
+              UpdatedAt = res.Fields.UpdatedAt
+              Content = res.Fields.Content }
             
+type MockPostClient() =
+    interface IPostClient with
+        member _.ListPosts(_pageSize:int, ?_offset:string) =
+            let res = PostListProvider.GetSample()
+            let posts =
+                res.Records
+                |> Array.map (fun record ->
+                    { PostId = record.Id
+                      Title = record.Fields.Title
+                      CreatedAt = record.Fields.CreatedAt
+                      UpdatedAt = record.Fields.UpdatedAt })
+                |> Array.toList
+            { Posts = posts
+              PageToken = None }
+
+        member _.GetPost(_postId:string) = 
+            let res = PostProvider.GetSample()
+            { PostId = res.Id
+              Title = res.Fields.Title
+              CreatedAt = res.Fields.CreatedAt
+              UpdatedAt = res.Fields.UpdatedAt
+              Content = res.Fields.Content }

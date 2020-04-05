@@ -1,16 +1,10 @@
 const getEnv = (key:string) => {
     const value = process.env[key]
-    if (typeof value !== 'undefined') {
+    if (value) {
         return value
     } else {
         throw new Error(`${key} is undefined`)
     }
-}
-
-export const appConfig = {
-    scheme: getEnv('REACT_APP_SCHEME'),
-    host: getEnv('REACT_APP_HOST'),
-    port: getEnv('REACT_APP_PORT')
 }
 
 export const graphqlConfig = {

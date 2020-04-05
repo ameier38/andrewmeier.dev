@@ -6,20 +6,27 @@ import * as path from 'path'
 import * as config from '../../config'
 import { appsNamespaceName } from '../infrastructure/namespace'
 
-class Blog extends pulumi.ComponentResource {
+class WebApp extends pulumi.ComponentResource {
     endpoint: pulumi.Output<string>
 
     constructor(
             name: string,
             namespace: pulumi.Output<string>,
             opts: pulumi.ComponentResourceOptions) {
-        super('apps:Blog', name, {}, opts)
+        super('apps:WebApp', name, {}, opts)
 
-        const blogImage = new docker.Image('blog', {
-            imageName: `${config.dockerRegistry.server}/ameier38/blog`,
+        const webAppImage = new docker.Image('web-app', {
+            imageName: `${config.dockerRegistry.server}/ameier38/web-app`,
             build: {
-                context: path.join(config.root, 'blog'),
-                dockerfile: path.join(config.root, 'blog', 'deploy', 'Dockerfile'),
+                context: path.join(config.root, 'web-app'),
+                dockerfile: path.join(config.root, 'web-app', 'deploy', 'Dockerfile'),
+                args: { 
+                    RUNTIME_IMAGE: 'arm32v7/nginx:1.17',
+                    REACT_APP_GRAPHQL_SCHEME: 'https',
+                    REACT_APP_GRAPHQL_HOST: `graphql.${config.dnsConfig.tld}`,
+                    REACT_APP_GRAPHQL_PORT: '80',
+                    REACT_APP_SEGMENT_SOURCE: 'test'
+                }
             },
             registry: config.dockerRegistry
         }, { parent: this })
@@ -27,16 +34,16 @@ class Blog extends pulumi.ComponentResource {
         const podBuilder = new kx.PodBuilder({
             containers: [
                 {
-                    image: blogImage.imageName,
+                    image: webAppImage.imageName,
                     imagePullPolicy: 'Always',
                     ports: { http: 8080 },
                 }
             ],
         })
 
-        const deployment = new kx.Deployment('blog', {
+        const deployment = new kx.Deployment('web-app', {
             metadata: {
-                name: 'blog',
+                name: 'web-app',
                 namespace: namespace
             },
             spec: podBuilder.asDeploymentSpec()
@@ -50,11 +57,11 @@ class Blog extends pulumi.ComponentResource {
         const servicePort = service.spec.ports.apply(ports => ports.find(port => port.name === 'http')!.port)
         this.endpoint = pulumi.interpolate `${serviceName}.${namespace}.svc.cluster.local:${servicePort}`
 
-        const ingressRoute = new k8s.apiextensions.CustomResource('blog', {
+        const ingressRoute = new k8s.apiextensions.CustomResource('web-app', {
             apiVersion: 'traefik.containo.us/v1alpha1',
             kind: 'IngressRoute',
             metadata: {
-                name: 'blog',
+                name: 'web-app',
                 namespace: namespace
             },
             spec: {
@@ -75,7 +82,7 @@ class Blog extends pulumi.ComponentResource {
     }
 }
 
-export const blog = new Blog(
-    'blog',
+export const webApp = new WebApp(
+    'web-app',
     appsNamespaceName,
     { provider: config.k8sProvider })

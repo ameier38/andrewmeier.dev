@@ -1,13 +1,13 @@
-import ApolloClient from 'apollo-boost'
+import { GraphQLClient } from 'graphql-hooks'
 import { graphqlConfig } from './config'
 
 const { scheme, host, port } = graphqlConfig
 
-const uri = 
+const url = 
     ['', '80'].includes(port)
     ? `${scheme}://${host}` 
     : `${scheme}://${host}:${port}`
 
-export const client = new ApolloClient({
-    uri: uri
+export const client = new GraphQLClient({
+    url: url
 })

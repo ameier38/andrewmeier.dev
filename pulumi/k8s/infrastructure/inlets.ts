@@ -4,7 +4,8 @@ import * as kx from '@pulumi/kubernetesx'
 import * as digitalocean from '@pulumi/digitalocean'
 import * as config from '../../config'
 import { infrastructureNamespaceName } from './namespace'
-import { blog } from '../apps/blog'
+import { webApp } from '../apps/webApp'
+import { graphql } from '../apps/graphql'
 
 const letsencryptProdEndpoint = 'https://acme-v02.api.letsencrypt.org/directory'
 const letsencryptStagingEndpoint = 'https://acme-staging-v02.api.letsencrypt.org/directory'
@@ -23,6 +24,10 @@ const caddyfile = `
 }
 
 ${config.dnsConfig.tld} {
+    import proxy
+}
+
+graphql.${config.dnsConfig.tld} {
     import proxy
 }
 `
@@ -146,9 +151,12 @@ class Inlets extends pulumi.ComponentResource {
     }
 }
 
+const tld = config.dnsConfig.tld
+const upstream = pulumi.interpolate `${tld}=${webApp.endpoint},graphql.${tld}=${graphql.endpoint}`
+
 export const inlets = new Inlets(
     'inlets',
     infrastructureNamespaceName,
     config.dnsConfig.tld,
-    blog.endpoint,
+    upstream,
     { providers: { k8s: config.k8sProvider, digitalocean: config.digitalOceanProvider } })

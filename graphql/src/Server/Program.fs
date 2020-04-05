@@ -1,6 +1,5 @@
 ﻿open FSharp.Data
 open Newtonsoft.Json
-open Newtonsoft.Json.Linq
 open Newtonsoft.Json.Serialization
 open Server
 open Serilog
@@ -13,10 +12,12 @@ open System.Text
 type Parser<'T>(executor:GraphQL.Executor<'T>) =
     let jsonOptions = JsonSerializerSettings(ContractResolver = CamelCasePropertyNamesContractResolver())
     do jsonOptions.Converters.Add(GraphQLQueryConverter(executor))
+    do jsonOptions.Converters.Add(OptionConverter())
 
     // ref: https://graphql.org/learn/serving-over-http/#post-request
     member _.ParseRequest(rawBody:byte[]) =
         let strBody = Encoding.UTF8.GetString(rawBody)
+        Log.Information("received request {@Request}", strBody)
         JsonConvert.DeserializeObject<GraphQLQuery>(strBody, jsonOptions)
 
     // ref: https://graphql.org/learn/serving-over-http/#response
@@ -28,8 +29,12 @@ type Parser<'T>(executor:GraphQL.Executor<'T>) =
             | errors -> failwithf "%A" errors
         | _ -> failwithf "only direct queries are supported"
 
-let configureRequest = 
-    Writers.setHeader "Access-Control-Allow-Headers" "Content-Type"
+let setCORSHeaders =
+    Writers.setHeader  "Access-Control-Allow-Origin" "*"
+    >=> Writers.setHeader "Access-Control-Allow-Headers" "content-type"
+
+let setResponseHeaders = 
+    setCORSHeaders
     >=> Writers.setHeader "Content-Type" "application/json"
     >=> Writers.setMimeType "application/json"
 
@@ -39,14 +44,23 @@ let graphql
     fun httpCtx ->
         async {
             try
-                let body = httpCtx.request.rawForm
-                let { ExecutionPlan = plan; Variables = variables } = parser.ParseRequest(body)
-                let! gqlResp = 
-                    executor.AsyncExecute(
-                        executionPlan=plan,
-                        variables=variables)
-                let sendResp = parser.ParseResponse(gqlResp) |> Successful.OK
-                return! sendResp httpCtx
+                match httpCtx.request.rawForm with
+                | [||] ->
+                    let sendResp =
+                        {| data = "" |}
+                        |> JsonConvert.SerializeObject
+                        |> Successful.OK
+                    return! sendResp httpCtx
+                | body ->
+                    let { ExecutionPlan = plan; Variables = variables } = parser.ParseRequest(body)
+                    let! gqlResp = 
+                        executor.AsyncExecute(
+                            executionPlan=plan,
+                            variables=variables)
+                    let sendResp = 
+                        parser.ParseResponse(gqlResp)
+                        |> Successful.OK
+                    return! sendResp httpCtx
             with ex ->
                 Log.Error("Error: {@Exception}", ex)
                 let sendResp =
@@ -76,8 +90,10 @@ let main _ =
         { defaultConfig 
             with bindings = [ HttpBinding.createSimple HTTP config.ServerConfig.Host config.ServerConfig.Port ]}
     let api = choose [
-        path "/health" >=> Successful.OK "Hi!"
-        configureRequest >=> graphql parser executor
+        OPTIONS >=> setCORSHeaders >=> Successful.OK "CORS approved"
+        POST >=> graphql parser executor >=> setResponseHeaders
+        GET >=> path "/health" >=> Successful.OK "Hi!"
+        RequestErrors.NOT_FOUND "location not available"
     ]
     Log.Information("starting server...", config.SeqConfig.Url)
     startWebServer suaveConfig api

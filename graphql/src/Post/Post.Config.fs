@@ -6,5 +6,5 @@ type AirtableConfig =
     { Url: string
       ApiKey: string } with
     static member Load() =
-        { Url = Some "http://localhost" |> Env.getEnv "AIRTABLE_URI"
+        { Url = Some "http://localhost" |> Env.getSecret "airtable" "url"
           ApiKey = Some "test" |> Env.getSecret "airtable" "api-key" }

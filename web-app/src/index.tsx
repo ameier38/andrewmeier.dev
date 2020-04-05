@@ -1,18 +1,18 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { ApolloProvider } from '@apollo/react-hooks'
+import { ClientContext } from 'graphql-hooks'
 import './index.css';
 import App from './components/App'
-import { client } from './apollo'
+import { client } from './graphql'
 import { AppStateProvider } from './state'
 import * as serviceWorker from './serviceWorker'
 
 ReactDOM.render(
     <React.StrictMode>
         <AppStateProvider>
-            <ApolloProvider client={client}>
+            <ClientContext.Provider value={client}>
                 <App />
-            </ApolloProvider>
+            </ClientContext.Provider>
         </AppStateProvider>
     </React.StrictMode>,
     document.getElementById('root')

@@ -39,8 +39,8 @@ let PostSummaryType =
         fields = [
             Define.AutoField("postId", ID)
             Define.AutoField("title", String)
-            Define.AutoField("createdAt", Date)
-            Define.AutoField("updatedAt", Date)
+            Define.Field("createdAt", Date, fun _ p -> p.CreatedAt.UtcDateTime)
+            Define.Field("updatedAt", Date, fun _ p -> p.UpdatedAt.UtcDateTime)
         ])
 
 let PostType =
@@ -50,8 +50,8 @@ let PostType =
         fields = [
             Define.AutoField("postId", ID)
             Define.AutoField("title", String)
-            Define.AutoField("createdAt", Date)
-            Define.AutoField("updatedAt", Date)
+            Define.Field("createdAt", Date, fun _ p -> p.CreatedAt.UtcDateTime)
+            Define.Field("updatedAt", Date, fun _ p -> p.UpdatedAt.UtcDateTime)
             Define.AutoField("content", String)
         ])
 

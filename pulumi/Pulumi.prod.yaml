@@ -1,4 +1,8 @@
 config:
+  airtable:apiKey:
+    secure: AAABAH//8ROtGqeOr+RE+MDPZjecbnFqBZM6DmUtJIBOKZr5o+FO/2LQ5u/aEThuWg==
+  airtable:url:
+    secure: AAABABnwjuRSrDFv4fFmvDi9qB7zwnqKSRqidTyv0uI726+1Zc9RLiNcnyqljfRN8ML4iGzKy9rqE3CGWWu2iHbU6lGtPox+NYZkJvU=
   cloudflare:apiKey:
     secure: AAABAD0Lt2G149B26zL8HgGIMnPze26w8/yflXLMMoxp+Eo9yoq2OQiu+YFsaFx/E7E614Qc0ph7yJiak51ncjebT/is
   cloudflare:email:

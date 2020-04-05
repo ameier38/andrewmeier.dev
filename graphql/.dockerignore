@@ -1,8 +1,5 @@
 .vscode
-.fake
 .ionide
+.fake
 .paket
 paket-files
-bin
-obj
-out

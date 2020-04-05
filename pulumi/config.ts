@@ -47,3 +47,9 @@ const rawInletsConfig = new pulumi.Config('inlets')
 export const inletsConfig = {
     token: rawInletsConfig.require('token')
 }
+
+const rawAirtableConfig = new pulumi.Config('airtable')
+export const airtableConfig = {
+    url: rawAirtableConfig.require('url'),
+    apiKey: rawAirtableConfig.require('apiKey')
+}

@@ -1,3 +1,5 @@
+ARG RUNTIME_IMAGE
+
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 as base
 
 # install locales
@@ -37,10 +39,11 @@ RUN fake build
 
 FROM base as builder
 
+ARG RUNTIME
 COPY src ./src
-RUN fake build -t Publish -e runtime=linux-arm
+RUN fake build -t Publish -e runtime=${RUNTIME}
 
-FROM mcr.microsoft.com/dotnet/core/runtime-deps:3.1.3-buster-slim-arm32v7 as runner
+FROM ${RUNTIME_IMAGE} as runner
 
 COPY --from=builder /app/src/Server/out/graphql /usr/local/bin/graphql
 RUN chmod +x /usr/local/bin/graphql

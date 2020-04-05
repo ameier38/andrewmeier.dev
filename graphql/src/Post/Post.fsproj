@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Post.Config.fs" />
+    <Compile Include="Post.Airtable.fs" />
     <Compile Include="Post.Dto.fs" />
     <Compile Include="Post.Client.fs" />
     <Compile Include="Post.Fields.fs" />
