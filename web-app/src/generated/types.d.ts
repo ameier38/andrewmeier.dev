@@ -44,15 +44,7 @@ export type GetPostInput = {
 export type ListPostsResponse = {
    __typename?: 'ListPostsResponse';
   pageToken: Scalars['String'];
-  posts: Array<PostSummary>;
-};
-
-export type PostSummary = {
-   __typename?: 'PostSummary';
-  createdAt: Scalars['Date'];
-  postId: Scalars['ID'];
-  title: Scalars['String'];
-  updatedAt: Scalars['Date'];
+  posts: Array<Post>;
 };
 
 export type ListPostsInput = {

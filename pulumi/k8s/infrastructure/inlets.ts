@@ -12,7 +12,7 @@ const letsencryptStagingEndpoint = 'https://acme-staging-v02.api.letsencrypt.org
 const letsencryptEndpoint = config.dnsConfig.useStaging ? letsencryptStagingEndpoint : letsencryptProdEndpoint
 
 // ref: https://caddyserver.com/docs/caddyfile/concepts
-const caddyfile = `
+const caddyfile = String.raw`
 {
     email ${config.dnsConfig.email}
     acme_ca ${letsencryptEndpoint}
@@ -33,7 +33,7 @@ graphql.${config.dnsConfig.tld} {
 `
 
 // ref: https://caddyserver.com/docs/install#manually-installing-as-a-linux-service
-const userDataScript = `#!/bin/bash
+const userDataScript = String.raw`#!/bin/bash
 
 set -e
 
@@ -68,7 +68,7 @@ curl -sL https://github.com/inlets/inlets/releases/download/2.7.0/inlets -o inle
 
 curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets.service  && \
     sed -i s/80/8080/g inlets.service && \
-    sed -i 's/^\(ExecStart.*$\)/\1 --disable-transport-wrapping/' && \
+    sed -i 's/^\(ExecStart.*$\)/\1 --disable-transport-wrapping/' inlets.service && \
     mv inlets.service /etc/systemd/system/inlets.service && \
     echo "AUTHTOKEN=$INLETSTOKEN" > /etc/default/inlets
 

@@ -32,17 +32,6 @@ let GetPostInputObject =
         description = "GetPost arguments",
         fields = [ postIdInputField ])
 
-let PostSummaryType =
-    Define.Object<PostSummaryDto>(
-        name = "PostSummary",
-        description = "Post summary information",
-        fields = [
-            Define.AutoField("postId", ID)
-            Define.AutoField("title", String)
-            Define.Field("createdAt", Date, fun _ p -> p.CreatedAt.UtcDateTime)
-            Define.Field("updatedAt", Date, fun _ p -> p.UpdatedAt.UtcDateTime)
-        ])
-
 let PostType =
     Define.Object<PostDto>(
         name = "Post",
@@ -60,7 +49,7 @@ let ListPostsResponseType =
         name = "ListPostsResponse",
         description = "List posts response",
         fields = [
-            Define.Field("posts", ListOf PostSummaryType, fun _ res -> res.Posts)
+            Define.Field("posts", ListOf PostType, fun _ res -> res.Posts)
             Define.AutoField("pageToken", String)
         ])
 

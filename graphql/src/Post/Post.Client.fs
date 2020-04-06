@@ -33,7 +33,8 @@ type PostClient(config:AirtableConfig) =
                     { PostId = record.Id
                       Title = record.Fields.Title
                       CreatedAt = record.Fields.CreatedAt
-                      UpdatedAt = record.Fields.UpdatedAt })
+                      UpdatedAt = record.Fields.UpdatedAt
+                      Content = record.Fields.Content })
                 |> Array.toList
             let pageToken = 
                 res.JsonValue.TryGetProperty("offset")
@@ -62,7 +63,8 @@ type MockPostClient() =
                     { PostId = record.Id
                       Title = record.Fields.Title
                       CreatedAt = record.Fields.CreatedAt
-                      UpdatedAt = record.Fields.UpdatedAt })
+                      UpdatedAt = record.Fields.UpdatedAt
+                      Content = record.Fields.Content })
                 |> Array.toList
             { Posts = posts
               PageToken = None }
