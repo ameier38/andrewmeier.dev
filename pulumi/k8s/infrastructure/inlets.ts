@@ -68,6 +68,7 @@ curl -sL https://github.com/inlets/inlets/releases/download/2.7.0/inlets -o inle
 
 curl -sLO https://raw.githubusercontent.com/inlets/inlets/master/hack/inlets.service  && \
     sed -i s/80/8080/g inlets.service && \
+    sed -i 's/^\(ExecStart.*$\)/\1 --disable-transport-wrapping/' && \
     mv inlets.service /etc/systemd/system/inlets.service && \
     echo "AUTHTOKEN=$INLETSTOKEN" > /etc/default/inlets
 

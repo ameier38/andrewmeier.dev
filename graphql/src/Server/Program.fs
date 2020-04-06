@@ -31,7 +31,7 @@ type Parser<'T>(executor:GraphQL.Executor<'T>) =
 
 let setCORSHeaders =
     Writers.setHeader  "Access-Control-Allow-Origin" "*"
-    >=> Writers.setHeader "Access-Control-Allow-Headers" "content-type"
+    >=> Writers.setHeader "Access-Control-Allow-Headers" "Content-Type"
 
 let setResponseHeaders = 
     setCORSHeaders
