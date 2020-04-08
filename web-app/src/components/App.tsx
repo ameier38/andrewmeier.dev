@@ -57,17 +57,33 @@ query GetPost($input:GetPostInput!) {
 }`
 
 const useStyles = makeStyles(theme => ({
-    appBarOffset: theme.mixins.toolbar,
-    toolbar: {
-        display: 'flex',
-        justifyContent: 'space-between'
+    appBarOffset: {
+        height: 80,
     },
-    cover: {
-        height: 200
+    appBar: {
+        background: theme.palette.background.paper,
+    },
+    toolbarContainer: {
+        display: 'flex',
+        justifyContent: 'space-between',
+    },
+    card: {
+        position: 'relative',
+    },
+    cardHeader: {
+        position: 'absolute',
+        top: 10,
+        left: 10,
+        color: theme.palette.primary.contrastText,
+        zIndex: 1,
+    },
+    cardMedia: {
+        height: 200,
+        filter: 'brightness(50%)',
     },
     error: {
         display: 'flex',
-        justifyContent: 'center'
+        justifyContent: 'center',
     }
 }))
 
@@ -101,12 +117,12 @@ const Navigation = () => {
     const classes = useStyles()
     return (
         <React.Fragment>
-            <AppBar color='default' position='fixed' elevation={1}>
+            <AppBar color='default' elevation={1}>
                 <Toolbar>
-                    <Container maxWidth='md' className={classes.toolbar}>
-                        <Typography variant='h6'>Journal of Andrew Meier</Typography>
+                    <Container maxWidth='md' className={classes.toolbarContainer}>
+                        <Typography variant='h6'>Andrew's Journal</Typography>
                         <div></div>
-                        <Button component={Link} to='/about'>About</Button>
+                        <Button color='inherit' component={Link} to='/about'>About</Button>
                     </Container>
                 </Toolbar>
             </AppBar>
@@ -132,31 +148,42 @@ const Detail = () => {
         </div>
     )
     return (
-        <Card>
+        <Card className={classes.card}>
+            <div className={classes.cardHeader}>
+                <Typography variant='h2'>
+                    {data.getPost.title}
+                </Typography>
+                <Typography variant='subtitle1'>
+                    <span>Created At: </span>{data.getPost.createdAt}
+                </Typography>
+                <Typography variant='subtitle1'>
+                    <span>Updated At: </span>{data.getPost.updatedAt}
+                </Typography>
+            </div>
             <CardMedia
-                className={classes.cover}
+                className={classes.cardMedia}
                 image={data.getPost.cover}
-                title={data.getPost.title}/>
+                title={data.getPost.title}>
+            </CardMedia>
             <CardContent>
-                <Typography variant='h2'>{data.getPost.title}</Typography>
                 <ReactMarkdown>{data.getPost.content}</ReactMarkdown>
             </CardContent>
         </Card>
     )
 }
 
-const App = () => (
-    <Container maxWidth='md'>
-        <Navigation />
-        <Switch>
-            <Route exact path="/">
-                <TableOfContents/>
-            </Route>
-            <Route path="/:postId">
-                <Detail/>
-            </Route>
-        </Switch>
-    </Container>
-)
-
-export default App
+export const App = () => {
+    return (
+        <Container maxWidth='md'>
+            <Navigation />
+            <Switch>
+                <Route exact path="/">
+                    <TableOfContents/>
+                </Route>
+                <Route path="/:postId">
+                    <Detail/>
+                </Route>
+            </Switch>
+        </Container>
+    )
+}
