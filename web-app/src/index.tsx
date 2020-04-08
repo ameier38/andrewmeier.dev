@@ -1,19 +1,19 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import { BrowserRouter as Router } from 'react-router-dom'
 import { ClientContext } from 'graphql-hooks'
 import './index.css';
 import App from './components/App'
 import { client } from './graphql'
-import { AppStateProvider } from './state'
 import * as serviceWorker from './serviceWorker'
 
 ReactDOM.render(
     <React.StrictMode>
-        <AppStateProvider>
-            <ClientContext.Provider value={client}>
+        <ClientContext.Provider value={client}>
+            <Router>
                 <App />
-            </ClientContext.Provider>
-        </AppStateProvider>
+            </Router>
+        </ClientContext.Provider>
     </React.StrictMode>,
     document.getElementById('root')
 );

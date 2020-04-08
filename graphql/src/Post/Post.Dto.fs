@@ -2,9 +2,15 @@ namespace Post
 
 open System
 
+type PostSummaryDto =
+    { PostId: string
+      Title: string
+      CreatedAt: DateTimeOffset }
+
 type PostDto =
     { PostId: string
       Title: string
+      Cover: string
       CreatedAt: DateTimeOffset
       UpdatedAt: DateTimeOffset
       Content: string }
@@ -17,5 +23,5 @@ type GetPostInputDto =
     { PostId: string }
 
 type ListPostsResponseDto =
-    { Posts: PostDto list
+    { Posts: PostSummaryDto list
       PageToken: string option }

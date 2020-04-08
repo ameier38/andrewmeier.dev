@@ -1,4 +1,5 @@
 import React from 'react'
+import { Route, Switch, Link, useParams } from 'react-router-dom'
 import { useQuery } from 'graphql-hooks'
 import { makeStyles } from '@material-ui/core/styles'
 import ReactMarkdown from 'react-markdown'
@@ -6,19 +7,25 @@ import {
     Container,
     LinearProgress,
     Typography,
-    Grid,
+    AppBar,
+    Toolbar,
+    List,
+    ListItem,
+    ListItemText,
     Card,
-    CardContent
+    CardMedia,
+    CardContent,
+    Button
 } from '@material-ui/core'
 import {
-    Post,
     Query,
-    QueryListPostsArgs
+    QueryListPostsArgs,
+    QueryGetPostArgs
 } from '../generated/types'
 
 const ERROR_COW = String.raw`
  -------
-< Opps! >
+< Opps! Something went wrong. >
  -------
         \   ^__^
          \  (xx)\_______
@@ -33,52 +40,38 @@ query ListPosts($input:ListPostsInput!) {
         posts {
             postId
             title
-            content
             createdAt
-            updatedAt
         }
     }
 }`
 
-const useStyles = makeStyles({
-    jumbotron: {
-        width: '100%',
-        height: 100,
-        textAlign: 'center'
+const GET_POST_QUERY = `
+query GetPost($input:GetPostInput!) {
+    getPost(input: $input) {
+        title
+        cover
+        content
+        createdAt
+        updatedAt
+    }
+}`
+
+const useStyles = makeStyles(theme => ({
+    appBarOffset: theme.mixins.toolbar,
+    toolbar: {
+        display: 'flex',
+        justifyContent: 'space-between'
+    },
+    cover: {
+        height: 200
     },
     error: {
         display: 'flex',
         justifyContent: 'center'
     }
-})
+}))
 
-const Jumbotron = () => {
-    const classes = useStyles()
-    return (
-        <div className={classes.jumbotron}>
-            <Typography variant='h2'>Andrew's Blog</Typography>
-        </div>
-    )
-}
-
-interface GalleryItemProps {
-    post: Post
-}
-
-const GalleryItem : React.FC<GalleryItemProps> = ({post}) => (
-    <Grid item xs={12}>
-        <Card>
-            <CardContent>
-                <Typography variant='h2'>{post.title}</Typography>
-                <Typography variant='subtitle1'>Created At: {post.createdAt}</Typography>
-                <Typography variant='subtitle1'>Updated At: {post.updatedAt}</Typography>
-                <ReactMarkdown>{post.content}</ReactMarkdown>
-            </CardContent>
-        </Card>
-    </Grid>
-)
-
-const Gallery : React.FC = () => {
+const TableOfContents : React.FC = () => {
     let classes = useStyles()
     let { loading, error, data } = useQuery<Query,QueryListPostsArgs>(LIST_POSTS_QUERY, {
         variables: {
@@ -94,18 +87,75 @@ const Gallery : React.FC = () => {
         </div>
     )
     return (
-        <Grid container spacing={2}>
+        <List>
             {data.listPosts.posts.map(post => (
-                <GalleryItem key={post.postId} post={post}/>
+                <ListItem key={post.postId} component={Link} to={`/${post.postId}`}>
+                    <ListItemText primary={post.title} secondary={post.createdAt}/>
+                </ListItem>
             ))}
-        </Grid>
+        </List>
     )
 } 
 
+const Navigation = () => {
+    const classes = useStyles()
+    return (
+        <React.Fragment>
+            <AppBar color='default' position='fixed' elevation={1}>
+                <Toolbar>
+                    <Container maxWidth='md' className={classes.toolbar}>
+                        <Typography variant='h6'>Journal of Andrew Meier</Typography>
+                        <div></div>
+                        <Button component={Link} to='/about'>About</Button>
+                    </Container>
+                </Toolbar>
+            </AppBar>
+            <div className={classes.appBarOffset}></div>
+        </React.Fragment>
+    )
+}
+
+const Detail = () => {
+    let classes = useStyles()
+    let { postId } = useParams()
+    let { loading, error, data } = useQuery<Query,QueryGetPostArgs>(GET_POST_QUERY, {
+        variables: {
+            input: {
+                postId: postId || ''
+            }
+        }
+    })
+    if (loading) return <LinearProgress/>
+    if (error) return (
+        <div className={classes.error}>
+            <pre>{ERROR_COW}</pre>
+        </div>
+    )
+    return (
+        <Card>
+            <CardMedia
+                className={classes.cover}
+                image={data.getPost.cover}
+                title={data.getPost.title}/>
+            <CardContent>
+                <Typography variant='h2'>{data.getPost.title}</Typography>
+                <ReactMarkdown>{data.getPost.content}</ReactMarkdown>
+            </CardContent>
+        </Card>
+    )
+}
+
 const App = () => (
-    <Container>
-        <Jumbotron />
-        <Gallery />
+    <Container maxWidth='md'>
+        <Navigation />
+        <Switch>
+            <Route exact path="/">
+                <TableOfContents/>
+            </Route>
+            <Route path="/:postId">
+                <Detail/>
+            </Route>
+        </Switch>
     </Container>
 )
 

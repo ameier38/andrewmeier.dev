@@ -31,6 +31,7 @@ export type QueryListPostsArgs = {
 export type Post = {
    __typename?: 'Post';
   content: Scalars['String'];
+  cover: Scalars['String'];
   createdAt: Scalars['Date'];
   postId: Scalars['ID'];
   title: Scalars['String'];
@@ -44,7 +45,14 @@ export type GetPostInput = {
 export type ListPostsResponse = {
    __typename?: 'ListPostsResponse';
   pageToken: Scalars['String'];
-  posts: Array<Post>;
+  posts: Array<PostSummary>;
+};
+
+export type PostSummary = {
+   __typename?: 'PostSummary';
+  createdAt: Scalars['Date'];
+  postId: Scalars['ID'];
+  title: Scalars['String'];
 };
 
 export type ListPostsInput = {
