@@ -1,2 +1,2 @@
 import './webApp'
-import './graphql'
+import './graphqlApi'

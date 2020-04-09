@@ -12,7 +12,7 @@ class GraphQL extends pulumi.ComponentResource {
             name:string,
             namespace: pulumi.Output<string>,
             opts:pulumi.CustomResourceOptions) {
-        super('apps:GraphQL', name, opts)
+        super('apps:GraphqlApi', name, opts)
 
         let airtableSecret = new kx.Secret('airtable', {
             metadata: {
@@ -24,11 +24,11 @@ class GraphQL extends pulumi.ComponentResource {
             }
         }, { parent: this })
 
-        let graphqlImage = new docker.Image('graphql', {
-            imageName: `${config.dockerRegistry.server}/ameier38/graphql`,
+        let graphqlImage = new docker.Image('graphql-api', {
+            imageName: `${config.dockerRegistry.server}/ameier38/graphql-api`,
             build: {
-                context: path.join(config.root, 'graphql'),
-                dockerfile: path.join(config.root, 'graphql', 'deploy', 'Dockerfile'),
+                context: path.join(config.root, 'graphql-api'),
+                dockerfile: path.join(config.root, 'graphql-api', 'deploy', 'Dockerfile'),
                 args: {
                     RUNTIME: 'linux-arm',
                     RUNTIME_IMAGE: 'mcr.microsoft.com/dotnet/core/runtime-deps:3.1.3-buster-slim-arm32v7'
@@ -40,7 +40,7 @@ class GraphQL extends pulumi.ComponentResource {
         const podBuilder = new kx.PodBuilder({
             containers: [
                 {
-                    name: 'graphql',
+                    name: 'graphql-api',
                     image: graphqlImage.imageName,
                     imagePullPolicy: 'Always',
                     ports: { http: 4000 },
@@ -49,7 +49,7 @@ class GraphQL extends pulumi.ComponentResource {
             ]
         })
 
-        const deployment = new kx.Deployment('graphql', {
+        const deployment = new kx.Deployment('graphql-api', {
             metadata: {
                 namespace: namespace
             },
@@ -70,7 +70,7 @@ class GraphQL extends pulumi.ComponentResource {
     }
 }
 
-export const graphql = new GraphQL(
-    'graphql',
+export const graphqlApi = new GraphQL(
+    'graphql-api',
     appsNamespaceName,
     { provider: config.k8sProvider })

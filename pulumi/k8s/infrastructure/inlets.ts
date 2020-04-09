@@ -5,7 +5,7 @@ import * as digitalocean from '@pulumi/digitalocean'
 import * as config from '../../config'
 import { infrastructureNamespaceName } from './namespace'
 import { webApp } from '../apps/webApp'
-import { graphql } from '../apps/graphql'
+import { graphqlApi } from '../apps/graphqlApi'
 
 const letsencryptProdEndpoint = 'https://acme-v02.api.letsencrypt.org/directory'
 const letsencryptStagingEndpoint = 'https://acme-staging-v02.api.letsencrypt.org/directory'
@@ -153,7 +153,7 @@ class Inlets extends pulumi.ComponentResource {
 }
 
 const tld = config.dnsConfig.tld
-const upstream = pulumi.interpolate `${tld}=${webApp.endpoint},graphql.${tld}=${graphql.endpoint}`
+const upstream = pulumi.interpolate `${tld}=${webApp.endpoint},graphql.${tld}=${graphqlApi.endpoint}`
 
 export const inlets = new Inlets(
     'inlets',
