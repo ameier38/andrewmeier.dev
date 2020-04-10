@@ -38,6 +38,7 @@
     ```
 
 ## Resources
+- [Fable](https://fable.io/)
 - [Feliz](https://zaid-ajaj.github.io/Feliz/)
 - [Feliz.MaterialUI](https://github.com/cmeeren/Feliz.MaterialUI)
 - [Feliz.Router](https://github.com/Zaid-Ajaj/Feliz.Router)

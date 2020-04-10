@@ -1,8 +1,9 @@
 [<RequireQualifiedAccess>]
-module Home
+module Blog.Home
 
 open Feliz
 open Feliz.MaterialUI
+open Feliz.Router
 open System
 
 type PostSummary =

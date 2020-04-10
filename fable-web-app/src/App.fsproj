@@ -4,8 +4,9 @@
     <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Config.fs" />
+    <Compile Include="Common.fs" />
     <Compile Include="Home.fs" />
+    <Compile Include="Post.fs" />
     <Compile Include="App.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
