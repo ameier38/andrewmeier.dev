@@ -115,6 +115,7 @@ type GraphqlClient() =
                        variables = {| input = input |} |}
                     |> Json.stringify
                 let! (statusCode, responseData) = Http.post url requestData
+                Log.info(responseData)
                 return
                     match statusCode with
                     | 200 ->

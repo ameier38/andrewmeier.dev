@@ -71,6 +71,8 @@ let update (msg:Msg) (state:State): State * Cmd<Msg> =
         let currentUrl = Url.parse url
         let newState = { state with CurrentUrl = currentUrl }
         match currentUrl with
+        | AboutUrl ->
+            newState, Cmd.ofMsg(PostMsg (Post.UrlChanged (Post.PostUrl "about")))
         | PostUrl postUrl ->
             newState, Cmd.ofMsg(PostMsg (Post.UrlChanged postUrl))
         | _ ->
@@ -116,7 +118,6 @@ let renderNavigation =
         let c = useStyles()
         React.fragment [
             Mui.appBar [
-                // appBar.elevation 1
                 appBar.variant.outlined
                 appBar.color.default'
                 appBar.position.fixed'
@@ -173,16 +174,7 @@ let renderPage (state:State) (dispatch:Msg -> unit) =
     match state.CurrentUrl with
     | HomeUrl ->
         Home.render state.Home (HomeMsg >> dispatch)
-    | AboutUrl -> 
-        Mui.card [
-            Mui.cardHeader [
-                cardHeader.title "About"
-            ]
-            Mui.cardContent [
-                Html.h1 "About"
-                Html.p "Hello"
-            ]
-        ]
+    | AboutUrl
     | PostUrl _ ->
         Post.render state.Post (PostMsg >> dispatch)
     | NotFoundUrl ->

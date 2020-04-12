@@ -1,9 +1,7 @@
 namespace Post
 
 open FSharp.Data
-open FSharp.UMX
 open Markdig
-open Serilog
 open System
 open System.Text.RegularExpressions
 open System.Web
@@ -30,11 +28,12 @@ module Dto =
                 |> Array.map (fun img -> 
                     String.Format(@"!\[(.*?)\]\({0}\)", img.Filename), 
                     sprintf "![$1](%s)" img.Thumbnails.Large.Url)
+            let replaceImages (content:string) (pattern:string, replace:string) =
+                Regex.Replace(content, pattern, replace)
             let parsedContent =
                 imagePatterns
-                |> Array.fold (fun content (pattern, replace) ->
-                    Regex.Replace(content, pattern, replace)
-                ) record.Fields.Content
+                |> Array.fold replaceImages record.Fields.Content
+                |> fun content -> Markdown.ToHtml(content, markdownPipeline)
             let coverPattern = @"^cover.(png|gif|jpg)$"
             let cover =
                 record.Fields.Images
@@ -47,7 +46,7 @@ module Dto =
               Cover = cover
               CreatedAt = record.Fields.CreatedAt
               UpdatedAt = record.Fields.UpdatedAt
-              Content = Markdown.ToHtml(parsedContent, markdownPipeline) }
+              Content = parsedContent }
 
 type PostClient(config:AirtableConfig) =
     let markdownPipeline = 
@@ -69,11 +68,14 @@ type PostClient(config:AirtableConfig) =
 
     interface IPostClient with
         member _.ListPosts(pageSize:int, ?offset:string) =
-            let formula = "({publish})"
+            let formula = "AND({status} = 'Published', {permalink} != 'about')"
             let query =
                 [ "pageSize", pageSize |> string
                   "filterByFormula", HttpUtility.UrlEncode(formula)
-                  if offset.IsSome then "offset", offset.Value ]
+                  for field in ["permalink"; "title"; "createdAt"] do
+                    HttpUtility.UrlEncode("fields[]"), field
+                  if offset.IsSome then 
+                    "offset", offset.Value ]
             let res =
                 get "Post" query
                 |> PostListProvider.Parse
@@ -89,7 +91,7 @@ type PostClient(config:AirtableConfig) =
               PageToken = pageToken }
 
         member _.GetPost(permalink:string) =
-            let formula = sprintf "AND({publish},{permalink} = '%s')" permalink
+            let formula = sprintf "AND({status} = 'Published', {permalink} = '%s')" permalink
             let query = [ "filterByFormula", HttpUtility.UrlEncode(formula) ]
             let res =
                 get "Post" query
@@ -116,13 +118,19 @@ type MockPostClient() =
             let res = PostListProvider.GetSample()
             let posts =
                 res.Records
+                |> Array.filter (fun record -> 
+                    record.Fields.Status = "Published"
+                    && record.Fields.Permalink <> "about")
                 |> Array.map Dto.PostSummaryDto.fromRecord
                 |> Array.toList
             { Posts = posts
               PageToken = None }
 
-        member _.GetPost(_postId:string) = 
+        member _.GetPost(permalink:string) = 
             let res = PostListProvider.GetSample()
             res.Records
+            |> Array.filter (fun record ->
+                record.Fields.Status = "Published"
+                && record.Fields.Permalink = permalink) 
             |> Array.head
             |> Dto.PostDto.fromRecord markdownPipeline

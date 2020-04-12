@@ -58,23 +58,29 @@ let renderPosts (posts:PostSummaryDto list) (dispatch:Msg -> unit) =
     ]
 
 let renderSkeleton () =
-    let listItems =
-        [ for i in 1..10 do
-            Mui.listItem [
+    Mui.list [
+        for i in 1..5 do
+            yield Mui.listItem [
                 prop.key i
                 listItem.children [
-                    Mui.skeleton [
-                        skeleton.variant.text
-                        skeleton.animation.pulse
-                    ]
-                    Mui.skeleton [
-                        skeleton.variant.text
-                        skeleton.animation.pulse
+                    Mui.listItemText [
+                        listItemText.primary (
+                            Mui.skeleton [
+                                skeleton.animation.wave
+                                skeleton.width 100
+                            ]
+                        )
+                        listItemText.secondary (
+                            Mui.skeleton [
+                                skeleton.animation.wave
+                                skeleton.width 250
+                            ]
+                        )
                     ]
                 ]
             ]
-        ]
-    Mui.list listItems
+            yield Mui.divider []
+    ]
 
 let render (state:State) (dispatch:Msg -> unit) =
     match state.Posts with

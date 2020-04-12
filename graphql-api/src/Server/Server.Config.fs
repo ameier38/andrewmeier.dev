@@ -23,7 +23,7 @@ type Config =
       SeqConfig: SeqConfig
       AirtableConfig: Post.AirtableConfig } with
     static member Load() =
-        { Debug = Some "false" |> Env.getEnv "DEBUG" |> bool.Parse
+        { Debug = Some "true" |> Env.getEnv "DEBUG" |> bool.Parse
           ServerConfig = ServerConfig.Load()
           SeqConfig = SeqConfig.Load()
           AirtableConfig = Post.AirtableConfig.Load() }

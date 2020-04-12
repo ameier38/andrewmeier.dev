@@ -81,7 +81,9 @@ let main _ =
             .CreateLogger()
     Log.Logger <- logger
     Log.Information("logging at {SeqUrl}", config.SeqConfig.Url)
-    let postClient = Post.MockPostClient()
+    let postClient = 
+        if config.Debug then Post.MockPostClient() :> Post.IPostClient
+        else Post.PostClient(config.AirtableConfig) :> Post.IPostClient
     let query = Root.Query postClient
     let schema = GraphQL.Schema(query)
     let executor = GraphQL.Executor(schema)

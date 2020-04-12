@@ -35,14 +35,14 @@ module Env =
 
 module Log =
     let info (msg:obj) =
-#if DEVEOPMENT
+#if DEVELOPMENT
         Fable.Core.JS.console.info(msg)
 #else
         ()
 #endif
 
     let error (error:obj) =
-#if DEVEOPMENT
+#if DEVELOPMENT
         Fable.Core.JS.console.error(error)
 #else
         ()

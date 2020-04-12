@@ -61,14 +61,15 @@ let useStyles = Styles.makeStyles(fun styles theme ->
         ]
         cardHeader = styles.create [
             style.position.absolute
-            style.top 10
-            style.left 10
+            style.top 20
+            style.left 20
             style.color theme.palette.primary.contrastText
             style.zIndex 1
         ]
         cardMedia = styles.create [
             style.height 250
             style.filter.brightness 50
+            style.backgroundColor.darkGray
         ]
     |}
 )
@@ -118,7 +119,7 @@ let renderPost =
                                     prop.className c.cardHeader
                                     prop.children [
                                         Mui.typography [
-                                            typography.variant.h2
+                                            typography.variant.h4
                                             typography.children props.title
                                         ]
                                         Mui.typography [
@@ -176,11 +177,13 @@ let renderSkeleton () =
                 ]
                 prop.children [
                     yield Mui.skeleton [
+                        skeleton.component' "h2"
                         skeleton.animation.wave
                         skeleton.width 200
                     ]
                     for _ in 1..20 do
                         yield Mui.skeleton [
+                            skeleton.component' "p"
                             skeleton.animation.wave
                         ]
                 ]
