@@ -4,11 +4,13 @@ open System
 
 type PostSummaryDto =
     { PostId: string
+      Permalink: string
       Title: string
       CreatedAt: DateTimeOffset }
 
 type PostDto =
     { PostId: string
+      Permalink: string
       Title: string
       Cover: string
       CreatedAt: DateTimeOffset
@@ -20,7 +22,7 @@ type ListPostsInputDto =
       PageToken: string option }
 
 type GetPostInputDto =
-    { PostId: string }
+    { Permalink: string }
 
 type ListPostsResponseDto =
     { Posts: PostSummaryDto list

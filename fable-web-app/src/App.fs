@@ -1,20 +1,11 @@
 [<RequireQualifiedAccess>]
 module Blog.App
 
+open Elmish
+open Fable.MaterialUI.MaterialDesignIcons
 open Feliz
 open Feliz.MaterialUI
 open Feliz.Router
-
-let cowNotFound = @"
- --------------------------
-< That page does not exist >
- --------------------------
-        \   ^__^
-         \  (xx)\_______
-            (__)\       )\/\
-             U  ||----w |
-                ||     ||
-"
 
 type Url =
     | HomeUrl
@@ -36,81 +27,179 @@ type State =
 
 type Msg =
     | UrlChanged of string list
+    | NavigateToHome
+    | NavigateToAbout
     | HomeMsg of Home.Msg
     | PostMsg of Post.Msg
 
-let init () =
-    let currentUrl = Router.currentUrl() |> Url.parse
+let init () : State * Cmd<Msg> =
+    let currentUrl = Router.currentPath() |> Url.parse
     match currentUrl with
     | NotFoundUrl
     | AboutUrl
     | HomeUrl ->
-        { CurrentUrl = currentUrl
-          Home = Home.init()
-          Post = Post.init Post.EmptyUrl }
+        let homeState, homeCmd = Home.init()
+        let postState, postCmd = Post.init Post.EmptyUrl
+        let cmd =
+            [ homeCmd |> Cmd.map HomeMsg
+              postCmd |> Cmd.map PostMsg ]
+            |> Cmd.batch
+        let state =
+            { CurrentUrl = currentUrl
+              Home = homeState
+              Post = postState }
+        state, cmd
     | PostUrl postUrl ->
-        { CurrentUrl = currentUrl
-          Home = Home.init()
-          Post = Post.init postUrl }
+        let homeState, homeCmd = Home.init()
+        let postState, postCmd = Post.init postUrl
+        let cmd =
+            [ homeCmd |> Cmd.map HomeMsg
+              postCmd |> Cmd.map PostMsg ]
+            |> Cmd.batch
+        let state =
+            { CurrentUrl = currentUrl
+              Home = homeState
+              Post = postState }
+        state, cmd
 
-let update (msg:Msg) (state:State): State =
+let graphqlClient = Graphql.GraphqlClient()
+
+let update (msg:Msg) (state:State): State * Cmd<Msg> =
+    Log.info msg
     match msg with
     | UrlChanged url ->
-        let currentUrl = url |> Url.parse
+        let currentUrl = Url.parse url
+        let newState = { state with CurrentUrl = currentUrl }
         match currentUrl with
         | PostUrl postUrl ->
-            let postMsg = Post.UrlChanged postUrl
-            { state with
-                CurrentUrl = currentUrl
-                Post = state.Post |> Post.update postMsg }
+            newState, Cmd.ofMsg(PostMsg (Post.UrlChanged postUrl))
         | _ ->
-            { state with
-                CurrentUrl = currentUrl }
+            newState, Cmd.none
+    | NavigateToHome ->
+        state, Router.navigatePath ""
+    | NavigateToAbout ->
+        state, Router.navigatePath "about"
     | HomeMsg msg -> 
-        { state with
-            Home = state.Home |> Home.update msg }
+        let newHome, homeCmd = state.Home |> Home.update graphqlClient msg
+        { state with Home = newHome }, homeCmd |> Cmd.map HomeMsg
     | PostMsg msg ->
-        { state with
-            Post = state.Post |> Post.update msg }
+        let newPost, postCmd = state.Post |> Post.update graphqlClient msg
+        { state with Post = newPost }, postCmd |> Cmd.map PostMsg
 
-// let useStyle = Styles.makeStyles(fun styles theme ->
-//     {| 
-//         notFound = styles.create [
-//             style.display.flex
-//             style.justifyContent.center
-//         ]
-//     |}
-// )
+let useStyles = Styles.makeStyles(fun styles theme ->
+    {| 
+        appBarOffset = styles.create [
+            style.height 80
+        ]
+        navContainer = styles.create [
+            style.display.flex
+            style.justifyContent.spaceBetween
+        ]
+        navHomeButton = styles.create [
+            style.fontFamily theme.typography.h6.fontFamily
+            style.fontSize 16
+            style.fontWeight 500
+            style.textTransform.none
+        ]
+        errorDiv = styles.create [
+            style.display.flex
+            style.justifyContent.center
+        ]
+    |}
+)
 
-let render (state:State) (dispatch:Msg -> unit) =
-    printfn "state: %A" state
-    let activePage =
-        match state.CurrentUrl with
-        | HomeUrl -> Home.render state.Home (HomeMsg >> dispatch)
-        | AboutUrl -> 
-            Html.div [
-                Html.h1 "About"
-                Html.h1 (Env.getEnv "TEST")
-            ]
-        | PostUrl _ -> Post.render state.Post (PostMsg >> dispatch)
-        | NotFoundUrl ->
-            Html.div [
-                prop.children [
-                    Mui.typography [
-                        typography.variant.h1
+type NavigationProps =
+    { dispatch: Msg -> unit }
+
+let renderNavigation = 
+    React.functionComponent<NavigationProps>(fun props ->
+        let c = useStyles()
+        React.fragment [
+            Mui.appBar [
+                // appBar.elevation 1
+                appBar.variant.outlined
+                appBar.color.default'
+                appBar.position.fixed'
+                appBar.children [
+                    Mui.toolbar [
+                        Mui.container [
+                            prop.className c.navContainer
+                            container.maxWidth.md
+                            container.children [
+                                Mui.button [
+                                    prop.onClick (fun e ->
+                                        e.preventDefault()
+                                        props.dispatch NavigateToHome
+                                    )
+                                    button.classes.root c.navHomeButton
+                                    button.children [ "Andrew's Thoughts" ]
+                                ]
+                                Html.div [
+                                    Mui.iconButton [
+                                        prop.href "https://twitter.com/ameier38"
+                                        iconButton.component' "a"
+                                        iconButton.children [
+                                            Icons.twitterIcon
+                                        ]
+                                    ]
+                                    Mui.iconButton [
+                                        prop.href "https://github.com/ameier38"
+                                        iconButton.component' "a"
+                                        iconButton.children [
+                                            Icons.githubIcon
+                                        ]
+                                    ]
+                                    Mui.button [
+                                        prop.onClick (fun e ->
+                                            e.preventDefault()
+                                            props.dispatch NavigateToAbout
+                                        )
+                                        button.color.inherit'
+                                        button.children [ "About" ]
+                                    ]
+                                ]
+                            ]
+                        ]
                     ]
-                    Html.pre cowNotFound
                 ]
             ]
-
-    Router.router [
-        Router.onUrlChanged (UrlChanged >> dispatch)
-        Router.application [
-            Mui.container [
-                container.maxWidth.md
-                container.children [
-                    activePage
-                ]
+            Html.div [
+                prop.className c.appBarOffset
             ]
         ]
+    )
+
+let renderPage (state:State) (dispatch:Msg -> unit) =
+    match state.CurrentUrl with
+    | HomeUrl ->
+        Home.render state.Home (HomeMsg >> dispatch)
+    | AboutUrl -> 
+        Mui.card [
+            Mui.cardHeader [
+                cardHeader.title "About"
+            ]
+            Mui.cardContent [
+                Html.h1 "About"
+                Html.p "Hello"
+            ]
+        ]
+    | PostUrl _ ->
+        Post.render state.Post (PostMsg >> dispatch)
+    | NotFoundUrl ->
+        Error.renderError "Page does not exist"
+
+let renderApp (state:State) (dispatch:Msg -> unit) =
+    Mui.container [
+        container.maxWidth.md
+        container.children [
+            renderNavigation { dispatch = dispatch }
+            renderPage state dispatch
+        ]
+    ]
+
+let render (state:State) (dispatch:Msg -> unit) =
+    Router.router [
+        Router.pathMode
+        Router.onUrlChanged (UrlChanged >> dispatch)
+        Router.application [ renderApp state dispatch ]
     ]

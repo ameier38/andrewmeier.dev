@@ -2,28 +2,29 @@ namespace Post
 
 open FSharp.Data
 open FSharp.UMX
+open Markdig
 open Serilog
 open System
 open System.Text.RegularExpressions
+open System.Web
 
 type PostListProvider = JsonProvider<Airtable.ListPostsResponse>
 
-type PostProvider = JsonProvider<Airtable.GetPostResponse>
-
 type IPostClient =
     abstract member ListPosts: pageSize:int * pageToken:string option -> ListPostsResponseDto
-    abstract member GetPost: postId:string -> PostDto 
+    abstract member GetPost: permalink:string -> PostDto 
 
 module Dto =
 
     module PostSummaryDto =
         let fromRecord(record:PostListProvider.Record) =
             { PostId = record.Id
+              Permalink = record.Fields.Permalink
               Title = record.Fields.Title
               CreatedAt = record.Fields.CreatedAt }
 
     module PostDto =
-        let fromRecord (record:PostProvider.Root) =
+        let fromRecord (markdownPipeline:MarkdownPipeline) (record:PostListProvider.Record) =
             let imagePatterns =
                 record.Fields.Images
                 |> Array.map (fun img -> 
@@ -41,18 +42,25 @@ module Dto =
                 |> Option.map (fun img -> img.Thumbnails.Large.Url)
                 |> Option.defaultValue ""
             { PostId = record.Id
+              Permalink = record.Fields.Permalink
               Title = record.Fields.Title
               Cover = cover
               CreatedAt = record.Fields.CreatedAt
               UpdatedAt = record.Fields.UpdatedAt
-              Content = parsedContent }
+              Content = Markdown.ToHtml(parsedContent, markdownPipeline) }
 
 type PostClient(config:AirtableConfig) =
+    let markdownPipeline = 
+        MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .UseEmojiAndSmiley()
+            .UseMathematics()
+            .Build()
+
     let get endpoint query =
         let auth = sprintf "Bearer %s" config.ApiKey
-        let filter = System.Web.HttpUtility.UrlEncode("({publish})")
         Http.RequestString(
-            url = sprintf "%s/%s?filterByFormula=%s" config.Url endpoint filter,
+            url = sprintf "%s/%s" config.Url endpoint,
             query = query,
             headers = [
                 HttpRequestHeaders.Authorization auth
@@ -61,8 +69,13 @@ type PostClient(config:AirtableConfig) =
 
     interface IPostClient with
         member _.ListPosts(pageSize:int, ?offset:string) =
+            let formula = "({publish})"
+            let query =
+                [ "pageSize", pageSize |> string
+                  "filterByFormula", HttpUtility.UrlEncode(formula)
+                  if offset.IsSome then "offset", offset.Value ]
             let res =
-                get "Post" ["pageSize", pageSize |> string; if offset.IsSome then "offset", offset.Value]
+                get "Post" query
                 |> PostListProvider.Parse
             let posts =
                 res.Records
@@ -75,13 +88,29 @@ type PostClient(config:AirtableConfig) =
             { Posts = posts
               PageToken = pageToken }
 
-        member _.GetPost(postId:string) =
-            let endpoint = sprintf "Post/%s" %postId
-            get endpoint []
-            |> PostProvider.Parse
-            |> Dto.PostDto.fromRecord
+        member _.GetPost(permalink:string) =
+            let formula = sprintf "AND({publish},{permalink} = '%s')" permalink
+            let query = [ "filterByFormula", HttpUtility.UrlEncode(formula) ]
+            let res =
+                get "Post" query
+                |> PostListProvider.Parse
+            match res.Records with
+            | [||] ->
+                failwithf "%s not found" permalink
+            | [| record |] ->
+                record
+                |> Dto.PostDto.fromRecord markdownPipeline
+            | _ ->
+                failwithf "found multiple posts with the same permalink: %s" permalink
             
 type MockPostClient() =
+    let markdownPipeline = 
+        MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .UseEmojiAndSmiley()
+            .UseMathematics()
+            .Build()
+
     interface IPostClient with
         member _.ListPosts(_pageSize:int, ?_offset:string) =
             let res = PostListProvider.GetSample()
@@ -93,5 +122,7 @@ type MockPostClient() =
               PageToken = None }
 
         member _.GetPost(_postId:string) = 
-            PostProvider.GetSample()
-            |> Dto.PostDto.fromRecord
+            let res = PostListProvider.GetSample()
+            res.Records
+            |> Array.head
+            |> Dto.PostDto.fromRecord markdownPipeline

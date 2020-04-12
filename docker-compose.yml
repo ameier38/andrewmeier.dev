@@ -1,5 +1,11 @@
 version: '3.7'
 services: 
+  fable-web-app:
+    build:
+      context: fable-web-app
+      dockerfile: deploy/Dockerfile
+    ports: 
+      - "8080:8080"
   web-app:
     build:
       context: web-app
@@ -11,9 +17,9 @@ services:
         REACT_APP_GRAPHQL_PORT: 4000
     ports: 
       - "8080:8080"
-  graphql:
+  graphql-api:
     build:
-      context: graphql
+      context: graphql-api
       dockerfile: deploy/Dockerfile
       args: 
         RUNTIME: linux-musl-x64

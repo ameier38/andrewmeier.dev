@@ -20,7 +20,8 @@ module.exports = (env, argv) => {
         devServer: {
             contentBase: path.join(__dirname, "dist"),
             hot: true,
-            inline: true
+            inline: true,
+            historyApiFallback: true
         },
         plugins: mode === "development" ?
             // development plugins
@@ -30,7 +31,7 @@ module.exports = (env, argv) => {
                     silent: true,
                     systemvars: true
                 }),
-                new webpack.HotModuleReplacementPlugin()
+                new webpack.HotModuleReplacementPlugin(),
             ]
             :
             // production plugins
@@ -42,15 +43,21 @@ module.exports = (env, argv) => {
                 }),
             ],
         module: {
-            rules: [{
-                test: /\.fs(x|proj)?$/,
-                use: {
-                    loader:  "fable-loader",
-                    options: {
-                        define: mode === "development" ? ["DEVELOPMENT"]: []
+            rules: [
+                { 
+                    test: /\.fs(x|proj)?$/, 
+                    use: { 
+                        loader:  "fable-loader", 
+                        options: { 
+                            define: mode === "development" ? ["DEVELOPMENT"]: [] 
+                        } 
                     }
-                }
-            }]
+                },
+                { 
+                    test: /\.css$/, 
+                    use: ['style-loader', 'css-loader']
+                },
+            ]
         }
     }
 }

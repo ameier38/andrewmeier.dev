@@ -1,105 +1,201 @@
 [<RequireQualifiedAccess>]
 module Blog.Post
 
-open System
+open Elmish
 open Feliz
 open Feliz.MaterialUI
+open Graphql
 
 type Url =
     | EmptyUrl
-    | PostUrl of postId:string
-
-type Post =
-    { PostId: string
-      Title: string
-      CreatedAt: DateTimeOffset
-      UpdatedAt: DateTimeOffset
-      Cover: string
-      Content: string }
+    | PostUrl of permalink:string
 
 type State =
     { CurrentUrl: Url
-      Post: Post option
-      Loading: bool }
+      Post: Deferred<Result<PostDto,string>> }
 
 type Msg =
     | UrlChanged of Url
+    | GetPost of AsyncOperation<string,Result<PostDto,string>>
 
-let init (url:Url) =
+let getPost (graphql:IGraphqlClient) (permalink:string): Cmd<Msg> =
+    async {
+        let! response = graphql.GetPost(permalink)
+        return GetPost (Finished response)
+    } |> Cmd.fromAsync
+
+let init (url:Url): State * Cmd<Msg> =
     match url with
     | EmptyUrl ->
-        { CurrentUrl = url
-          Post = None
-          Loading = true }
-    | PostUrl postId ->
-        { CurrentUrl = url
-          Post =
-            { PostId = postId
-              Title = sprintf "Test %s" postId
-              CreatedAt = DateTimeOffset.UtcNow
-              UpdatedAt = DateTimeOffset.UtcNow
-              Cover = "test"
-              Content = "# Hello\ntesting"}
-            |> Some
-          Loading = false }
+        let state =
+            { CurrentUrl = url
+              Post = NotStarted }
+        state, Cmd.none
+    | PostUrl permalink ->
+        let state =
+            { CurrentUrl = url
+              Post = NotStarted }
+        state, Cmd.ofMsg(GetPost (Started permalink))
 
-let update (msg:Msg) (state:State) =
-    printfn "received msg: %A" msg
+let update (graphql:IGraphqlClient) (msg:Msg) (state:State): State * Cmd<Msg> =
     match msg with
-    | UrlChanged EmptyUrl -> state
-    | UrlChanged (PostUrl newPostId) ->
+    | UrlChanged EmptyUrl ->
+        state, Cmd.none
+    | UrlChanged (PostUrl newPermalink) ->
         match state.CurrentUrl with
         // don't refetch if the post is the same as current state
-        // | PostUrl prevPostId when prevPostId = newPostId -> state
+        | PostUrl prevPermalink when prevPermalink = newPermalink ->
+            state, Cmd.none
         | EmptyUrl
         | PostUrl _ ->
-            { state with
-                Post =
-                    { PostId = newPostId
-                      Title = sprintf "Test %s" newPostId
-                      CreatedAt = DateTimeOffset.UtcNow
-                      UpdatedAt = DateTimeOffset.UtcNow
-                      Cover = "test"
-                      Content = "# Hello\ntesting"}
-                    |> Some
-                Loading = false }
+            state, Cmd.ofMsg(GetPost (Started newPermalink))
+    | GetPost (Started postId) ->
+        { state with Post = InProgress }, getPost graphql postId
+    | GetPost (Finished response) ->
+        { state with Post = Resolved response }, Cmd.none
+
+let useStyles = Styles.makeStyles(fun styles theme ->
+    {|
+        card = styles.create [
+            style.position.relative
+        ]
+        cardHeader = styles.create [
+            style.position.absolute
+            style.top 10
+            style.left 10
+            style.color theme.palette.primary.contrastText
+            style.zIndex 1
+        ]
+        cardMedia = styles.create [
+            style.height 250
+            style.filter.brightness 50
+        ]
+    |}
+)
+
+let renderDisqus (post:PostDto) =
+    let shortname = Env.getEnv "FABLE_APP_DISQUS_SHORTNAME"
+    let scheme = Env.getEnv "FABLE_APP_SCHEME"
+    let host = Env.getEnv "FABLE_APP_HOST"
+    let port = Env.getEnv "FABLE_APP_PORT"
+    let url =
+        match port with
+        | "" | "80" -> sprintf "%s://%s" scheme host
+        | port -> sprintf "%s://%s:%s" scheme host port
+    let config: Disqus.DisqusConfig =
+        { url = url
+          identifier = post.permalink
+          title = post.title }
+    Mui.card [
+        Mui.cardContent [
+            Disqus.disqus [
+                Disqus.Shortname shortname
+                Disqus.Config config
+            ]
+        ]
+    ]
+
+let renderPost =
+    React.functionComponent<PostDto> (fun props ->
+        let c = useStyles()
+        let highlight (el:Browser.Types.Element) =
+            match el with
+            | null -> ()
+            | el -> Prism.highlightAllUnder el
+        let ref = React.useCallback(highlight, [| props.content |> box |])
+        Mui.grid [
+            grid.container true
+            grid.spacing._2
+            grid.children [
+                Mui.grid [
+                    grid.item true
+                    grid.sm._12
+                    grid.children [
+                        Mui.card [
+                            prop.className c.card
+                            card.children [
+                                Html.div [
+                                    prop.className c.cardHeader
+                                    prop.children [
+                                        Mui.typography [
+                                            typography.variant.h2
+                                            typography.children props.title
+                                        ]
+                                        Mui.typography [
+                                            typography.variant.subtitle1
+                                            typography.children [
+                                                Html.span "Created On: "
+                                                Html.text (props.createdAt.ToString("yyyy-MM-dd"))
+                                            ]
+                                        ]
+                                        Mui.typography [
+                                            typography.variant.subtitle1
+                                            typography.children [
+                                                Html.span "Updated On: "
+                                                Html.text (props.updatedAt.ToString("yyyy-MM-dd"))
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                                Mui.cardMedia [
+                                    prop.className c.cardMedia
+                                    cardMedia.image props.cover
+                                ]
+                                Mui.cardContent [
+                                    Mui.typography [
+                                        prop.ref ref
+                                        prop.dangerouslySetInnerHTML (props.content)
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+                Mui.grid [
+                    grid.item true
+                    grid.sm._12
+                    grid.children [
+                        renderDisqus props
+                    ]
+                ]
+            ]
+        ]
+    )
+
+let renderSkeleton () =
+    Mui.card [
+        card.children [
+            Mui.skeleton [
+                prop.height 200
+                skeleton.variant.rect
+                skeleton.animation.wave
+            ]
+            Html.div [
+                prop.style [
+                    style.padding 30
+                ]
+                prop.children [
+                    yield Mui.skeleton [
+                        skeleton.animation.wave
+                        skeleton.width 200
+                    ]
+                    for _ in 1..20 do
+                        yield Mui.skeleton [
+                            skeleton.animation.wave
+                        ]
+                ]
+            ]
+        ]
+    ]
 
 let render (state:State) (dispatch:Msg -> unit) =
-    match state.Loading, state.Post with
-    | true, _
-    | false, None ->
-        Mui.card [
-            Mui.skeleton [
-                prop.height 100
-                skeleton.variant.rect
-            ]
-            Mui.skeleton [
-                skeleton.animation.pulse
-                skeleton.width 60
-            ]
-            Mui.skeleton [
-                skeleton.animation.pulse
-            ]
-        ]
-    | false, Some post ->
-        Mui.card [
-            Mui.cardMedia [
-                prop.height 100
-                cardMedia.src post.Cover
-            ]
-            Mui.cardContent [
-                Mui.typography [
-                    typography.variant.h6
-                    typography.gutterBottom true
-                    typography.children [
-                        post.Title
-                    ]
-                ]
-                Mui.typography [
-                    typography.variant.subtitle1
-                    typography.children [
-                        post.CreatedAt.ToString()
-                    ]
-                ]
-            ]
-        ]
+    match state.Post with
+    | NotStarted
+    | InProgress ->
+        renderSkeleton()
+    | Resolved response ->
+        match response with
+        | Ok post ->
+            renderPost post
+        | Error error ->
+            Error.renderError error

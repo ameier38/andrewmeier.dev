@@ -1,8 +1,6 @@
 #load ".fake/build.fsx/intellisense.fsx"
-open Fake.Core
 open Fake.DotNet
 open Fake.IO
-open Fake.IO.FileSystemOperators
 open Fake.IO.Globbing.Operators
 open Fake.JavaScript
 open BlackFox.Fake
@@ -11,15 +9,31 @@ let clean = BuildTask.create "Clean" [] {
     !! "src/**/bin"
     ++ "src/**/obj"
     |> Shell.cleanDirs 
+
+    "dist/main.js"
+    |> Shell.rm
 }
 
-BuildTask.create "Restore" [] {
+let cleanNode = BuildTask.create "CleanNode" [] {
+    "node_modules"
+    |> Shell.cleanDir
+}
+
+BuildTask.create "Install" [] {
+    Npm.install id
+}
+
+BuildTask.create "Restore" [clean] {
     !! "src/**/*.fsproj"
     |> Seq.iter (fun proj -> DotNet.restore id proj)
 }
 
-BuildTask.create "Start" [] {
-    Npm.exec "start" id
+BuildTask.create "Serve" [] {
+    Npm.run "start" id
+}
+
+BuildTask.create "Build" [clean] {
+    Npm.run "build" id
 }
 
 let _default = BuildTask.createEmpty "Default" []

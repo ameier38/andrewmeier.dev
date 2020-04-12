@@ -1,3 +1,5 @@
+version 5.241.2
+
 storage none
 source https://api.nuget.org/v3/index.json
 
@@ -6,6 +8,9 @@ nuget Fable.Browser.Dom
 nuget Fable.Elmish
 nuget Fable.Elmish.HMR
 nuget Fable.Elmish.React
+nuget Fable.MaterialUI.MaterialDesignIcons
+nuget Fable.SimpleHttp
+nuget Fable.SimpleJson
 nuget Feliz
 nuget Feliz.MaterialUI
 nuget Feliz.Router

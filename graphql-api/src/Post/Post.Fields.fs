@@ -2,9 +2,9 @@ module Post.Fields
 
 open FSharp.Data.GraphQL.Types
 
-let postIdInputField =
+let permalinkInputField =
     Define.Input(
-        name = "postId",
+        name = "permalink",
         typedef = ID,
         description = "Unique identifier of the post")
 
@@ -30,7 +30,7 @@ let GetPostInputObject =
     Define.InputObject<GetPostInputDto>(
         name = "GetPostInput",
         description = "GetPost arguments",
-        fields = [ postIdInputField ])
+        fields = [ permalinkInputField ])
 
 let PostSummaryType =
     Define.Object<PostSummaryDto>(
@@ -38,10 +38,10 @@ let PostSummaryType =
         description = "Post summary",
         fields = [
             Define.AutoField("postId", ID)
+            Define.AutoField("permalink", String)
             Define.AutoField("title", String)
             Define.Field("createdAt", Date, fun _ p -> p.CreatedAt.UtcDateTime)
-        ]
-    )
+        ])
 
 let PostType =
     Define.Object<PostDto>(
@@ -49,6 +49,7 @@ let PostType =
         description = "Post",
         fields = [
             Define.AutoField("postId", ID)
+            Define.AutoField("permalink", String)
             Define.AutoField("title", String)
             Define.AutoField("cover", String)
             Define.Field("createdAt", Date, fun _ p -> p.CreatedAt.UtcDateTime)
@@ -86,4 +87,4 @@ let getPostField
         args = [Define.Input("input", GetPostInputObject)],
         resolve = (fun ctx _ ->
             let getPostInput = ctx.Arg<GetPostInputDto>("input")
-            postClient.GetPost(getPostInput.PostId)))
+            postClient.GetPost(getPostInput.Permalink)))

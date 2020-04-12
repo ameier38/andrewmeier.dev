@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Common.fs" />
+    <Compile Include="Graphql.fs" />
     <Compile Include="Home.fs" />
     <Compile Include="Post.fs" />
     <Compile Include="App.fs" />

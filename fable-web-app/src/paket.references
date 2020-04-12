@@ -6,3 +6,6 @@ Fable.Elmish
 Fable.Elmish.React
 Feliz.Router
 Fable.Elmish.HMR
+Fable.SimpleHttp
+Fable.SimpleJson
+Fable.MaterialUI.MaterialDesignIcons

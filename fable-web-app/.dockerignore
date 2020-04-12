@@ -1,7 +1,8 @@
-.fable
-.fake
+.vscode
 .ionide
 .paket
+.fake
+.fable
 paket-files
 node_modules
 dist/main.js
