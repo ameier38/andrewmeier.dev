@@ -60,7 +60,8 @@ module Cmd =
         Cmd.ofSub asyncCmd
 
 module Prism =
-    let highlightAllUnder (ref:Browser.Types.Element): unit = importDefault "./scripts/prism.js"
+    let highlightAllUnder (ref:Browser.Types.Element): unit =
+        importMember "./scripts/script.js"
 
 module Icons =
     let githubIcon = ofImport "GitHub" "@material-ui/icons" [] []

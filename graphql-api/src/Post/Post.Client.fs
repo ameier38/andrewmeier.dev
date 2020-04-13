@@ -2,9 +2,9 @@ namespace Post
 
 open FSharp.Data
 open Markdig
+open Markdig.Extensions.AutoIdentifiers
 open System
 open System.Text.RegularExpressions
-open System.Web
 
 type PostListProvider = JsonProvider<Airtable.ListPostsResponse>
 
@@ -71,9 +71,9 @@ type PostClient(config:AirtableConfig) =
             let formula = "AND({status} = 'Published', {permalink} != 'about')"
             let query =
                 [ "pageSize", pageSize |> string
-                  "filterByFormula", HttpUtility.UrlEncode(formula)
-                  for field in ["permalink"; "title"; "createdAt"] do
-                    HttpUtility.UrlEncode("fields[]"), field
+                  "filterByFormula", formula
+                  for field in ["permalink"; "title"; "created_at"] do
+                    "fields[]", field
                   if offset.IsSome then 
                     "offset", offset.Value ]
             let res =
@@ -92,7 +92,7 @@ type PostClient(config:AirtableConfig) =
 
         member _.GetPost(permalink:string) =
             let formula = sprintf "AND({status} = 'Published', {permalink} = '%s')" permalink
-            let query = [ "filterByFormula", HttpUtility.UrlEncode(formula) ]
+            let query = [ "filterByFormula", formula ]
             let res =
                 get "Post" query
                 |> PostListProvider.Parse

@@ -145,6 +145,7 @@ let renderPost =
                                 Mui.cardContent [
                                     Mui.typography [
                                         prop.ref ref
+                                        prop.className "post"
                                         prop.dangerouslySetInnerHTML (props.content)
                                     ]
                                 ]
@@ -181,7 +182,7 @@ let renderSkeleton () =
                         skeleton.animation.wave
                         skeleton.width 200
                     ]
-                    for _ in 1..20 do
+                    for _ in 1..10 do
                         yield Mui.skeleton [
                             skeleton.component' "p"
                             skeleton.animation.wave

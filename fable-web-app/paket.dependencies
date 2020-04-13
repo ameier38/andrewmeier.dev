@@ -8,7 +8,6 @@ nuget Fable.Browser.Dom
 nuget Fable.Elmish
 nuget Fable.Elmish.HMR
 nuget Fable.Elmish.React
-nuget Fable.MaterialUI.MaterialDesignIcons
 nuget Fable.SimpleHttp
 nuget Fable.SimpleJson
 nuget Feliz

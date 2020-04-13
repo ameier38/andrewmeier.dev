@@ -88,14 +88,12 @@ type GraphqlClient() =
                        variables = {| input = input |} |} 
                     |> Json.stringify
                 let! (statusCode, responseData) = Http.post url requestData
-                Log.info(responseData)
                 return
                     match statusCode with
                     | 200 -> 
                         let parsedResponse =
                             responseData
                             |> Json.parseAs<Response>
-                        Log.info(Json.stringify parsedResponse)
                         match parsedResponse.data.listPosts with
                         | Some posts -> Ok posts
                         | None -> Error "failed to parse"
@@ -115,7 +113,6 @@ type GraphqlClient() =
                        variables = {| input = input |} |}
                     |> Json.stringify
                 let! (statusCode, responseData) = Http.post url requestData
-                Log.info(responseData)
                 return
                     match statusCode with
                     | 200 ->

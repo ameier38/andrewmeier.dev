@@ -27,6 +27,7 @@ services:
     ports:
       - "4000:4000"
     environment: 
+      DEBUG: "false"
       SECRETS_DIR: /var/secrets
       SEQ_SCHEME: http
       SEQ_HOST: seq

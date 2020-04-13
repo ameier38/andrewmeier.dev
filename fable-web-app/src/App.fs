@@ -2,7 +2,6 @@
 module Blog.App
 
 open Elmish
-open Fable.MaterialUI.MaterialDesignIcons
 open Feliz
 open Feliz.MaterialUI
 open Feliz.Router
