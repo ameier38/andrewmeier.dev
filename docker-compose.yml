@@ -4,6 +4,8 @@ services:
     build:
       context: fable-web-app
       dockerfile: deploy/Dockerfile
+      args:
+        RUNTIME_IMAGE: nginx:1.17-alpine
     ports: 
       - "8080:8080"
   web-app:
@@ -12,9 +14,6 @@ services:
       dockerfile: deploy/Dockerfile
       args:
         RUNTIME_IMAGE: nginx:1.17-alpine
-        REACT_APP_GRAPHQL_SCHEME: http
-        REACT_APP_GRAPHQL_HOST: localhost
-        REACT_APP_GRAPHQL_PORT: 4000
     ports: 
       - "8080:8080"
   graphql-api:

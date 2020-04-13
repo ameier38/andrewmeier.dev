@@ -15,17 +15,20 @@ class WebApp extends pulumi.ComponentResource {
             opts: pulumi.ComponentResourceOptions) {
         super('apps:WebApp', name, {}, opts)
 
-        const webAppImage = new docker.Image('web-app', {
-            imageName: `${config.dockerRegistry.server}/ameier38/web-app`,
+        const webAppImage = new docker.Image('fable-web-app', {
+            imageName: `${config.dockerRegistry.server}/ameier38/fable-web-app`,
             build: {
-                context: path.join(config.root, 'web-app'),
-                dockerfile: path.join(config.root, 'web-app', 'deploy', 'Dockerfile'),
+                context: path.join(config.root, 'fable-web-app'),
+                dockerfile: path.join(config.root, 'fable-web-app', 'deploy', 'Dockerfile'),
                 args: { 
                     RUNTIME_IMAGE: 'arm32v7/nginx:1.17',
-                    REACT_APP_GRAPHQL_SCHEME: 'https',
-                    REACT_APP_GRAPHQL_HOST: `graphql.${config.dnsConfig.tld}`,
-                    REACT_APP_GRAPHQL_PORT: '80',
-                    REACT_APP_SEGMENT_SOURCE: 'test'
+                    FABLE_APP_SCHEME: 'https',
+                    FABLE_APP_HOST: config.dnsConfig.tld,
+                    FABLE_APP_PORT: '80',
+                    FABLE_APP_GRAPHQL_SCHEME: 'https',
+                    FABLE_APP_GRAPHQL_HOST: `graphql.${config.dnsConfig.tld}`,
+                    FABLE_APP_GRAPHQL_PORT: '80',
+                    FABLE_APP_DISQUS_SHORTNAME: 'andrewmeier-dev'
                 }
             },
             registry: config.dockerRegistry

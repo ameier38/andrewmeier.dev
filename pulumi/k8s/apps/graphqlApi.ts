@@ -44,7 +44,8 @@ class GraphQL extends pulumi.ComponentResource {
                     image: graphqlImage.imageName,
                     imagePullPolicy: 'Always',
                     ports: { http: 4000 },
-                    volumeMounts: [airtableSecret.mount('/var/secrets/airtable')]
+                    env: { DEBUG: 'false' },
+                    volumeMounts: [airtableSecret.mount('/var/secrets/airtable')],
                 }
             ]
         })

@@ -81,6 +81,7 @@ systemctl start inlets
 
 class Inlets extends pulumi.ComponentResource {
     exitNodeIP: pulumi.Output<string>
+    deploymentName: pulumi.Output<string>
 
     constructor(
             name: string,
@@ -145,8 +146,11 @@ class Inlets extends pulumi.ComponentResource {
             spec: podBuilder.asDeploymentSpec()
         }, { parent: this })
 
+        this.deploymentName = deployment.metadata.name
+
         this.registerOutputs({
             exitNodeIP: this.exitNodeIP,
+            deploymentName: this.deploymentName,
         })
 
     }
@@ -154,6 +158,7 @@ class Inlets extends pulumi.ComponentResource {
 
 const tld = config.dnsConfig.tld
 const upstream = pulumi.interpolate `${tld}=${webApp.endpoint},graphql.${tld}=${graphqlApi.endpoint}`
+// const upstream = pulumi.interpolate `graphql.${tld}=${graphqlApi.endpoint}`
 
 export const inlets = new Inlets(
     'inlets',

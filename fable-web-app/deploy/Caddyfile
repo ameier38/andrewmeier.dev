@@ -1,5 +1,0 @@
-http://localhost:8080
-
-file_server {
-    root /site
-}
