@@ -110,7 +110,7 @@ let renderPost =
             grid.children [
                 Mui.grid [
                     grid.item true
-                    grid.sm._12
+                    grid.xs._12
                     grid.children [
                         Mui.card [
                             prop.className c.card
@@ -155,7 +155,7 @@ let renderPost =
                 ]
                 Mui.grid [
                     grid.item true
-                    grid.sm._12
+                    grid.xs._12
                     grid.children [
                         renderDisqus props
                     ]

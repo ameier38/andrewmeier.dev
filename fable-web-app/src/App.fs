@@ -110,7 +110,8 @@ let useStyles = Styles.makeStyles(fun styles theme ->
 )
 
 type NavigationProps =
-    { dispatch: Msg -> unit }
+    { isGteMd: bool
+      dispatch: Msg -> unit }
 
 let renderNavigation = 
     React.functionComponent<NavigationProps>(fun props ->
@@ -124,6 +125,7 @@ let renderNavigation =
                     Mui.toolbar [
                         Mui.container [
                             prop.className c.navContainer
+                            container.disableGutters (not props.isGteMd)
                             container.maxWidth.md
                             container.children [
                                 Mui.button [
@@ -179,18 +181,30 @@ let renderPage (state:State) (dispatch:Msg -> unit) =
     | NotFoundUrl ->
         Error.renderError "Page does not exist"
 
-let renderApp (state:State) (dispatch:Msg -> unit) =
-    Mui.container [
-        container.maxWidth.md
-        container.children [
-            renderNavigation { dispatch = dispatch }
-            renderPage state dispatch
+type AppProps =
+    { state: State
+      dispatch: Msg -> unit }
+
+let renderApp =
+    React.functionComponent<AppProps>(fun props ->
+        let theme = Styles.useTheme()
+        let isGteMd = Hooks.useMediaQuery(theme.breakpoints.upMd)
+        Mui.container [
+            container.disableGutters (not isGteMd)
+            container.maxWidth.md
+            container.children [
+                renderNavigation { dispatch = props.dispatch; isGteMd = isGteMd }
+                renderPage props.state props.dispatch
+            ]
         ]
-    ]
+    )
 
 let render (state:State) (dispatch:Msg -> unit) =
     Router.router [
         Router.pathMode
         Router.onUrlChanged (UrlChanged >> dispatch)
-        Router.application [ renderApp state dispatch ]
+        Router.application [ 
+            Mui.cssBaseline []
+            renderApp { state = state; dispatch = dispatch }
+        ]
     ]
