@@ -8,16 +8,12 @@ open Feliz.Router
 
 type Url =
     | HomeUrl
-    | AboutUrl
     | PostUrl of Post.Url
-    | NotFoundUrl
 module Url =
     let parse (url:string list) =
         match url with
         | [] -> HomeUrl
-        | [ "about" ] -> AboutUrl
-        | [ postId ] -> PostUrl (Post.Url.PostUrl postId)
-        | _ -> NotFoundUrl
+        | permalink :: _ -> PostUrl (Post.Url.PostUrl permalink)
 
 type State =
     { CurrentUrl: Url
@@ -25,17 +21,16 @@ type State =
       Post: Post.State }
 
 type Msg =
-    | UrlChanged of string list
     | NavigateToHome
     | NavigateToAbout
+    | UrlChanged of string list
     | HomeMsg of Home.Msg
     | PostMsg of Post.Msg
 
 let init () : State * Cmd<Msg> =
     let currentUrl = Router.currentPath() |> Url.parse
+    Log.info(sprintf "App.init currentUrl: %A" (Router.currentPath()))
     match currentUrl with
-    | NotFoundUrl
-    | AboutUrl
     | HomeUrl ->
         let homeState, homeCmd = Home.init()
         let postState, postCmd = Post.init Post.EmptyUrl
@@ -64,22 +59,20 @@ let init () : State * Cmd<Msg> =
 let graphqlClient = Graphql.GraphqlClient()
 
 let update (msg:Msg) (state:State): State * Cmd<Msg> =
-    Log.info msg
+    Log.info(msg)
     match msg with
-    | UrlChanged url ->
-        let currentUrl = Url.parse url
-        let newState = { state with CurrentUrl = currentUrl }
-        match currentUrl with
-        | AboutUrl ->
-            newState, Cmd.ofMsg(PostMsg (Post.UrlChanged (Post.PostUrl "about")))
-        | PostUrl postUrl ->
-            newState, Cmd.ofMsg(PostMsg (Post.UrlChanged postUrl))
-        | _ ->
-            newState, Cmd.none
     | NavigateToHome ->
         state, Router.navigatePath ""
     | NavigateToAbout ->
         state, Router.navigatePath "about"
+    | UrlChanged url ->
+        let currentUrl = Url.parse url
+        let newState = { state with CurrentUrl = currentUrl }
+        match currentUrl with
+        | PostUrl postUrl ->
+            newState, Cmd.ofMsg(PostMsg (Post.UrlChanged postUrl))
+        | _ ->
+            newState, Cmd.none
     | HomeMsg msg -> 
         let newHome, homeCmd = state.Home |> Home.update graphqlClient msg
         { state with Home = newHome }, homeCmd |> Cmd.map HomeMsg
@@ -175,11 +168,8 @@ let renderPage (state:State) (dispatch:Msg -> unit) =
     match state.CurrentUrl with
     | HomeUrl ->
         Home.render state.Home (HomeMsg >> dispatch)
-    | AboutUrl
     | PostUrl _ ->
         Post.render state.Post (PostMsg >> dispatch)
-    | NotFoundUrl ->
-        Error.renderError "Page does not exist"
 
 type AppProps =
     { state: State
@@ -202,7 +192,10 @@ let renderApp =
 let render (state:State) (dispatch:Msg -> unit) =
     Router.router [
         Router.pathMode
-        Router.onUrlChanged (UrlChanged >> dispatch)
+        Router.onUrlChanged (fun url ->
+            Fable.Core.JS.console.info(url)
+            dispatch (UrlChanged url)
+        )
         Router.application [ 
             Mui.cssBaseline []
             renderApp { state = state; dispatch = dispatch }

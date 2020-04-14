@@ -65,11 +65,6 @@ NUGET
     Feliz.MaterialUI (0.14)
       Feliz (>= 0.71 < 1.0)
       FSharp.Core (>= 4.7.1 < 4.8)
-    Feliz.Router (2.0)
-      Fable.Core (>= 3.1.2) - restriction: >= netstandard2.0
-      Fable.Elmish (>= 3.0.5) - restriction: >= netstandard2.0
-      Feliz (>= 0.68.3) - restriction: >= netstandard2.0
-      FSharp.Core (>= 4.7) - restriction: >= netstandard2.0
     FSharp.Core (4.7.1)
 
 GROUP Build

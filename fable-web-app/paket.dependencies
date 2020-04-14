@@ -12,7 +12,7 @@ nuget Fable.SimpleHttp
 nuget Fable.SimpleJson
 nuget Feliz
 nuget Feliz.MaterialUI
-nuget Feliz.Router
+// nuget Feliz.Router
 
 // [ FAKE GROUP ]
 group Build
