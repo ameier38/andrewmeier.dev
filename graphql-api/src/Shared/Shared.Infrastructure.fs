@@ -2,6 +2,7 @@
 
 open System
 open System.IO
+open System.Text.RegularExpressions
 
 module Env =
 
@@ -22,3 +23,9 @@ module Env =
             match defaultValueOpt with
             | Some value -> value
             | None -> failwithf "%s not found and no default provided" secretPath
+
+module Regex =
+    let (|Regex|_|) (pattern:string) (s:string) =
+        let m = Regex.Match(s, pattern)
+        if m.Success then Some(List.tail [for g in m.Groups -> g.Value])
+        else None

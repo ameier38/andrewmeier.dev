@@ -2,8 +2,8 @@ namespace Post
 
 open FSharp.Data
 open Markdig
-open Markdig.Extensions.AutoIdentifiers
 open System
+open System.IO
 open System.Text.RegularExpressions
 
 type PostListProvider = JsonProvider<Airtable.ListPostsResponse>
@@ -83,7 +83,7 @@ type PostClient(config:AirtableConfig) =
                 res.Records
                 |> Array.map Dto.PostSummaryDto.fromRecord
                 |> Array.toList
-                |> List.sortBy (fun post -> post.CreatedAt)
+                |> List.sortByDescending (fun post -> post.CreatedAt)
             let pageToken = 
                 res.JsonValue.TryGetProperty("offset")
                 |> Option.map (fun jval -> jval.AsString())
@@ -104,7 +104,7 @@ type PostClient(config:AirtableConfig) =
                 |> Dto.PostDto.fromRecord markdownPipeline
             | _ ->
                 failwithf "found multiple posts with the same permalink: %s" permalink
-            
+
 type MockPostClient() =
     let markdownPipeline = 
         MarkdownPipelineBuilder()

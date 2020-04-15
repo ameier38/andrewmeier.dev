@@ -1,13 +1,22 @@
 #load ".fake/build.fsx/intellisense.fsx"
+open Fake.Core
 open Fake.DotNet
 open Fake.IO
 open Fake.IO.Globbing.Operators
 open Fake.JavaScript
 open BlackFox.Fake
 
+let run cmd args workDir =
+    CreateProcess.fromRawCommand cmd args
+    |> CreateProcess.withWorkingDirectory workDir
+    |> CreateProcess.ensureExitCode
+    |> Proc.run
+    |> ignore
+
 let clean = BuildTask.create "Clean" [] {
     !! "src/**/bin"
     ++ "src/**/obj"
+    ++ ".fable"
     |> Shell.cleanDirs 
 
     "dist/main.js"

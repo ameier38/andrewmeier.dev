@@ -2,16 +2,17 @@
 [Fable](https://fable.io/docs/) web application for Andrew's blog.
 
 ## Setup
-1. Install dotnet tools.
-    ```
-    dotnet tool install femto -g
-    dotnet tool install paket -g
-    dotnet tool install fake-cli -g
-    ```
-2. Install dependencies
-    ```
-    fake build -t Install
-    ```
+Install dotnet tools.
+```
+dotnet tool install femto -g
+dotnet tool install paket -g
+dotnet tool install fake-cli -g
+```
+
+Install dependencies
+```
+fake build -t Install
+```
 
 ## Development
 Start the GraphQL API.
