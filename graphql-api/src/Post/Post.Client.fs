@@ -27,7 +27,7 @@ module Dto =
                 record.Fields.Images
                 |> Array.map (fun img -> 
                     String.Format(@"!\[(.*?)\]\({0}\)", img.Filename), 
-                    sprintf "![$1](%s)" img.Thumbnails.Large.Url)
+                    sprintf "![$1](%s)" img.Url)
             let replaceImages (content:string) (pattern:string, replace:string) =
                 Regex.Replace(content, pattern, replace)
             let parsedContent =
@@ -38,7 +38,7 @@ module Dto =
             let cover =
                 record.Fields.Images
                 |> Array.tryFind (fun img -> Regex.IsMatch(img.Filename, coverPattern)) 
-                |> Option.map (fun img -> img.Thumbnails.Large.Url)
+                |> Option.map (fun img -> img.Url)
                 |> Option.defaultValue ""
             { PostId = record.Id
               Permalink = record.Fields.Permalink
