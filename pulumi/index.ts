@@ -1,5 +1,5 @@
 import './k8s'
 import './cloudflare'
-import { inlets } from './k8s/infrastructure/inlets'
+import { exitNode } from './digitalocean/exitNode'
 
-export const exitNodeIP = inlets.exitNodeIP
+export const exitNodeIP = exitNode.exitNodeIP

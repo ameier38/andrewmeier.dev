@@ -71,9 +71,7 @@ pulumi up
 ```
 ...
 Outputs:
-  + blogEndpoint   : "blog-ca4h0w4e:8080"
   + exitNodeIP     : "<exit node ip>"
-  + gatewayEndpoint: "traefik:80"
 ```
 
 Connect to the exit node to inspect the services.
@@ -123,3 +121,13 @@ Redeploy the workloads.
 ```
 pulumi up
 ```
+
+## Troubleshooting
+Get the user data script on the exit node.
+```
+curl http://169.254.169.254/metadata/v1/user-data > user-data.sh
+```
+
+## Resources
+- [Caddy](https://caddyserver.com/docs/install)
+- [Inlets](https://github.com/inlets/inlets)

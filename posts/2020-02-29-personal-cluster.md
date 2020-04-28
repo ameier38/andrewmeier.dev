@@ -13,12 +13,13 @@ categories:
 comments: true
 ---
 
-At work we run [Kubernetes](https://kubernetes.io/) to manage our workloads. 
-For the unfamiliar, Kubernetes (or k8s for short) is a container (read: virtual machine)
-orchestration system which makes it easy to securely and reliably run services.
-To run Kubernetes you need physical servers, or nodes as they are called in k8s land.
-Physical services must be purchased, either by renting from your favorite cloud
-provider (AWS, Azure, GCP, etc.) or buying and running your own.
+[Kubernetes](https://kubernetes.io/) is a great tool for managing workloads, which
+could be a web server, chron job, API, etc. For the unfamiliar, Kubernetes
+(or k8s for short) is a container (read: virtual machine) orchestration system
+which makes it easy to securely and reliably run services.
+To run Kubernetes you need physical servers, which must be purchased,
+either by renting from your favorite cloud provider (AWS, Azure, GCP, etc.)
+or buying and running your own.
 
 Running Kubernetes in the cloud has become much easier in the last couple years
 with tools such as AWS EKS, GCP GKE, or Azure AKS among others. While they make
@@ -26,20 +27,18 @@ it easy, it does not come without cost, and depending on how many workloads
 you need to run, it can really add up.
 
 For production services you can justify the cost as you are (hopefully :pray:)
-getting paid by the customers who are using those services. For development,
-running an cluster to just to test things is harder to justify for those
-who control the wallet. But what if you could run a cluster for free :thinking:?
-We were in this position at work and a colleague had a good idea of turning all
-of our old laptops that are just sitting around into Ubuntu servers and running
-our own development cluster. Since it would just be a development environment
-we would not worry too much about it going down, and we would save around $300
-a month on our AWS bill.
+getting paid by the customers who are using those services. For development
+or for learning, paying for a cluster to just to test things is harder to justify.
+But what if you could run a cluster for free[^1] :thinking:?
 
 With great tools like [k3s](https://github.com/rancher/k3s) and
 [k3sup](https://github.com/alexellis/k3sup), creating your own Kubernetes
-cluster is easier than ever. The rest of this post will describe the process
-for converting old computers into Ubuntu servers, setting up secure SSH,
-installing required tools, and creating the Kubernetes cluster.
+cluster is easier than ever. In this post will cover:
+1. Setting up servers (in this case a few Raspberry Pis),
+2. Setting up secure SSH to connect to the servers,
+3. Installing required tools for creating the Kubernetes cluster,
+4. Creating the Kubernetes cluster,
+5. 
 
 ## Materials
 - Computers (preferably PC) with at least 2GB available on hard drive.
@@ -75,3 +74,7 @@ to flash the microSD card with Raspbian Lite.
     ![raspbian-lite](/assets/images/dev-cluster/raspbian-lite.png)
 
 3. 
+
+## Resources
+
+[^1]: Or just really cheap.

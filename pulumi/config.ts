@@ -38,13 +38,18 @@ export const digitalOceanProvider = new digitalocean.Provider(`${env}-digitaloce
 })
 
 const rawCloudflareConfig = new pulumi.Config('cloudflare')
-export const cloudflareProvider = new cloudflare.Provider(`${env}-cloudflare-provider`, {
+export const cloudflareConfig = {
     email: rawCloudflareConfig.require('email'),
     apiKey: rawCloudflareConfig.require('apiKey')
+}
+export const cloudflareProvider = new cloudflare.Provider(`${env}-cloudflare-provider`, {
+    email: cloudflareConfig.email,
+    apiKey: cloudflareConfig.apiKey
 })
 
 const rawInletsConfig = new pulumi.Config('inlets')
 export const inletsConfig = {
+    version: '2.7.0',
     token: rawInletsConfig.require('token')
 }
 
