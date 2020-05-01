@@ -1,12 +1,11 @@
 import * as pulumi from '@pulumi/pulumi'
 import * as cloudflare from '@pulumi/cloudflare'
 import * as digitalocean from '@pulumi/digitalocean'
-import * as k8s from '@pulumi/kubernetes'
 import * as docker from '@pulumi/docker'
 import * as path from 'path'
 
 export const env = pulumi.getStack()
-export const root = path.dirname(__dirname)
+export const root = path.dirname(path.dirname(__dirname))
 
 const rawDnsConfig = new pulumi.Config('dns')
 export const dnsConfig = {
@@ -28,13 +27,15 @@ export const dockerRegistry: docker.ImageRegistry = {
 }
 
 const rawK8sConfig = new pulumi.Config('k8s')
-export const k8sProvider = new k8s.Provider(`${env}-k8s-provider`, {
+export const k8sConfig = {
+    usePi: rawK8sConfig.requireBoolean('useLocal'),
     kubeconfig: rawK8sConfig.require('kubeconfig')
-})
+}
 
 const rawDigitalOceanConfig = new pulumi.Config('digitalocean')
 export const digitalOceanProvider = new digitalocean.Provider(`${env}-digitalocean-provider`, {
-    token: rawDigitalOceanConfig.require('token')
+    token: rawDigitalOceanConfig.require('token'),
+    spacesEndpoint: 'https://nyc1.digitaloceanspaces.com'
 })
 
 const rawCloudflareConfig = new pulumi.Config('cloudflare')

@@ -150,7 +150,7 @@ class ExitNode extends pulumi.ComponentResource {
         const exitNode = new digitalocean.Droplet('exit-node', {
             image: 'ubuntu-18-04-x64',
             region: digitalocean.Regions.NYC1,
-            size: digitalocean.DropletSlugs.Droplet512mb,
+            size: digitalocean.DropletSlugs.DropletS1VCPU1GB,
             sshKeys: [sshKey.fingerprint],
             userData: userDataScript
         }, { parent: this })

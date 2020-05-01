@@ -94,7 +94,7 @@ let main _ =
     let api = choose [
         OPTIONS >=> setCORSHeaders >=> Successful.OK "CORS approved"
         POST >=> graphql parser executor >=> setResponseHeaders
-        GET >=> path "/health" >=> Successful.OK "Hi!"
+        GET >=> path "/_health" >=> Successful.OK "Hi!"
         RequestErrors.NOT_FOUND "location not available"
     ]
     Log.Information("starting server...", config.SeqConfig.Url)

@@ -1,6 +1,6 @@
 import * as cloudflare from '@pulumi/cloudflare'
 import * as config from '../config'
-import { exitNode } from '../digitalocean/exitNode'
+import { exitNode } from '../exitNode'
 
 const zone = new cloudflare.Zone(`${config.env}-zone`, {
     zone: config.dnsConfig.tld
@@ -13,9 +13,9 @@ export const rootRecord = new cloudflare.Record('root', {
     value: exitNode.exitNodeIP
 }, { provider: config.cloudflareProvider, deleteBeforeReplace: true })
 
-export const wildcardRecord = new cloudflare.Record('wildcard', {
+export const graphqlRecord = new cloudflare.Record('graphql', {
     zoneId: zone.id,
-    name: '*',
+    name: 'graphql',
     type: 'A',
     value: exitNode.exitNodeIP
 }, { provider: config.cloudflareProvider, deleteBeforeReplace: true })

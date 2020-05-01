@@ -1,7 +1,7 @@
 import * as pulumi from '@pulumi/pulumi'
 import * as k8s from '@pulumi/kubernetes'
-import * as kx from '@pulumi/kubernetesx'
 import * as config from '../../config'
+import { k8sProvider } from '../cluster'
 import { infrastructureNamespaceName } from './namespace'
 import { webApp } from '../apps/webApp'
 import { graphqlApi } from '../apps/graphqlApi'
@@ -27,34 +27,42 @@ class Inlets extends pulumi.ComponentResource {
             }
         }, { parent: this })
 
+        const labels = { 'app.kubernetes.io/name': 'inlets' }
         const tokenVolumeName = 'inlets-token-volume'
         const tokenMountPath = '/var/inlets'
 
-        const podBuilder = new kx.PodBuilder({
-            containers: [
-                {
-                    name: 'inlets',
-                    image: `inlets/inlets:${config.inletsConfig.version}`,
-                    imagePullPolicy: 'Always',
-                    command: ['inlets'],
-                    args: [
-                        'client',
-                        pulumi.interpolate `--remote=wss://${remote}`,
-                        pulumi.interpolate `--upstream=${upstream}`,
-                        `--token-from=${tokenMountPath}/token`
-                    ],
-                    volumeMounts: [{ name: tokenVolumeName, mountPath: '/var/inlets' }]
+        const deployment = new k8s.apps.v1.Deployment('inlets', {
+            metadata: { name: 'inlets', namespace: infrastructureNamespaceName },
+            spec: {
+                replicas: 1,
+                selector: { 
+                    matchLabels: labels
+                },
+                template: {
+                    metadata: {
+                        labels: labels
+                    },
+                    spec: {
+                        containers: [{
+                            name: 'inlets',
+                            image: `inlets/inlets:${config.inletsConfig.version}`,
+                            imagePullPolicy: 'Always',
+                            command: ['inlets'],
+                            args: [
+                                'client',
+                                pulumi.interpolate `--remote=wss://${remote}`,
+                                pulumi.interpolate `--upstream=${upstream}`,
+                                `--token-from=${tokenMountPath}/token`
+                            ],
+                            volumeMounts: [{ name: tokenVolumeName, mountPath: tokenMountPath }]
+                        }],
+                        volumes: [{
+                            name: tokenVolumeName,
+                            secret: { secretName: inletsTokenSecret.metadata.name } 
+                        }]
+                    }
                 }
-            ],
-            volumes: [ { name: tokenVolumeName, secret: { secretName: inletsTokenSecret.metadata.name } } ]
-        })
-
-        const deployment = new kx.Deployment('inlets', {
-            metadata: {
-                name: 'inlets',
-                namespace: namespace
-            },
-            spec: podBuilder.asDeploymentSpec()
+            }
         }, { parent: this })
 
         this.deploymentName = deployment.metadata.name
@@ -73,4 +81,4 @@ export const inlets = new Inlets(
     infrastructureNamespaceName,
     config.dnsConfig.tld,
     upstream,
-    { providers: { k8s: config.k8sProvider, digitalocean: config.digitalOceanProvider } })
+    { provider: k8sProvider })
