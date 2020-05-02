@@ -19,7 +19,7 @@ class Cluster extends pulumi.ComponentResource {
                 nodePool: {
                     name: 'default',
                     size: digitalocean.DropletSlugs.DropletS1VCPU2GB,
-                    nodeCount: 3
+                    nodeCount: 2
                 }
             }, { parent: this })
 
