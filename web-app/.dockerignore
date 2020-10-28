@@ -1,3 +1,10 @@
 .vscode
+.ionide
+.paket
+.fake
+.fable
+paket-files
 node_modules
-build
+dist/main.js
+obj
+bin

@@ -1,61 +1,35 @@
 import * as pulumi from '@pulumi/pulumi'
 import * as cloudflare from '@pulumi/cloudflare'
-import * as digitalocean from '@pulumi/digitalocean'
 import * as docker from '@pulumi/docker'
+import * as k8s from '@pulumi/kubernetes'
 import * as path from 'path'
 
 export const env = pulumi.getStack()
 export const root = path.dirname(path.dirname(__dirname))
 
-const rawDnsConfig = new pulumi.Config('dns')
-export const dnsConfig = {
-    tld: rawDnsConfig.require('tld'),
-    email: rawDnsConfig.require('email'),
-    useStaging: rawDnsConfig.requireBoolean('useStaging')
-}
+const infrastructureStack = new pulumi.StackReference('ameier38/infrastructure/prod')
 
-const rawSshConfig = new pulumi.Config('ssh')
-export const sshConfig = {
-    publicKey: rawSshConfig.require('publicKey')
-}
-
-const rawDockerConfig = new pulumi.Config('docker')
-export const dockerRegistry: docker.ImageRegistry = {
-    server: 'docker.io',
-    username: rawDockerConfig.require('user'),
-    password: rawDockerConfig.require('password')
-}
-
-const rawK8sConfig = new pulumi.Config('k8s')
-export const k8sConfig = {
-    usePi: rawK8sConfig.requireBoolean('useLocal'),
-    kubeconfig: rawK8sConfig.require('kubeconfig')
-}
-
-const rawDigitalOceanConfig = new pulumi.Config('digitalocean')
-export const digitalOceanProvider = new digitalocean.Provider(`${env}-digitalocean-provider`, {
-    token: rawDigitalOceanConfig.require('token'),
-    spacesEndpoint: 'https://nyc1.digitaloceanspaces.com'
-})
+export const tld = infrastructureStack.requireOutput('tld').apply(o => o as string)
+export const tldZoneId = infrastructureStack.requireOutput('tldZoneId').apply(o => o as string)
+export const acmeEmail = infrastructureStack.requireOutput('acmeEmail').apply(o => o as string)
+export const registryEndpoint = infrastructureStack.requireOutput('registryEndpoint').apply(o => o as string)
+export const imageRegistry = infrastructureStack.requireOutput('imageRegistry').apply(o => o as docker.ImageRegistry)
+export const dockerCredentials = infrastructureStack.requireOutput('dockerCredentials').apply(o => o as string)
+export const loadBalancerAddress = infrastructureStack.requireOutput('loadBalancerAddress').apply(o => o as string)
+const kubeconfig = infrastructureStack.requireOutput('kubeconfig').apply(o => o as string)
 
 const rawCloudflareConfig = new pulumi.Config('cloudflare')
-export const cloudflareConfig = {
+export const cloudflareProvider = new cloudflare.Provider(`${env}-cloudflare-provider`, {
     email: rawCloudflareConfig.require('email'),
     apiKey: rawCloudflareConfig.require('apiKey')
-}
-export const cloudflareProvider = new cloudflare.Provider(`${env}-cloudflare-provider`, {
-    email: cloudflareConfig.email,
-    apiKey: cloudflareConfig.apiKey
 })
 
-const rawInletsConfig = new pulumi.Config('inlets')
-export const inletsConfig = {
-    version: '2.7.0',
-    token: rawInletsConfig.require('token')
-}
+export const k8sProvider = new k8s.Provider(`${env}-k8s-provider`, {
+    kubeconfig: kubeconfig
+})
 
 const rawAirtableConfig = new pulumi.Config('airtable')
 export const airtableConfig = {
-    url: rawAirtableConfig.require('url'),
+    baseId: rawAirtableConfig.require('baseId'),
     apiKey: rawAirtableConfig.require('apiKey')
 }

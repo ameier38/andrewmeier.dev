@@ -1,2 +1,0 @@
-import './webApp'
-import './graphqlApi'

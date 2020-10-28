@@ -57,7 +57,7 @@ spec:
           {{ else }}
           livenessProbe:
             httpGet:
-              path: /_health
+              path: /healthz
               port: http
           readinessProbe:
             httpGet:

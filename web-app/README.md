@@ -1,33 +1,33 @@
-# Andrew's Blog Application
-Web application for Andrew's blog. Built using [React](https://create-react-app.dev/),
-[TypeScript](https://www.typescriptlang.org/), and [Material-UI](https://material-ui.com/).
+# Web App
+[Fable](https://fable.io/docs/) web application for Andrew's blog.
 
 ## Setup
-Install nvm (Node version manager).
+Install dotnet tools.
 ```
-scoop install nvm
-```
-
-Install Node.
-```
-nvm install 12.16.1
-nvm use 12.16.1
-```
-> You can use `nvm list available` to see available versions.
-
-Install dependencies.
-```
-npm install
+dotnet tool install femto -g
+dotnet tool install paket -g
+dotnet tool install fake-cli -g
 ```
 
-## Run locally
-Start the development server.
+Install dependencies
 ```
-npm start
+fake build -t Install
 ```
 
 ## Development
-If you update the GraphQL API then you should regenerate the types.
+Start the GraphQL API.
 ```
-npm run generate
+docker-compose up -d graphql-api
 ```
+
+Run the development server.
+```
+fake build -t Serve
+```
+
+## Resources
+- [Fable](https://fable.io/)
+- [Feliz](https://zaid-ajaj.github.io/Feliz/)
+- [Feliz.MaterialUI](https://github.com/cmeeren/Feliz.MaterialUI)
+- [Feliz.Router](https://github.com/Zaid-Ajaj/Feliz.Router)
+- [Prism](https://prismjs.com/extending.html#api)

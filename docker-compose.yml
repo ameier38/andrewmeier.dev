@@ -1,38 +1,29 @@
 version: '3.7'
 services: 
-  fable-web-app:
-    build:
-      context: fable-web-app
-      dockerfile: deploy/Dockerfile
-      args:
-        RUNTIME_IMAGE: nginx:1.17-alpine
-    ports: 
-      - "8080:8080"
   web-app:
     build:
       context: web-app
-      dockerfile: deploy/Dockerfile
       args:
         RUNTIME_IMAGE: nginx:1.17-alpine
+        APP_SCHEME: http
+        APP_HOST: localhost
+        APP_PORT: 8080
+        GRAPHQL_SCHEME: http
+        GRAPHQL_HOST: localhost
+        GRAPHQL_PORT: 4000
     ports: 
       - "8080:8080"
   graphql-api:
     build:
       context: graphql-api
-      dockerfile: deploy/Dockerfile
-      args: 
-        RUNTIME: linux-musl-x64
-        RUNTIME_IMAGE: mcr.microsoft.com/dotnet/core/runtime-deps:3.1-alpine
     ports:
       - "4000:4000"
     environment: 
-      DEBUG: "false"
+      DEBUG: "true"
       SECRETS_DIR: /var/secrets
       SEQ_SCHEME: http
       SEQ_HOST: seq
       SEQ_PORT: 5341
-    volumes:
-      - c:/dev/secrets/ameier38/airtable:/var/secrets/airtable
   seq:
     image: datalust/seq:5.1
     ports:

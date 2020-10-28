@@ -1,0 +1,51 @@
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 as builder
+
+ARG PAKET_VERSION=5.250.0
+ARG FAKE_VERSION=5.20.3
+
+# install locales
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y locales
+
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=en_US.UTF-8
+
+# set locales
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US.UTF-8
+ENV LC_ALL en_US.UTF-8
+
+# prevent sending metrics to microsoft
+ENV DOTNET_CLI_TELEMETRY_OPTOUT 1
+
+# install tools
+RUN dotnet tool install -g fake-cli --version ${FAKE_VERSION}
+RUN dotnet tool install -g paket --version ${PAKET_VERSION}
+
+# add tools to PATH
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+RUN fake --version
+RUN paket --version
+
+WORKDIR /app
+
+# install dependencies
+COPY paket.dependencies .
+COPY paket.lock .
+RUN paket install
+
+# copy build script
+COPY build.fsx .
+
+COPY src ./src
+RUN fake build -t Publish
+
+FROM mcr.microsoft.com/dotnet/core/runtime:3.1 as runner
+
+WORKDIR /app
+
+COPY --from=builder /app/src/Server/out .
+
+ENTRYPOINT ["dotnet", "Server.dll"]

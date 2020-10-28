@@ -6,23 +6,18 @@ open System.Text.RegularExpressions
 
 module Env =
 
-    let getEnv key defaultValueOpt =
+    let getEnv key defaultValue =
         match Environment.GetEnvironmentVariable(key) with
-        | s when String.IsNullOrEmpty(s) ->
-            match defaultValueOpt with
-            | Some value -> value
-            | None -> failwithf "%s not found and no default provided" key
+        | s when String.IsNullOrEmpty(s) -> defaultValue
         | s -> s
 
-    let getSecret secretName secretKey defaultValueOpt =
-        let secretsDir = Some "/var/secrets" |> getEnv "SECRETS_DIR"
+    let getSecret secretName secretKey defaultEnv defaultValue =
+        let secretsDir = getEnv "SECRETS_DIR" "/var/secrets" 
         let secretPath = Path.Combine(secretsDir, secretName, secretKey)
         if File.Exists(secretPath) then
             File.ReadAllText(secretPath).Trim()
         else
-            match defaultValueOpt with
-            | Some value -> value
-            | None -> failwithf "%s not found and no default provided" secretPath
+            getEnv defaultEnv defaultValue
 
 module Regex =
     let (|Regex|_|) (pattern:string) (s:string) =
