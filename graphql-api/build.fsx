@@ -2,7 +2,6 @@
 open Fake.Core
 open Fake.DotNet
 open Fake.IO
-open Fake.IO.FileSystemOperators
 open Fake.IO.Globbing.Operators
 open BlackFox.Fake
 
@@ -23,22 +22,17 @@ BuildTask.create "Serve" [] {
     |> ignore
 }
 
-BuildTask.create "Scratch" [] {
-    DotNet.exec id "run" "-p src/Scratch/Scratch.fsproj"
-    |> ignore
-}
-
 BuildTask.create "Publish" [clean] {
-    let customParams = "/p:PublishSingleFile=true /p:PublishTrimmed=true"
-    let runtime = Environment.environVarOrDefault "runtime" "linux-x64"
+    let runtime =
+        if Environment.isLinux then "linux-x64"
+        elif Environment.isWindows then "win-x64"
+        elif Environment.isMacOS then "osx-x64"
+        else failwithf "environment not supported"
     DotNet.publish
         (fun args -> 
             { args with
                 OutputPath = Some "src/Server/out"
-                Runtime = Some runtime
-                Common =
-                    args.Common
-                    |> DotNet.Options.withCustomParams (Some customParams) })
+                Runtime = Some runtime })
         "src/Server/Server.fsproj"
 }
 

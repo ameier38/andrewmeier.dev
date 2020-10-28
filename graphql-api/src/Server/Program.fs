@@ -2,6 +2,7 @@
 open Newtonsoft.Json
 open Newtonsoft.Json.Serialization
 open Server
+open Server.Post.Client
 open Serilog
 open Serilog.Events
 open Suave
@@ -82,8 +83,8 @@ let main _ =
     Log.Logger <- logger
     Log.Information("logging at {SeqUrl}", config.SeqConfig.Url)
     let postClient = 
-        if config.Debug then Post.MockPostClient() :> Post.IPostClient
-        else Post.PostClient(config.AirtableConfig) :> Post.IPostClient
+        if config.Debug then MockPostClient() :> IPostClient
+        else PostClient(config.AirtableConfig) :> IPostClient
     let query = Root.Query postClient
     let schema = GraphQL.Schema(query)
     let executor = GraphQL.Executor(schema)
@@ -94,7 +95,7 @@ let main _ =
     let api = choose [
         OPTIONS >=> setCORSHeaders >=> Successful.OK "CORS approved"
         POST >=> graphql parser executor >=> setResponseHeaders
-        GET >=> path "/_health" >=> Successful.OK "Hi!"
+        GET >=> path "/healthz" >=> Successful.OK "Healthy!"
         RequestErrors.NOT_FOUND "location not available"
     ]
     Log.Information("starting server...", config.SeqConfig.Url)

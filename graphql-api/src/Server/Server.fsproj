@@ -3,16 +3,19 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AssemblyName>graphql</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Server.Config.fs" />
-    <Compile Include="Server.Infrastructure.fs" />
-    <Compile Include="Server.Root.fs" />
+    <Compile Include="Config.fs" />
+    <Compile Include="Infrastructure.fs" />
+    <Compile Include="Post/Post.Airtable.fs" />
+    <Compile Include="Post/Post.Dto.fs" />
+    <Compile Include="Post/Post.Client.fs" />
+    <Compile Include="Post/Post.Fields.fs" />
+    <Compile Include="Root.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Post\Post.fsproj" />
+    <ProjectReference Include="..\Shared\Shared.fsproj" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

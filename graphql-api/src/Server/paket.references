@@ -1,4 +1,6 @@
+FSharp.Data
 FSharp.Data.GraphQL.Server
+Markdig
 Newtonsoft.Json
 Serilog
 Serilog.Sinks.Console
