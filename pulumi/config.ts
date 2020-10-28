@@ -5,7 +5,7 @@ import * as k8s from '@pulumi/kubernetes'
 import * as path from 'path'
 
 export const env = pulumi.getStack()
-export const root = path.dirname(path.dirname(__dirname))
+export const root = path.dirname(__dirname)
 
 const infrastructureStack = new pulumi.StackReference('ameier38/infrastructure/prod')
 
