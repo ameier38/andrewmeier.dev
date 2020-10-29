@@ -11,7 +11,7 @@ type WebAppArgs = {
     registryEndpoint: pulumi.Input<string>
     imageRegistry: pulumi.Input<docker.ImageRegistry>
     dockerCredentials: pulumi.Input<string>
-    tld: pulumi.Input<string>
+    zone: pulumi.Input<string>
     graphqlHost: pulumi.Input<string>
 }
 
@@ -37,7 +37,7 @@ class WebApp extends pulumi.ComponentResource {
                 args: { 
                     RUNTIME_IMAGE: 'nginx:1.17-alpine',
                     APP_SCHEME: 'https',
-                    APP_HOST: args.tld,
+                    APP_HOST: args.zone,
                     APP_PORT: '80',
                     GRAPHQL_SCHEME: 'https',
                     GRAPHQL_HOST: args.graphqlHost,
@@ -83,7 +83,7 @@ class WebApp extends pulumi.ComponentResource {
             metadata: { namespace: args.namespace },
             spec: {
                 prefix: '/',
-                host: args.tld,
+                host: args.zone,
                 service: pulumi.interpolate `${this.internalHost}:${this.internalPort}`
             }
         }, { parent: this })
@@ -96,7 +96,7 @@ class WebApp extends pulumi.ComponentResource {
 }
 
 export const webApp = new WebApp(config.env, {
-    tld: config.tld,
+    zone: config.zone,
     namespace: blogNamespace.metadata.name,
     registryEndpoint: config.registryEndpoint,
     imageRegistry: config.imageRegistry,
