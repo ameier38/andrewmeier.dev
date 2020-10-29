@@ -7,7 +7,7 @@ import * as config from './config'
 import { blogNamespace } from './namespace'
 
 type GraphqlApiArgs = {
-    tldZoneId: pulumi.Input<string>
+    zoneId: pulumi.Input<string>
     subdomain: pulumi.Input<string>
     loadBalancerAddress: pulumi.Input<string>
     acmeEmail: pulumi.Input<string>
@@ -28,7 +28,7 @@ class GraphqlApi extends pulumi.ComponentResource {
         super('blog:GraphqlApi', name, {}, opts)
 
         const record = new cloudflare.Record(`${name}-graphql-api`, {
-            zoneId: args.tldZoneId,
+            zoneId: args.zoneId,
             name: args.subdomain,
             type: 'A',
             value: args.loadBalancerAddress
@@ -128,7 +128,7 @@ class GraphqlApi extends pulumi.ComponentResource {
 
 export const graphqlApi = new GraphqlApi(config.env, {
     namespace: blogNamespace.metadata.name,
-    tldZoneId: config.tldZoneId,
+    zoneId: config.zoneId,
     subdomain: 'graphql',
     acmeEmail: config.acmeEmail,
     registryEndpoint: config.registryEndpoint,
