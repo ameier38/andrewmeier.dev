@@ -9,8 +9,8 @@ export const root = path.dirname(__dirname)
 
 const infrastructureStack = new pulumi.StackReference('ameier38/infrastructure/prod')
 
-export const tld = infrastructureStack.requireOutput('tld').apply(o => o as string)
-export const tldZoneId = infrastructureStack.requireOutput('tldZoneId').apply(o => o as string)
+export const zone = infrastructureStack.requireOutput('zone').apply(o => o as string)
+export const zoneId = infrastructureStack.requireOutput('zoneId').apply(o => o as string)
 export const acmeEmail = infrastructureStack.requireOutput('acmeEmail').apply(o => o as string)
 export const registryEndpoint = infrastructureStack.requireOutput('registryEndpoint').apply(o => o as string)
 export const imageRegistry = infrastructureStack.requireOutput('imageRegistry').apply(o => o as docker.ImageRegistry)
