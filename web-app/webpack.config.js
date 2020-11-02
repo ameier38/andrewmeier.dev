@@ -21,7 +21,8 @@ module.exports = (env, argv) => {
             contentBase: path.join(__dirname, "dist"),
             hot: true,
             inline: true,
-            historyApiFallback: true
+            historyApiFallback: true,
+            port: 3000
         },
         plugins: mode === "development" ?
             // development plugins

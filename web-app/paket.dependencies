@@ -1,4 +1,4 @@
-version 5.250.0
+version 5.251.0
 
 storage none
 source https://api.nuget.org/v3/index.json
@@ -25,3 +25,4 @@ group Build
     nuget Fake.JavaScript.Npm
     nuget Fake.Core.Target
     nuget BlackFox.Fake.BuildTask
+    nuget NuGet.Packaging 5.6.0

@@ -4,15 +4,11 @@ services:
     build:
       context: web-app
       args:
-        RUNTIME_IMAGE: nginx:1.17-alpine
-        APP_SCHEME: http
-        APP_HOST: localhost
-        APP_PORT: 8080
         GRAPHQL_SCHEME: http
         GRAPHQL_HOST: localhost
         GRAPHQL_PORT: 4000
     ports: 
-      - "8080:8080"
+      - "3001:3000"
   graphql-api:
     build:
       context: graphql-api

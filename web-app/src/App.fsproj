@@ -5,11 +5,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Common.fs" />
+    <Compile Include="Config.fs" />
     <Compile Include="Graphql.fs" />
     <Compile Include="Home.fs" />
     <Compile Include="Post.fs" />
     <Compile Include="App.fs" />
-    <Compile Include="Main.fs" />
+    <Compile Include="Program.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

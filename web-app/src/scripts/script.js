@@ -7,6 +7,7 @@ import 'prismjs/components/prism-shell-session'
 import 'prismjs/components/prism-bash'
 import 'prismjs/components/prism-powershell'
 import 'prismjs/components/prism-json'
+import 'prismjs/components/prism-yaml'
 import '../styles/prism.css'
 import '../styles/post.css'
 

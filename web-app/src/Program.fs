@@ -1,4 +1,4 @@
-module Blog.Main
+module Blog.Program
 
 open Elmish
 open Elmish.React
