@@ -68,6 +68,7 @@ class GraphqlApi extends pulumi.ComponentResource {
             },
             namespace: args.namespace,
             values: {
+                nameOverride: chartName,
                 fullnameOverride: chartName,
                 backendType: 'http',
                 containerPort: 8080,

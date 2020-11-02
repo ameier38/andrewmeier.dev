@@ -41,14 +41,14 @@ let update (graphql:IGraphqlClient) (msg:Msg) (state:State): State * Cmd<Msg> =
     match msg with
     | UrlChanged EmptyUrl ->
         state, Cmd.none
-    | UrlChanged (PostUrl newPermalink) ->
+    | UrlChanged ((PostUrl newPermalink) as newUrl) ->
         match state.CurrentUrl with
         // don't refetch if the post is the same as current state
         | PostUrl prevPermalink when prevPermalink = newPermalink ->
             state, Cmd.none
         | EmptyUrl
         | PostUrl _ ->
-            state, Cmd.ofMsg(GetPost (Started newPermalink))
+            { state with CurrentUrl = newUrl }, Cmd.ofMsg(GetPost (Started newPermalink))
     | GetPost (Started postId) ->
         { state with Post = InProgress }, getPost graphql postId
     | GetPost (Finished response) ->
@@ -75,23 +75,21 @@ let useStyles = Styles.makeStyles(fun styles theme ->
 )
 
 let renderDisqus (post:PostDto) =
-    let shortname = Env.getEnv "DISQUS_SHORTNAME"
-    let scheme = Env.getEnv "APP_SCHEME"
-    let host = Env.getEnv "APP_HOST"
-    let port = Env.getEnv "APP_PORT"
-    let url =
-        match port with
-        | "" | "80" -> sprintf "%s://%s" scheme host
-        | port -> sprintf "%s://%s:%s" scheme host port
-    let config: Disqus.DisqusConfig =
+    let config = Config.disqusConfig
+    let hostPort =
+        match config.AppPort with
+        | "" | "80" -> config.AppHost
+        | port -> sprintf "%s:%s" config.AppHost port
+    let url = sprintf "%s://%s" config.AppScheme hostPort
+    let postDisqusConfig: Disqus.DisqusConfig =
         { url = url
           identifier = post.permalink
           title = post.title }
     Mui.card [
         Mui.cardContent [
             Disqus.disqus [
-                Disqus.Shortname shortname
-                Disqus.Config config
+                Disqus.Shortname config.Shortname
+                Disqus.Config postDisqusConfig
             ]
         ]
     ]

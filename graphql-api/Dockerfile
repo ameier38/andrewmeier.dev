@@ -1,7 +1,6 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 as builder
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 as base
 
-ARG PAKET_VERSION=5.250.0
-ARG FAKE_VERSION=5.20.3
+WORKDIR /app
 
 # install locales
 RUN apt-get update && \
@@ -20,16 +19,13 @@ ENV LC_ALL en_US.UTF-8
 ENV DOTNET_CLI_TELEMETRY_OPTOUT 1
 
 # install tools
-RUN dotnet tool install -g fake-cli --version ${FAKE_VERSION}
-RUN dotnet tool install -g paket --version ${PAKET_VERSION}
+RUN dotnet tool install -g fake-cli --version 5.20.4-alpha.1642 \
+    && dotnet tool install -g paket --version 5.251.0
 
 # add tools to PATH
 ENV PATH="$PATH:/root/.dotnet/tools"
 
-RUN fake --version
-RUN paket --version
-
-WORKDIR /app
+FROM base as builder
 
 # install dependencies
 COPY paket.dependencies .

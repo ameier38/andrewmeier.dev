@@ -30,8 +30,8 @@ module Cow =
 
 
 module Env =
-    [<Emit("process.env[$0] ? process.env[$0] : ''")>]
-    let getEnv (key:string): string = jsNative
+    [<Emit("process.env[$0] ? process.env[$0] : $1")>]
+    let getEnv (key:string) (defaultValue:string): string = jsNative
 
 module Log =
     let info (msg:obj) =

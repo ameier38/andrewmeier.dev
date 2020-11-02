@@ -35,13 +35,12 @@ class WebApp extends pulumi.ComponentResource {
             build: {
                 context: path.join(config.root, 'web-app'),
                 args: { 
-                    RUNTIME_IMAGE: 'nginx:1.17-alpine',
-                    APP_SCHEME: 'https',
-                    APP_HOST: args.zone,
-                    APP_PORT: '80',
                     GRAPHQL_SCHEME: 'https',
                     GRAPHQL_HOST: args.graphqlHost,
                     GRAPHQL_PORT: '80',
+                    DISQUS_APP_SCHEME: 'https',
+                    DISQUS_APP_HOST: args.zone,
+                    DISQUS_APP_PORT: '80',
                     DISQUS_SHORTNAME: 'andrewmeier-dev'
                 }
             },
@@ -57,11 +56,12 @@ class WebApp extends pulumi.ComponentResource {
             },
             namespace: args.namespace,
             values: {
+                nameOverride: chartName,
                 fullnameOverride: chartName,
                 imagePullPolicy: 'Always',
                 imagePullSecrets: [ registrySecret.metadata.name ],
                 backendType: 'http',
-                containerPort: 8080,
+                containerPort: 3000,
                 image: image.imageName
             }
         }, { parent: this })

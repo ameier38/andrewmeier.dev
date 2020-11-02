@@ -70,13 +70,12 @@ type IGraphqlClient =
     abstract member GetPost: permalink:string -> Async<Result<PostDto,string>>
 
 type GraphqlClient() =
-    let scheme = Env.getEnv "GRAPHQL_SCHEME"
-    let host = Env.getEnv "GRAPHQL_HOST"
-    let port = Env.getEnv "GRAPHQL_PORT"
-    let url =
-        match port with
-        | "" | "80" -> sprintf "%s://%s" scheme host
-        | port -> sprintf "%s://%s:%s" scheme host port
+    let config = Config.graphqlConfig
+    let hostPort =
+        match config.Port with
+        | "" | "80" -> config.Host
+        | port -> sprintf "%s:%s" config.Host port
+    let url = sprintf "%s://%s" config.Scheme hostPort
     interface IGraphqlClient with
         member _.ListPosts() =
             async {
