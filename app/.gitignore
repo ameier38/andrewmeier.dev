@@ -1,0 +1,12 @@
+.vscode
+.fake
+.ionide
+.paket
+.fable
+*.fs.js
+paket-files
+bin
+obj
+out
+dist
+client/build

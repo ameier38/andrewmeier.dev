@@ -1,0 +1,30 @@
+.post img {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    margin-top: 20px;
+    margin-right: auto;
+    margin-bottom: 20px;
+    margin-left: auto;
+    display: block;
+    width: 80%;
+}
+
+.post blockquote {
+    color: #828282;
+    border-left: 4px solid #e8e8e8;
+    padding-left: 15px;
+    margin-left: 5px;
+    font-style: italic;
+}
+
+.post a {
+    text-decoration: none;
+    color: #2a7ae2;
+}
+
+.post a:visited {
+    color: #1756a9;
+}
+
+.post a:hover {
+    text-decoration: underline;
+}

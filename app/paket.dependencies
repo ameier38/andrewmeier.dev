@@ -1,0 +1,30 @@
+version 5.257.0
+
+storage none
+source https://api.nuget.org/v3/index.json
+
+nuget BlackFox.Fake.BuildTask
+nuget Expecto
+nuget Fable.Core
+nuget Fable.Browser.Dom
+nuget Fable.Elmish
+nuget Fable.Elmish.HMR
+nuget Fable.Elmish.React
+nuget Fable.Remoting.Client
+nuget Fable.Remoting.Server
+nuget Fable.Remoting.Giraffe
+nuget Fake.DotNet.Cli
+nuget Fake.IO.FileSystem
+nuget Fake.Core.Target
+nuget Fake.JavaScript.Npm
+nuget Feliz
+nuget Feliz.MaterialUI
+nuget Feliz.Router
+nuget FSharp.Core
+nuget FSharp.Data
+nuget Giraffe
+nuget Markdig
+nuget Microsoft.AspNetCore.SpaServices.Extensions
+nuget Serilog
+nuget Serilog.Sinks.Console
+nuget Serilog.Sinks.Seq

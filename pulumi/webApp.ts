@@ -3,10 +3,11 @@ import * as docker from '@pulumi/docker'
 import * as k8s from '@pulumi/kubernetes'
 import * as path from 'path'
 import * as config from './config'
-import { blogNamespace } from './namespace'
-import { graphqlApi } from './graphqlApi'
+import { blogNamespace, localBlogNamespace } from './namespace'
+import { graphqlApi, localGraphqlApi } from './graphqlApi'
 
 type WebAppArgs = {
+    runtimeImage: pulumi.Input<string>
     namespace: pulumi.Input<string>
     registryEndpoint: pulumi.Input<string>
     imageRegistry: pulumi.Input<docker.ImageRegistry>
@@ -35,6 +36,7 @@ class WebApp extends pulumi.ComponentResource {
             build: {
                 context: path.join(config.root, 'web-app'),
                 args: { 
+                    RUNTIME_IMAGE: args.runtimeImage,
                     GRAPHQL_SCHEME: 'https',
                     GRAPHQL_HOST: args.graphqlHost,
                     GRAPHQL_PORT: '80',
@@ -96,10 +98,21 @@ class WebApp extends pulumi.ComponentResource {
 }
 
 export const webApp = new WebApp(config.env, {
+    runtimeImage: 'nginx:1.17-alpine',
     zone: config.zone,
     namespace: blogNamespace.metadata.name,
     registryEndpoint: config.registryEndpoint,
     imageRegistry: config.imageRegistry,
     dockerCredentials: config.dockerCredentials,
     graphqlHost: graphqlApi.host
+}, { provider: config.k8sProvider })
+
+export const localWebApp = new WebApp('local', {
+    runtimeImage: 'arm32v7/nginx:1.18',
+    zone: config.localZoneId,
+    namespace: localBlogNamespace.metadata.name,
+    registryEndpoint: config.registryEndpoint,
+    imageRegistry: config.imageRegistry,
+    dockerCredentials: config.dockerCredentials,
+    graphqlHost: localGraphqlApi.host
 }, { provider: config.k8sProvider })

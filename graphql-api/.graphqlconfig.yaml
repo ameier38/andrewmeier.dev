@@ -1,6 +1,0 @@
-projects:
-  andrewmeier.dev:
-    extensions:
-      endpoints:
-        local: 'http://localhost:4000'
-        prod: 'https://graphql.andrewmeier.dev'

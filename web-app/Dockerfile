@@ -1,3 +1,4 @@
+ARG RUNTIME_IMAGE=nginx:1.17-alpine
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 as base
 
 WORKDIR /app
@@ -55,7 +56,7 @@ COPY dist dist
 COPY webpack.config.js .
 RUN fake build -t Build
 
-FROM nginx:1.17-alpine as runner
+FROM ${RUNTIME_IMAGE} as runner
 
 COPY --from=builder /app/dist /var/www
 COPY nginx.conf /etc/nginx/conf.d/default.conf
