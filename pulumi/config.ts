@@ -10,24 +10,15 @@ export const root = path.dirname(__dirname)
 const infrastructureStack = new pulumi.StackReference('ameier38/infrastructure/prod')
 
 export const zone = infrastructureStack.requireOutput('zone').apply(o => o as string)
-export const localZone = infrastructureStack.requireOutput('localZone').apply(o => o as string)
 export const zoneId = infrastructureStack.requireOutput('zoneId').apply(o => o as string)
-export const localZoneId = infrastructureStack.requireOutput('localZoneId').apply(o => o as string)
 export const acmeEmail = infrastructureStack.requireOutput('acmeEmail').apply(o => o as string)
 export const registryEndpoint = infrastructureStack.requireOutput('registryEndpoint').apply(o => o as string)
 export const imageRegistry = infrastructureStack.requireOutput('imageRegistry').apply(o => o as docker.ImageRegistry)
 export const dockerCredentials = infrastructureStack.requireOutput('dockerCredentials').apply(o => o as string)
-export const loadBalancerAddress = infrastructureStack.requireOutput('loadBalancerAddress').apply(o => o as string)
-export const exitNodeIp = infrastructureStack.requireOutput('exitNodeIp').apply(o => o as string)
-export const kubeconfig = infrastructureStack.requireOutput('kubeconfig').apply(o => o as string)
-export const localKubeconfig = infrastructureStack.requireOutput('localKubeconfig').apply(o => o as string)
+export const kubeconfig = infrastructureStack.requireOutput('localKubeconfig').apply(o => o as string)
 
 export const k8sProvider = new k8s.Provider(`${env}-k8s-provider`, {
     kubeconfig: kubeconfig
-})
-
-export const localK8sProvider = new k8s.Provider(`${env}-local-k8s-provider`, {
-    kubeconfig: localKubeconfig
 })
 
 const rawCloudflareConfig = new pulumi.Config('cloudflare')

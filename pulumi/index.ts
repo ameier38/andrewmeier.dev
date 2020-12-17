@@ -1,2 +1,2 @@
-import './graphqlApi'
-import './webApp'
+import './namespace'
+import './app'

@@ -1,28 +1,16 @@
 version: '3.7'
-services: 
-  web-app:
+services:
+  app:
     build:
-      context: web-app
-      args:
-        GRAPHQL_SCHEME: http
-        GRAPHQL_HOST: localhost
-        GRAPHQL_PORT: 4000
-    ports: 
-      - "3001:3000"
-  graphql-api:
-    build:
-      context: graphql-api
-    ports:
-      - "4000:4000"
-    environment: 
+      context: ./app
+      args: 
+        RUNTIME_IMAGE_TAG: 5.0-focal-arm32v7
+        RUNTIME_ID: linux-arm
+    environment:
       DEBUG: "true"
-      SECRETS_DIR: /var/secrets
-      SEQ_SCHEME: http
-      SEQ_HOST: seq
-      SEQ_PORT: 5341
-  seq:
-    image: datalust/seq:5.1
     ports:
-      - "5341:80"
-    environment: 
-      ACCEPT_EULA: "Y"
+      - "5000:5000"
+  chrome:
+    image: browserless/chrome:1.42.0-chrome-stable
+    ports:
+      - "3001:3000"

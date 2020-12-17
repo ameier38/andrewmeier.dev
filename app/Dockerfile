@@ -1,5 +1,5 @@
-ARG IMAGE_TAG=5.0
-FROM mcr.microsoft.com/dotnet/sdk:${IMAGE_TAG} as builder
+ARG RUNTIME_IMAGE_TAG=5.0
+FROM mcr.microsoft.com/dotnet/sdk:5.0 as builder
 
 WORKDIR /app
 
@@ -45,7 +45,7 @@ RUN ./fake.sh TestUnits
 RUN ./fake.sh BuildClient
 RUN ./fake.sh PublishServer
 
-FROM mcr.microsoft.com/dotnet/runtime:${IMAGE_TAG} as runner
+FROM mcr.microsoft.com/dotnet/runtime:${RUNTIME_IMAGE_TAG} as runner
 
 WORKDIR /app
 
