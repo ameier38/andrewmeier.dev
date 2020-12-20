@@ -63,15 +63,21 @@ module.exports = (env, argv) => {
                             plugins: [
                                 ['prismjs', {
                                     "languages": [
+                                        "markup",
                                         "javascript",
+                                        "typescript",
                                         "shell-session",
+                                        "go",
                                         "python",
-                                        "fsharp"
+                                        "fsharp",
+                                        "yaml",
+                                        "json",
+                                        "sql"
                                     ],
                                     "plugins": [
                                         "line-numbers"
                                     ],
-                                    "theme": "okaidia",
+                                    "theme": "default",
                                     "css": true
                                 }]
                             ]

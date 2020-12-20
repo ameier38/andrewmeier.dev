@@ -2,7 +2,7 @@ version: '3.7'
 services:
   app:
     build:
-      context: ./app
+      context: .
       args: 
         RUNTIME_IMAGE_TAG: 5.0-focal-arm32v7
         RUNTIME_ID: linux-arm

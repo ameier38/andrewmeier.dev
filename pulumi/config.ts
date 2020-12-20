@@ -15,7 +15,9 @@ export const acmeEmail = infrastructureStack.requireOutput('acmeEmail').apply(o 
 export const registryEndpoint = infrastructureStack.requireOutput('registryEndpoint').apply(o => o as string)
 export const imageRegistry = infrastructureStack.requireOutput('imageRegistry').apply(o => o as docker.ImageRegistry)
 export const dockerCredentials = infrastructureStack.requireOutput('dockerCredentials').apply(o => o as string)
-export const kubeconfig = infrastructureStack.requireOutput('localKubeconfig').apply(o => o as string)
+export const kubeconfig = infrastructureStack.requireOutput('kubeconfig').apply(o => o as string)
+export const seqInternalHost = infrastructureStack.requireOutput('seqInternalHost').apply(o => o as string)
+export const seqInternalPort = infrastructureStack.requireOutput('seqInternalPort').apply(o => o as string)
 
 export const k8sProvider = new k8s.Provider(`${env}-k8s-provider`, {
     kubeconfig: kubeconfig

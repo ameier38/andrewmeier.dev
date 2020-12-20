@@ -25,12 +25,18 @@ module Dto =
                 |> Array.map (fun img -> 
                     String.Format(@"!\[(.*?)\]\({0}\)", img.Filename), 
                     sprintf "![$1](%s)" img.Url)
-            let replaceImages (content:string) (pattern:string, replace:string) =
-                Regex.Replace(content, pattern, replace)
-            let parsedContent =
+            let replaceImages (content:string) =
                 imagePatterns
-                |> Array.fold replaceImages record.Fields.Content
-                |> fun content -> Markdown.ToHtml(content, markdownPipeline)
+                |> Array.fold (fun content (pattern, replace) -> Regex.Replace(content, pattern, replace)) content
+            let markdownToHtml (content:string) =
+                Markdown.ToHtml(content, markdownPipeline)
+            let replaceInlineCode (content:string) =
+                Regex.Replace(content, "<code>", "<code class='language-none'>")
+            let parsedContent =
+                record.Fields.Content
+                |> replaceImages
+                |> markdownToHtml
+                |> replaceInlineCode
             let coverPattern = @"^cover.(png|gif|jpg)$"
             let cover =
                 record.Fields.Images

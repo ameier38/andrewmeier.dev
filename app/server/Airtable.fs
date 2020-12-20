@@ -2,6 +2,7 @@ module Server.Airtable
 
 open FSharp.Data
 open Server
+open Serilog
 
 let [<Literal>] ListPostsResponse = """
 {
@@ -122,7 +123,7 @@ let [<Literal>] ListPostsResponse = """
                     }
                 ],
                 "title": "Windows Development Environment",
-                "content": "## Table of Contents\n- [Computer and Windows](#computer-and-windows): Recommended specs for computer\n```fsharp\nlet x = 2\n```\n",
+                "content": "## Table of Contents\n- [Computer and Windows](#computer-and-windows): Recommended specs for computer\n```fsharp\nlet x = 2\n```\n\n![computer](computer.png)\nAnd some `markup`\n",
                 "created_at": "2020-04-04T15:53:36.000Z",
                 "updated_at": "2020-04-12T18:08:23.000Z"
             },
@@ -154,33 +155,41 @@ type AirtablePostClient(config:AirtableConfig) =
     interface IPostClient with
         member _.ListPosts(?pageSize:int, ?offset:string) =
             async {
-                let pageSize = pageSize |> Option.defaultValue 10
-                let formula = "AND({status} = 'Published', {permalink} != 'about')"
-                let query =
-                    [ "pageSize", pageSize |> string
-                      "filterByFormula", formula
-                      for field in ["permalink"; "title"; "created_at"] do
-                        "fields[]", field
-                      if offset.IsSome then 
-                        "offset", offset.Value ]
-                let! res = get "Post" query
-                return res |> PostProvider.Parse
+                try
+                    let pageSize = pageSize |> Option.defaultValue 10
+                    let formula = "AND({status} = 'Published', {permalink} != 'about')"
+                    let query =
+                        [ "pageSize", pageSize |> string
+                          "filterByFormula", formula
+                          for field in ["permalink"; "title"; "created_at"] do
+                            "fields[]", field
+                          if offset.IsSome then 
+                            "offset", offset.Value ]
+                    let! res = get "Post" query
+                    return res |> PostProvider.Parse
+                with ex ->
+                    Log.Error(ex, "Error listing posts")
+                    return raise ex
             }
 
         member _.GetPost(permalink:string) =
             async {
-                let formula = sprintf "AND({status} = 'Published', {permalink} = '%s')" permalink
-                let query = [ "filterByFormula", formula ]
-                let! res = get "Post" query
-                let root = res |> PostProvider.Parse
-                let record =
-                    match root.Records with
-                    | [||] ->
-                        failwithf "%s not found" permalink
-                    | [| record |] -> record
-                    | _ ->
-                        failwithf "found multiple posts with the same permalink: %s" permalink
-                return record
+                try
+                    let formula = sprintf "AND({status} = 'Published', {permalink} = '%s')" permalink
+                    let query = [ "filterByFormula", formula ]
+                    let! res = get "Post" query
+                    let root = res |> PostProvider.Parse
+                    let record =
+                        match root.Records with
+                        | [||] ->
+                            failwithf "%s not found" permalink
+                        | [| record |] -> record
+                        | _ ->
+                            failwithf "found multiple posts with the same permalink: %s" permalink
+                    return record
+                with ex ->
+                    Log.Error(ex, "Error getting post")
+                    return raise ex
             }
 
 type MockPostClient() =

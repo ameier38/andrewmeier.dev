@@ -5,8 +5,11 @@ open Client
 open Elmish
 open Feliz
 open Feliz.MaterialUI
+open Fable.Core.JsInterop
 open Shared.Api
 open Shared.Domain
+
+importAll "../styles/post.css"
 
 type Url =
     | EmptyUrl
