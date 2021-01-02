@@ -18,6 +18,7 @@ module.exports = (env, argv) => {
 
     return {
         mode: mode,
+        // fable will output to ./bin
         entry: './bin/Program.js',
         output: {
             path: path.join(__dirname, "dist"),

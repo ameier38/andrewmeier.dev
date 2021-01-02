@@ -3,14 +3,28 @@ services:
   app:
     build:
       context: .
+      target: runner
       args: 
-        RUNTIME_IMAGE_TAG: 5.0-focal-arm32v7
-        RUNTIME_ID: linux-arm
+        RUNTIME_IMAGE_TAG: 5.0
+        RUNTIME_ID: linux-x64
     environment:
       DEBUG: "true"
+      CI: "true"
     ports:
       - "5000:5000"
   chrome:
-    image: browserless/chrome:1.42.0-chrome-stable
+    image: browserless/chrome
     ports:
       - "3001:3000"
+  integration-tests:
+    build:
+      context: .
+      target: tester
+      args: 
+        RUNTIME_IMAGE_TAG: 5.0
+        RUNTIME_ID: linux-x64
+    environment:
+      CLIENT_HOST: app
+      CLIENT_PORT: 5000
+      CHROME_HOST: chrome
+      CHROME_PORT: 3000

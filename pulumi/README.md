@@ -1,6 +1,5 @@
 # Pulumi
-Project to deploy [andrewmeier.dev](https://andrewmeier.dev)
-using Pulumi, Kubernetes, and Inlets.
+Project to deploy [andrewmeier.dev](https://andrewmeier.dev).
 
 ## Usage
 

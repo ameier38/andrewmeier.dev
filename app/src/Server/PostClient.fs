@@ -1,4 +1,4 @@
-module Server.Airtable
+module Server.PostClient
 
 open FSharp.Data
 open Server
@@ -153,7 +153,7 @@ type AirtablePostClient(config:AirtableConfig) =
             ])
 
     interface IPostClient with
-        member _.ListPosts(?pageSize:int, ?offset:string) =
+        member _.ListPosts(pageSize:int option, offset:string option) =
             async {
                 try
                     let pageSize = pageSize |> Option.defaultValue 10
@@ -195,7 +195,7 @@ type AirtablePostClient(config:AirtableConfig) =
 type MockPostClient() =
 
     interface IPostClient with
-        member _.ListPosts(?_pageSize:int, ?_offset:string) =
+        member _.ListPosts(_pageSize:int option, _offset:string option) =
             async {
                 return PostProvider.GetSample()
             }

@@ -1,6 +1,6 @@
 module Server.Api
 
-open Airtable
+open PostClient
 open FSharp.Data
 open Markdig
 open Serilog
@@ -19,7 +19,14 @@ module Dto =
               CreatedAt = record.Fields.CreatedAt }
 
     module Post =
-        let fromRecord (markdownPipeline:MarkdownPipeline) (record:PostProvider.Record) =
+        let markdownPipeline = 
+            MarkdownPipelineBuilder()
+                .UseAdvancedExtensions()
+                .UseEmojiAndSmiley()
+                .UseMathematics()
+                .Build()
+
+        let fromRecord (record:PostProvider.Record) =
             let imagePatterns =
                 record.Fields.Images
                 |> Array.map (fun img -> 
@@ -27,7 +34,8 @@ module Dto =
                     sprintf "![$1](%s)" img.Url)
             let replaceImages (content:string) =
                 imagePatterns
-                |> Array.fold (fun content (pattern, replace) -> Regex.Replace(content, pattern, replace)) content
+                |> Array.fold (fun content (pattern, replace) ->
+                    Regex.Replace(content, pattern, replace)) content
             let markdownToHtml (content:string) =
                 Markdown.ToHtml(content, markdownPipeline)
             let replaceInlineCode (content:string) =
@@ -52,13 +60,12 @@ module Dto =
               Content = parsedContent }
 
 let getPost
-    (markdownPipeline:MarkdownPipeline)
     (client:IPostClient) = 
     fun (req:GetPostRequest) ->
         async {
             Log.Information("Getting post {@Request}", req)
             let! record = client.GetPost(req.Permalink)
-            let post = record |> Dto.Post.fromRecord markdownPipeline
+            let post = Dto.Post.fromRecord record
             return { Post = post }
         }
 
@@ -84,8 +91,7 @@ let listPosts
         }
 
 let postApi
-    (markdownPipeline:MarkdownPipeline)
     (client:IPostClient)
     : IPostApi =
-    { getPost = getPost markdownPipeline client
+    { getPost = getPost client
       listPosts = listPosts client }

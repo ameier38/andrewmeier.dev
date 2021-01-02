@@ -43,7 +43,9 @@ let update (msg:Msg) (state:State): State * Cmd<Msg> =
 let renderPosts (posts:PostSummary list) (dispatch:Msg -> unit) =
     Mui.list [
         for post in posts do
-            yield Mui.listItem [
+            Mui.listItem [
+                prop.className "post"
+                prop.id post.Permalink
                 prop.key post.Permalink
                 prop.onClick (fun e -> 
                     e.preventDefault()
@@ -61,13 +63,13 @@ let renderPosts (posts:PostSummary list) (dispatch:Msg -> unit) =
                     ]
                 ]
             ]
-            yield Mui.divider []
+            Mui.divider []
     ]
 
 let renderSkeleton () =
     Mui.list [
         for i in 1..5 do
-            yield Mui.listItem [
+            Mui.listItem [
                 prop.key i
                 listItem.children [
                     Mui.listItemText [
@@ -86,7 +88,7 @@ let renderSkeleton () =
                     ]
                 ]
             ]
-            yield Mui.divider []
+            Mui.divider []
     ]
 
 let renderError (msg:string) =

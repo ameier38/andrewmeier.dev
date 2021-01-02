@@ -1,1 +1,1 @@
-dotnet run --project ./build/Build.fsproj -- %1
+dotnet run --project ./src/Build/Build.fsproj %1

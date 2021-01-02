@@ -8,8 +8,8 @@
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\server\Server.fsproj" />
-    <ProjectReference Include="..\shared\Shared.fsproj" />
+    <ProjectReference Include="..\Server\Server.fsproj" />
+    <ProjectReference Include="..\Shared\Shared.fsproj" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

@@ -1,8 +1,9 @@
-namespace Server
+namespace Shared
 
 open System
 open System.IO
 
+#if !FABLE_COMPILER
 module Env =
 
     let getEnv (key:string) (defaultValue:string) =
@@ -17,3 +18,4 @@ module Env =
             File.ReadAllText(secretPath).Trim()
         else
             getEnv defaultEnv defaultValue
+#endif

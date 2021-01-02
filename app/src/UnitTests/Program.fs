@@ -2,18 +2,18 @@ open Expecto
 open Markdig
 open Shared.Api
 open Server.Api
-open Server.Airtable
+open Server.PostClient
 
 let markdownPipeline = MarkdownPipelineBuilder().Build() 
 
 let postClient = MockPostClient()
 
-let mockApi = postApi markdownPipeline postClient
+let mockApi = postApi postClient
 
 [<Tests>]
 let testPostApi =
     testAsync "PostApi" {
-        // GIVEN a list posts requests
+        // GIVEN a list posts request
         let req:ListPostsRequest = { PageSize = Some 10; PageToken = None }
         // WHEN we send the request
         let! res = mockApi.listPosts(req)

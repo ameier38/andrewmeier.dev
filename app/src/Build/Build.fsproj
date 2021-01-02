@@ -6,14 +6,7 @@
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Infrastructure.fs" />
-    <Compile Include="Config.fs" />
-    <Compile Include="Airtable.fs" />
-    <Compile Include="Api.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\shared\Shared.fsproj" />
-  </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

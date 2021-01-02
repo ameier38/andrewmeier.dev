@@ -10,29 +10,25 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT 1
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
     && apt-get install -y nodejs
 
-# install F# dependencies
-COPY .config ./.config
-COPY paket.dependencies .
-COPY paket.lock .
+# restore tools
+COPY .config .config
 RUN dotnet tool restore
+
+# install F# dependencies
+COPY paket.dependencies paket.lock ./
 RUN dotnet paket install
 RUN dotnet paket restore
 
-WORKDIR /app/client
+WORKDIR /app/src/Client
 
 # install JavaScript dependencies
-COPY client/package.json .
-COPY client/package-lock.json .
+COPY src/Client/package.json src/Client/package-lock.json ./
 RUN npm install
 
 WORKDIR /app
 
-# copy projects 
-COPY build ./build
-COPY shared ./shared
-COPY client ./client
-COPY server ./server
-COPY unit-tests ./unit-tests
+# copy projects and build script
+COPY src src
 COPY fake.sh .
 RUN chmod +x fake.sh
 
@@ -44,12 +40,30 @@ ENV RUNTIME_ID ${RUNTIME_ID}
 RUN ./fake.sh TestUnits
 RUN ./fake.sh BuildClient
 RUN ./fake.sh PublishServer
+RUN ./fake.sh PublishIntegrationTests
+
+FROM mcr.microsoft.com/dotnet/runtime:${RUNTIME_IMAGE_TAG} as tester
+
+# install packages needed for chrome driver
+RUN apt-get update \
+    && apt-get -y install --no-install-recommends \
+        libgdiplus \
+    # clean up
+    && apt-get autoremove -y \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=builder /app/src/IntegrationTests/out .
+
+ENTRYPOINT ["dotnet", "IntegrationTests.dll", "--remote"]
 
 FROM mcr.microsoft.com/dotnet/runtime:${RUNTIME_IMAGE_TAG} as runner
 
 WORKDIR /app
 
-COPY --from=builder /app/server/out .
-COPY --from=builder /app/client/dist ./wwwroot
+COPY --from=builder /app/src/Server/out .
+COPY --from=builder /app/src/Client/dist ./wwwroot
 
 ENTRYPOINT ["dotnet", "Server.dll"]

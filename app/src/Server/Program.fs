@@ -1,12 +1,9 @@
-﻿open Fable.Remoting.Server
-open Fable.Remoting.Giraffe
-open Giraffe
-open Markdig
+﻿open Giraffe
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Hosting
-open Microsoft.AspNetCore.SpaServices
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
+open Server.PostClient
 open Serilog
 open Serilog.Events
 
@@ -24,38 +21,18 @@ let main _ =
     Log.Debug("Debug mode")
     Log.Information("Logging at {Url}", config.SeqConfig.Url)
 
-    let markdownPipeline = 
-        MarkdownPipelineBuilder()
-            .UseAdvancedExtensions()
-            .UseEmojiAndSmiley()
-            .UseMathematics()
-            .Build()
-
-    let airtable =
-        if config.Debug then Server.Airtable.MockPostClient() :> Server.Airtable.IPostClient
-        else Server.Airtable.AirtablePostClient(config.AirtableConfig) :> Server.Airtable.IPostClient
-
-    let routeBuilder (typeName:string) (methodName:string) = $"/api/{typeName}/{methodName}"
-
-    let api: HttpHandler =
-        Remoting.createApi()
-        |> Remoting.fromValue (Server.Api.postApi markdownPipeline airtable)
-        |> Remoting.withRouteBuilder routeBuilder
-        |> Remoting.buildHttpHandler
-
-    let app = choose [
-        GET >=> route "/healthz" >=> Successful.OK "Healthy!"
-        api
-    ]
-
     let configureServices (serviceCollection:IServiceCollection) =
+        if config.CI then
+            serviceCollection.AddSingleton<IPostClient, MockPostClient>() |> ignore
+        else
+            serviceCollection.AddSingleton<IPostClient, AirtablePostClient>(fun _ -> AirtablePostClient(config.AirtableConfig)) |> ignore
         serviceCollection.AddSpaStaticFiles(fun config -> config.RootPath <- "wwwroot")
         serviceCollection.AddGiraffe() |> ignore
 
     let configureApp (appBuilder:IApplicationBuilder) =
         appBuilder.UseDefaultFiles() |> ignore
         appBuilder.UseSpaStaticFiles()
-        appBuilder.UseGiraffe app
+        appBuilder.UseGiraffe Server.HttpHandlers.app
         appBuilder.UseSpa(fun _ -> ())
 
     Host.CreateDefaultBuilder()

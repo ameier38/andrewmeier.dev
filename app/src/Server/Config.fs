@@ -1,5 +1,7 @@
 namespace Server
 
+open Shared
+
 type ServerConfig =
     { Url: string }
     static member Load() =
@@ -28,11 +30,13 @@ type AirtableConfig =
 
 type Config =
     { Debug: bool
+      CI: bool
       ServerConfig: ServerConfig
       SeqConfig: SeqConfig
       AirtableConfig: AirtableConfig }
     static member Load() =
         { Debug = Env.getEnv "DEBUG" "true" |> bool.Parse
+          CI = Env.getEnv "CI" "false" |> bool.Parse
           ServerConfig = ServerConfig.Load()
           SeqConfig = SeqConfig.Load()
           AirtableConfig = AirtableConfig.Load() }

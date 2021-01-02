@@ -4,6 +4,7 @@ storage none
 source https://api.nuget.org/v3/index.json
 
 nuget BlackFox.Fake.BuildTask
+nuget canopy
 nuget Expecto
 nuget Fable.Core
 nuget Fable.Browser.Dom
@@ -25,6 +26,7 @@ nuget FSharp.Data
 nuget Giraffe
 nuget Markdig
 nuget Microsoft.AspNetCore.SpaServices.Extensions
+nuget Selenium.WebDriver.ChromeDriver 87.0.4280.8800
 nuget Serilog
 nuget Serilog.Sinks.Console
 nuget Serilog.Sinks.Seq

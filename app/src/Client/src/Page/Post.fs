@@ -129,6 +129,7 @@ let renderPost =
                                     prop.className c.cardHeader
                                     prop.children [
                                         Mui.typography [
+                                            prop.id "title"
                                             typography.variant.h4
                                             typography.children props.post.Title
                                         ]

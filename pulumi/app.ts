@@ -28,6 +28,7 @@ const image = new docker.Image(identifier, {
     imageName: pulumi.interpolate `${config.registryEndpoint}/blog`,
     build: {
         context: path.join(config.root, 'app'),
+        target: 'runner',
         args: { 
             RUNTIME_IMAGE_TAG: '5.0-focal-arm32v7',
             RUNTIME_ID: 'linux-arm',
