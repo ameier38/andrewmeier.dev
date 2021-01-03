@@ -3,7 +3,7 @@ services:
   app:
     build:
       context: .
-      target: runner
+      dockerfile: docker/server.Dockerfile
       args: 
         RUNTIME_IMAGE_TAG: 5.0
         RUNTIME_ID: linux-x64
@@ -19,7 +19,7 @@ services:
   integration-tests:
     build:
       context: .
-      target: tester
+      dockerfile: docker/tester.Dockerfile
       args: 
         RUNTIME_IMAGE_TAG: 5.0
         RUNTIME_ID: linux-x64

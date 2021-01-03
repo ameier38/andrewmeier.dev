@@ -40,24 +40,6 @@ ENV RUNTIME_ID ${RUNTIME_ID}
 RUN ./fake.sh TestUnits
 RUN ./fake.sh BuildClient
 RUN ./fake.sh PublishServer
-RUN ./fake.sh PublishIntegrationTests
-
-FROM mcr.microsoft.com/dotnet/runtime:${RUNTIME_IMAGE_TAG} as tester
-
-# install packages needed for chrome driver
-RUN apt-get update \
-    && apt-get -y install --no-install-recommends \
-        libgdiplus \
-    # clean up
-    && apt-get autoremove -y \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-COPY --from=builder /app/src/IntegrationTests/out .
-
-ENTRYPOINT ["dotnet", "IntegrationTests.dll", "--remote"]
 
 FROM mcr.microsoft.com/dotnet/runtime:${RUNTIME_IMAGE_TAG} as runner
 

@@ -15,6 +15,11 @@ jobs:
           docker-compose build
           docker-compose up -d app chrome
           docker-compose run --rm integration-tests
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v2
+        with:
+          name: screenshots
+          path: ./app/.screenshots/*.jpg
       - uses: docker://pulumi/actions
         with:
           args: preview
