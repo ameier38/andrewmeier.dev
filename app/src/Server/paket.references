@@ -1,0 +1,9 @@
+Fable.Remoting.Server
+Fable.Remoting.Giraffe
+FSharp.Data
+Giraffe
+Markdig
+Microsoft.AspNetCore.SpaServices.Extensions
+Serilog
+Serilog.Sinks.Console
+Serilog.Sinks.Seq
