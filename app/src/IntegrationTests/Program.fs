@@ -6,6 +6,7 @@ open OpenQA.Selenium.Chrome
 
 let canopyConfig = CanopyConfig.Load()
 let clientUrl = canopyConfig.ClientUrl
+let screenshotDir = canopyConfig.ScreenshotDir
 
 canopy.configuration.chromeDir <- canopyConfig.DriverDir
 canopy.configuration.webdriverPort <- Some canopyConfig.DriverPort
@@ -44,14 +45,19 @@ let startApp () =
     startApp()
     describe "should be on home page"
     on clientUrl
+    waitForElement "#win-dev"
+    screenshot screenshotDir "home" |> ignore
     describe "should be two posts"
     count ".post" 2
-    describe "should navigate to 'about' post"
-    click "#about"
-    describe "should be on 'about' post"
-    on $"{clientUrl}/about"
-    describe "title should be 'About'"
-    "#title" == "About"
+    describe "should navigate to 'win-dev' post"
+    click "#win-dev"
+    describe "should be on 'win-dev' post"
+    on $"{clientUrl}/win-dev"
+    waitForElement "#title"
+    screenshot screenshotDir "win-dev" |> ignore
+    let expectedTitle = "Windows Development Environment"
+    describe $"title should be '{expectedTitle}'"
+    "#title" == expectedTitle
 
 [<EntryPoint>]
 let main argv =

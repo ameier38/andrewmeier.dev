@@ -3,6 +3,7 @@
 .ionide
 .paket
 .fable
+.screenshots
 *.fs.js
 paket-files
 bin

@@ -1,2 +1,1 @@
-import './namespace'
-import './app'
+import './resources'
