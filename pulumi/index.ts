@@ -1,1 +1,1 @@
-import './resources'
+import './src/app'

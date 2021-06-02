@@ -1,12 +1,11 @@
 module Client.Program
 
-open Elmish
-open Elmish.React
+open Browser.Dom
+open Feliz
 
 #if DEBUG
-open Elmish.HMR
+open Fable.Core.JsInterop
+importSideEffects "../scripts/hmr.mjs"
 #endif
 
-Program.mkProgram App.init App.update App.render
-|> Program.withReactSynchronous "app"
-|> Program.run
+ReactDOM.render(App.App(), document.getElementById "app")

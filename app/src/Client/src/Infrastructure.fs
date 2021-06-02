@@ -11,28 +11,10 @@ type Deferred<'T> =
     | Error of string
 
 module Env =
-    [<Emit("process.env[$0] ? process.env[$0] : $1")>]
+    [<Emit("import.meta.env[$0] ? import.meta.env[$0] : $1")>]
     let getEnv (key:string) (defaultValue:string): string = jsNative
 
-module Icons =
-    let githubIcon = ofImport "GitHub" "@material-ui/icons" [] []
-    let twitterIcon = ofImport "Twitter" "@material-ui/icons" [] []
-
 module Prism =
-    type IPrism =
-        abstract member highlightAllUnder: Browser.Types.Element -> unit
-
-    let Prism:IPrism = importDefault "prismjs"
-
-    let highlightAllUnder = Prism.highlightAllUnder
-
-module Disqus =
-    type DisqusConfig =
-        { url: string 
-          identifier: string
-          title: string }
-    type DisqusProps =
-        | Shortname of string
-        | Config of DisqusConfig
-    let inline disqus (props:DisqusProps list) =
-        ofImport "DiscussionEmbed" "disqus-react" (keyValueList CaseRules.LowerFirst props) []
+    [<Emit("window.Prism.highlightAllUnder($0)")>]
+    let highlightAllUnder (el:Browser.Types.Element): unit = jsNative
+    

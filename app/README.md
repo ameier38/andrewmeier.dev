@@ -1,6 +1,6 @@
 # Application
 Client and server for [andrewmeier.dev](https://andrewmeier.dev) using
-F#, Fable, Fable.Remoting, Feliz, Giraffe, and Airtable.
+F#, ASP.NET, Fable, Fable.Remoting, Feliz, Tailwind CSS, Snowpack, and Airtable.
 
 ## Setup
 1. Install [.NET SDK](https://dotnet.microsoft.com/download)
@@ -28,7 +28,7 @@ The following targets are available:
    TestUnits
 ```
 
-Running the application
+Run the application
 ```
 docker-compose up -d --build app
 ```
@@ -37,5 +37,6 @@ docker-compose up -d --build app
 ## Resources
 - [Fable.Remoting](https://zaid-ajaj.github.io/Fable.Remoting/)
 - [Feliz](https://zaid-ajaj.github.io/Feliz/)
-- [Giraffe](https://github.com/giraffe-fsharp/Giraffe)
+- [Snowpack](https://www.snowpack.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
 - [Airtable](https://airtable.com/)

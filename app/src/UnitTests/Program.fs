@@ -1,24 +1,24 @@
 open Expecto
 open Markdig
-open Shared.Api
-open Server.Api
+open Shared.PostStore
+open Server.PostStore
 open Server.PostClient
 
 let markdownPipeline = MarkdownPipelineBuilder().Build() 
 
 let postClient = MockPostClient()
 
-let mockApi = postApi postClient
+let mockPostStore = postStore postClient
 
 [<Tests>]
-let testPostApi =
-    testAsync "PostApi" {
+let testPostStore =
+    testAsync "PostStore" {
         // GIVEN a list posts request
         let req:ListPostsRequest = { PageSize = Some 10; PageToken = None }
         // WHEN we send the request
-        let! res = mockApi.listPosts(req)
+        let! res = mockPostStore.listPosts(req)
         // THEN we should receive posts
-        let expectedPermalinks = ["about"; "win-dev"]
+        let expectedPermalinks = ["win-dev"; "about"]
         let actualPermalinks = res.Posts |> List.map (fun p -> p.Permalink)
         Expect.sequenceEqual actualPermalinks expectedPermalinks "permalinks should match"
     }

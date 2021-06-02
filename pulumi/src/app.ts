@@ -3,12 +3,11 @@ import * as docker from '@pulumi/docker'
 import * as k8s from '@pulumi/kubernetes'
 import * as path from 'path'
 import * as config from './config'
-import { blogNamespace } from './namespace'
 
-const identifier = `${config.env}-blog`
+const identifier = 'blog'
 
 const registrySecret = new k8s.core.v1.Secret(`${identifier}-registry`, {
-    metadata: { namespace: blogNamespace.metadata.name },
+    metadata: { namespace: config.blogNamespace },
     type: 'kubernetes.io/dockerconfigjson',
     stringData: {
         '.dockerconfigjson': config.dockerCredentials
@@ -16,7 +15,7 @@ const registrySecret = new k8s.core.v1.Secret(`${identifier}-registry`, {
 }, { provider: config.k8sProvider })
 
 let airtableSecret = new k8s.core.v1.Secret(`${identifier}-airtable`, {
-    metadata: { namespace: blogNamespace.metadata.name },
+    metadata: { namespace: config.blogNamespace },
     immutable: true,
     stringData: {
         'base-id': config.airtableConfig.baseId,
@@ -28,14 +27,10 @@ const image = new docker.Image(identifier, {
     imageName: pulumi.interpolate `${config.registryEndpoint}/blog`,
     build: {
         context: path.join(config.root, 'app'),
-        dockerfile: path.join(config.root, 'app', 'docker', 'server.Dockerfile'),
+        dockerfile: path.join(config.root, 'app', 'docker', 'app.Dockerfile'),
         args: { 
             RUNTIME_IMAGE_TAG: '5.0-focal-arm32v7',
-            RUNTIME_ID: 'linux-arm',
-            DISQUS_APP_SCHEME: 'https',
-            DISQUS_APP_HOST: config.zone,
-            DISQUS_APP_PORT: '80',
-            DISQUS_SHORTNAME: 'andrewmeier-dev'
+            RUNTIME_ID: 'linux-arm'
         }
     },
     registry: config.imageRegistry
@@ -47,7 +42,7 @@ const chart = new k8s.helm.v3.Chart(identifier, {
     fetchOpts: {
         repo: 'https://ameier38.github.io/charts'
     },
-    namespace: blogNamespace.metadata.name,
+    namespace: config.blogNamespace,
     values: {
         nameOverride: identifier,
         fullnameOverride: identifier,
@@ -60,8 +55,8 @@ const chart = new k8s.helm.v3.Chart(identifier, {
             DEBUG: "false",
             AIRTABLE_SECRET: airtableSecret.metadata.name,
             SERVER_PORT: 5000,
-            SEQ_HOST: config.seqInternalHost,
-            SEQ_PORT: config.seqInternalPort
+            SEQ_HOST: config.seqHost,
+            SEQ_PORT: config.seqPort
         },
         secrets: [
             airtableSecret.metadata.name
@@ -71,20 +66,20 @@ const chart = new k8s.helm.v3.Chart(identifier, {
 }, { provider: config.k8sProvider })
 
 const internalHost =
-    pulumi.all([chart, blogNamespace.metadata.name])
+    pulumi.all([chart, config.blogNamespace])
     .apply(([chart, namespace]) => chart.getResourceProperty('v1/Service', namespace, identifier, 'metadata'))
     .apply(meta => `${meta.name}.${meta.namespace}.svc.cluster.local`)
 
 const internalPort =
-    pulumi.all([chart, blogNamespace.metadata.name])
+    pulumi.all([chart, config.blogNamespace])
     .apply(([chart, namespace]) => chart.getResourceProperty('v1/Service', namespace, identifier, 'spec'))
     .apply(spec => spec.ports.find(port => port.name === 'http')!.port)
 
 // NB: specifies how to direct incoming requests
-new k8s.apiextensions.CustomResource(`${config.env}-blog`, {
+new k8s.apiextensions.CustomResource('blog-mapping', {
     apiVersion: 'getambassador.io/v2',
     kind: 'Mapping',
-    metadata: { namespace: blogNamespace.metadata.name },
+    metadata: { namespace: config.blogNamespace },
     spec: {
         prefix: '/',
         host: config.zone,

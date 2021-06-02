@@ -1,9 +1,11 @@
 Fable.Remoting.Server
-Fable.Remoting.Giraffe
+Fable.Remoting.AspNetCore
 FSharp.Data
-Giraffe
 Markdig
-Microsoft.AspNetCore.SpaServices.Extensions
+Microsoft.AspNetCore.Hosting
+Microsoft.AspNetCore.StaticFiles
+Microsoft.AspNetCore.Server.Kestrel
 Serilog
+Serilog.AspNetCore
 Serilog.Sinks.Console
 Serilog.Sinks.Seq

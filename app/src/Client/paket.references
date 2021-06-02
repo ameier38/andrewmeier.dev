@@ -1,9 +1,7 @@
 Fable.Core
 Fable.Browser.Dom
 Fable.Elmish
-Fable.Elmish.React
-Fable.Elmish.HMR
 Fable.Remoting.Client
 Feliz
-Feliz.MaterialUI
 Feliz.Router
+Feliz.UseElmish

@@ -39,25 +39,29 @@ let registerTasks() =
         |> Seq.iter (DotNet.restore id)
     } |> ignore
 
-    let dotnet workingDir command args =
-        let res = DotNet.exec (fun opts -> { opts with WorkingDirectory = workingDir }) command args
+    let dotnet workingDir env command args =
+        let res = DotNet.exec (fun opts ->
+            { opts with
+                WorkingDirectory = workingDir
+                Environment = env }) command args
         if not res.OK then
             failwithf $"{res.Errors}"
 
     BuildTask.create "TestUnits" [] {
-        dotnet unitTestsRoot "run" ""
+        dotnet unitTestsRoot Map.empty "run" ""
     } |> ignore
 
     BuildTask.create "StartServer" [] {
-        dotnet serverRoot "watch" "run"
+        let env = Map.ofList [ "CI", "true" ]
+        dotnet serverRoot env "watch" "run"
     } |> ignore
 
     BuildTask.create "TestIntegrations" [] {
-        dotnet integrationTestsRoot "run" ""
+        dotnet integrationTestsRoot Map.empty "run" ""
     } |> ignore
 
     BuildTask.create "TestIntegrationsHeadless" [] {
-        dotnet integrationTestsRoot "run" "--headless"
+        dotnet integrationTestsRoot Map.empty "run" "--headless"
     } |> ignore
 
     let publish projRoot =

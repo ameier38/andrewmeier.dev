@@ -1,0 +1,12 @@
+﻿/*aa*/
+@import './prism.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    .post img {
+        @apply shadow-md;
+    }
+}

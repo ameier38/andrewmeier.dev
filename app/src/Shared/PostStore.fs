@@ -1,4 +1,4 @@
-module Shared.Api
+module Shared.PostStore
 
 open Domain
 
@@ -14,6 +14,6 @@ type GetPostRequest = { Permalink: string }
 
 type GetPostResponse = { Post: Post }
 
-type IPostApi =
+type IPostStore =
     { getPost: GetPostRequest -> Async<GetPostResponse>
       listPosts: ListPostsRequest -> Async<ListPostsResponse> }

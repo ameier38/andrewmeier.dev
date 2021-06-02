@@ -12,7 +12,3 @@ Apply changes.
 ```
 pulumi up
 ```
-
-## Resources
-- [Pulumi](https://www.pulumi.com/)
-- [Inlets](https://docs.inlets.dev/#/)

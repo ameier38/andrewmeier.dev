@@ -8,8 +8,8 @@
   <ItemGroup>
     <Compile Include="Config.fs" />
     <Compile Include="PostClient.fs" />
+    <Compile Include="PostStore.fs" />
     <Compile Include="Api.fs" />
-    <Compile Include="HttpHandlers.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

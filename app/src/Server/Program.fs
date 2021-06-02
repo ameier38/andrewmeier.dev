@@ -1,8 +1,7 @@
-﻿open Giraffe
+﻿open Fable.Remoting.AspNetCore
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Hosting
 open Microsoft.Extensions.DependencyInjection
-open Microsoft.Extensions.Hosting
 open Server.PostClient
 open Serilog
 open Serilog.Events
@@ -19,29 +18,36 @@ let main _ =
             .CreateLogger()
     Log.Logger <- logger
     Log.Debug("Debug mode")
-    Log.Information("Logging at {Url}", config.SeqConfig.Url)
+    if config.Debug then
+        Log.Debug("Config {@Config}", config)
 
     let configureServices (serviceCollection:IServiceCollection) =
+        serviceCollection
+            .AddRouting()
+            .AddHealthChecks() |> ignore
         if config.CI then
             serviceCollection.AddSingleton<IPostClient, MockPostClient>() |> ignore
         else
-            serviceCollection.AddSingleton<IPostClient, AirtablePostClient>(fun _ -> AirtablePostClient(config.AirtableConfig)) |> ignore
-        serviceCollection.AddSpaStaticFiles(fun config -> config.RootPath <- "wwwroot")
-        serviceCollection.AddGiraffe() |> ignore
+            serviceCollection.AddSingleton<IPostClient, AirtablePostClient>(fun _ ->
+                AirtablePostClient(config.AirtableConfig)) |> ignore
 
     let configureApp (appBuilder:IApplicationBuilder) =
-        appBuilder.UseDefaultFiles() |> ignore
-        appBuilder.UseSpaStaticFiles()
-        appBuilder.UseGiraffe Server.HttpHandlers.app
-        appBuilder.UseSpa(fun _ -> ())
-
-    Host.CreateDefaultBuilder()
-        .ConfigureWebHostDefaults(fun webHostBuilder ->
-            webHostBuilder
-                .Configure(configureApp)
-                .ConfigureServices(configureServices)
-                .UseUrls(config.ServerConfig.Url)
-                |> ignore)
+        appBuilder.UseRemoting(Server.Api.postApi)
+        appBuilder
+            .UseRouting()
+            .UseDefaultFiles()
+            .UseStaticFiles()
+            .UseEndpoints(fun endpoints ->
+                endpoints.MapHealthChecks("/healthz") |> ignore
+                endpoints.MapFallbackToFile("index.html") |> ignore)
+            |> ignore
+        
+    WebHostBuilder()
+        .UseSerilog()
+        .UseKestrel()
+        .ConfigureServices(configureServices)
+        .Configure(System.Action<IApplicationBuilder> configureApp)
+        .UseUrls(config.ServerConfig.Url)
         .Build()
         .Run()
     0

@@ -3,30 +3,35 @@ version 5.257.0
 storage none
 source https://api.nuget.org/v3/index.json
 
-nuget BlackFox.Fake.BuildTask
 nuget canopy
 nuget Expecto
 nuget Fable.Core
 nuget Fable.Browser.Dom
 nuget Fable.Elmish
-nuget Fable.Elmish.HMR
-nuget Fable.Elmish.React
 nuget Fable.Remoting.Client
 nuget Fable.Remoting.Server
-nuget Fable.Remoting.Giraffe
-nuget Fake.DotNet.Cli
-nuget Fake.IO.FileSystem
-nuget Fake.Core.Target
-nuget Fake.JavaScript.Npm
+nuget Fable.Remoting.AspNetCore
 nuget Feliz
-nuget Feliz.MaterialUI
 nuget Feliz.Router
+nuget Feliz.UseElmish
 nuget FSharp.Core
 nuget FSharp.Data
-nuget Giraffe
 nuget Markdig
-nuget Microsoft.AspNetCore.SpaServices.Extensions
+nuget Microsoft.AspNetCore.Hosting
+nuget Microsoft.AspNetCore.StaticFiles
+nuget Microsoft.AspNetCore.Server.Kestrel
 nuget Selenium.WebDriver.ChromeDriver 87.0.4280.8800
 nuget Serilog
+nuget Serilog.AspNetCore
 nuget Serilog.Sinks.Console
 nuget Serilog.Sinks.Seq
+
+group Build
+    storage none
+    source https://api.nuget.org/v3/index.json
+    
+    nuget BlackFox.Fake.BuildTask
+    nuget Fake.DotNet.Cli
+    nuget Fake.IO.FileSystem
+    nuget Fake.Core.Target
+    nuget Fake.JavaScript.Npm

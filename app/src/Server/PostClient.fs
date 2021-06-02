@@ -14,6 +14,7 @@ let [<Literal>] ListPostsResponse = """
                 "permalink": "about",
                 "title": "About",
                 "content": "Welcome to the personal blog of Andrew C. Meier! Originally from STL, now living in NYC",
+                "summary": "About Andrew Meier",
                 "created_at": "2020-04-12T16:55:28.000Z",
                 "updated_at": "2020-04-12T18:07:32.000Z"
             },
@@ -123,14 +124,14 @@ let [<Literal>] ListPostsResponse = """
                     }
                 ],
                 "title": "Windows Development Environment",
-                "content": "## Table of Contents\n- [Computer and Windows](#computer-and-windows): Recommended specs for computer\n```fsharp\nlet x = 2\n```\n\n![computer](computer.png)\nAnd some `markup`\n",
+                "content": "## Table of Contents\n- [Computer and Windows](#computer-and-windows): Recommended specs for computer\n```fsharp\nlet x = 2\n```\n\n![computer](computer.png)\nAnd some `markup`\nAnd a blockquote\n> This is a quote\n",
+                "summary": "Set up a Window's machine for development.",
                 "created_at": "2020-04-04T15:53:36.000Z",
                 "updated_at": "2020-04-12T18:08:23.000Z"
             },
             "createdTime": "2020-04-04T15:53:36.000Z"
         }
-    ],
-    "offset": "rec5AMJ3Lah6OSy61"
+    ]
 }
 """
 
@@ -161,7 +162,7 @@ type AirtablePostClient(config:AirtableConfig) =
                     let query =
                         [ "pageSize", pageSize |> string
                           "filterByFormula", formula
-                          for field in ["permalink"; "title"; "created_at"] do
+                          for field in ["permalink"; "title"; "created_at"; "updated_at"] do
                             "fields[]", field
                           if offset.IsSome then 
                             "offset", offset.Value ]

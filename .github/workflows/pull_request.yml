@@ -7,8 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        with:
-          fetch-depth: 1
       - name: Run Integration Tests
         working-directory: ./app
         run: |
@@ -20,10 +18,18 @@ jobs:
         with:
           name: screenshots
           path: ./app/.screenshots/*.jpg
-      - uses: docker://pulumi/actions
+      - name: Setup Node
+        uses: actions/setup-node@v1
         with:
-          args: preview
+          node-version: 14.x
+      - name: Install Packages
+        run: npm install
+        working-directory: ./pulumi
+      - name: Preview
+        uses: pulumi/actions@v3
+        with:
+          work-dir: ./pulumi
+          command: preview
+          stack-name: prod
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-          PULUMI_ROOT: pulumi
-          PULUMI_CI: pr

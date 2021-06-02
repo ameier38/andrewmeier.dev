@@ -48,7 +48,7 @@ let startApp () =
     waitForElement "#win-dev"
     screenshot screenshotDir "home" |> ignore
     describe "should be two posts"
-    count ".post" 2
+    count ".post-item" 2
     describe "should navigate to 'win-dev' post"
     click "#win-dev"
     describe "should be on 'win-dev' post"
@@ -57,6 +57,12 @@ let startApp () =
     screenshot screenshotDir "win-dev" |> ignore
     let expectedTitle = "Windows Development Environment"
     describe $"title should be '{expectedTitle}'"
+    "#title" == expectedTitle
+    describe "going directly to url should work"
+    url clientUrl
+    waitForElement "#win-dev"
+    url $"{clientUrl}/win-dev"
+    waitForElement "#title"
     "#title" == expectedTitle
 
 [<EntryPoint>]
