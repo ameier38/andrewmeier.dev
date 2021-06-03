@@ -48,7 +48,13 @@ let registerTasks() =
             failwithf $"{res.Errors}"
 
     BuildTask.create "TestUnits" [] {
-        dotnet unitTestsRoot Map.empty "run" ""
+        let res =
+            DotNet.exec
+                (fun opts -> { opts with WorkingDirectory = unitTestsRoot })
+                "run"
+                $"-p {unitTestsRoot}/UnitTests.fsproj"
+        if not res.OK then
+            failwithf $"{res.Errors}"
     } |> ignore
 
     BuildTask.create "StartServer" [] {
