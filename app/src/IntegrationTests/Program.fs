@@ -49,6 +49,8 @@ let startApp () =
     screenshot screenshotDir "home" |> ignore
     describe "should be two posts"
     count ".post-item" 2
+    describe "post item should have summary"
+    "#win-dev > .post-summary" == "Set up a Window's machine for development."
     describe "should navigate to 'win-dev' post"
     click "#win-dev"
     describe "should be on 'win-dev' post"
