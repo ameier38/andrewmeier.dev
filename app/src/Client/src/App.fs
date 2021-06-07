@@ -1,194 +1,113 @@
 [<RequireQualifiedAccess>]
 module Client.App
 
+open Client.UseBlog
 open Elmish
 open Feliz
-open Feliz.MaterialUI
 open Feliz.Router
+open Feliz.UseElmish
 
 type Url =
     | HomeUrl
-    | PostUrl of Page.Post.Url
+    | PostUrl of permalink:string
 module Url =
     let parse (url:string list) =
         match url with
         | [] -> HomeUrl
-        | permalink :: _ -> PostUrl (Page.Post.Url.PostUrl permalink)
+        | permalink :: _ -> PostUrl permalink
 
 type State =
-    { CurrentUrl: Url
-      Home: Page.Home.State
-      Post: Page.Post.State }
+    { CurrentUrl: Url }
 
 type Msg =
-    | NavigateToHome
-    | NavigateToAbout
     | UrlChanged of string list
-    | HomeMsg of Page.Home.Msg
-    | PostMsg of Page.Post.Msg
 
 let init () : State * Cmd<Msg> =
     let currentUrl = Router.currentPath() |> Url.parse
-    match currentUrl with
-    | HomeUrl ->
-        let homeState, homeCmd = Page.Home.init()
-        let postState, postCmd = Page.Post.init Page.Post.EmptyUrl
-        let cmd =
-            [ homeCmd |> Cmd.map HomeMsg
-              postCmd |> Cmd.map PostMsg ]
-            |> Cmd.batch
-        let state =
-            { CurrentUrl = currentUrl
-              Home = homeState
-              Post = postState }
-        state, cmd
-    | PostUrl postUrl ->
-        let homeState, homeCmd = Page.Home.init()
-        let postState, postCmd = Page.Post.init postUrl
-        let cmd =
-            [ homeCmd |> Cmd.map HomeMsg
-              postCmd |> Cmd.map PostMsg ]
-            |> Cmd.batch
-        let state =
-            { CurrentUrl = currentUrl
-              Home = homeState
-              Post = postState }
-        state, cmd
+    { CurrentUrl = currentUrl },
+    Cmd.none
 
 let update (msg:Msg) (state:State): State * Cmd<Msg> =
     match msg with
-    | NavigateToHome ->
-        state, Cmd.navigatePath ""
-    | NavigateToAbout ->
-        state, Cmd.navigatePath "about"
     | UrlChanged url ->
         let currentUrl = Url.parse url
-        let newState = { state with CurrentUrl = currentUrl }
-        match currentUrl with
-        | PostUrl postUrl ->
-            newState, Cmd.ofMsg(PostMsg (Page.Post.UrlChanged postUrl))
-        | _ ->
-            newState, Cmd.none
-    | HomeMsg msg -> 
-        let newHome, homeCmd = state.Home |> Page.Home.update msg
-        { state with Home = newHome }, homeCmd |> Cmd.map HomeMsg
-    | PostMsg msg ->
-        let newPost, postCmd = state.Post |> Page.Post.update msg
-        { state with Post = newPost }, postCmd |> Cmd.map PostMsg
+        { state with CurrentUrl = currentUrl },
+        Cmd.none
+        
+[<ReactComponent>]
+let Icon (path:string) (href:string) =
+    Html.a [
+        prop.href href
+        prop.children [
+            Svg.svg [
+                svg.className "h-8 w-8 p-1 mx-1 rounded-md fill-current text-gray-500 cursor-pointer hover:bg-gray-200"
+                svg.viewBox (0, 0, 16, 16)
+                svg.children [
+                    Svg.path [
+                        svg.d path
+                    ]
+                ]
+            ]
+        ]
+    ]
+    
+let [<Literal>] GitHubPath = "M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"
 
-let useStyles = Styles.makeStyles(fun styles _ ->
-    {| 
-        appBarOffset = styles.create [
-            style.height 80
-        ]
-        navContainer = styles.create [
-            style.display.flex
-            style.justifyContent.spaceBetween
-        ]
-        navHomeButton = styles.create [
-            style.fontSize 16
-            style.fontWeight 500
-            style.textTransform.none
-        ]
-        errorDiv = styles.create [
-            style.display.flex
-            style.justifyContent.center
-        ]
-    |}
-)
-
-type NavigationProps =
-    { isGteMd: bool
-      dispatch: Msg -> unit }
-
-let renderNavigation = 
-    React.functionComponent<NavigationProps>(fun props ->
-        let c = useStyles()
-        React.fragment [
-            Mui.appBar [
-                appBar.variant.outlined
-                appBar.color.default'
-                appBar.position.fixed'
-                appBar.children [
-                    Mui.toolbar [
-                        Mui.container [
-                            prop.className c.navContainer
-                            container.disableGutters (not props.isGteMd)
-                            container.maxWidth.md
-                            container.children [
-                                Mui.button [
-                                    prop.onClick (fun e ->
-                                        e.preventDefault()
-                                        props.dispatch NavigateToHome
-                                    )
-                                    button.classes.root c.navHomeButton
-                                    button.children [ "Andrew's Thoughts" ]
-                                ]
-                                Html.div [
-                                    Mui.iconButton [
-                                        prop.href "https://twitter.com/ameier38"
-                                        iconButton.component' "a"
-                                        iconButton.children [
-                                            Icons.twitterIcon
-                                        ]
-                                    ]
-                                    Mui.iconButton [
-                                        prop.href "https://github.com/ameier38"
-                                        iconButton.component' "a"
-                                        iconButton.children [
-                                            Icons.githubIcon
-                                        ]
-                                    ]
-                                    Mui.button [
-                                        prop.onClick (fun e ->
-                                            e.preventDefault()
-                                            props.dispatch NavigateToAbout
-                                        )
-                                        button.color.inherit'
-                                        button.children [ "About" ]
-                                    ]
-                                ]
+let [<Literal>] TwitterPath = "M5.026 15c6.038 0 9.341-5.003 9.341-9.334 0-.14 0-.282-.006-.422A6.685 6.685 0 0 0 16 3.542a6.658 6.658 0 0 1-1.889.518 3.301 3.301 0 0 0 1.447-1.817 6.533 6.533 0 0 1-2.087.793A3.286 3.286 0 0 0 7.875 6.03a9.325 9.325 0 0 1-6.767-3.429 3.289 3.289 0 0 0 1.018 4.382A3.323 3.323 0 0 1 .64 6.575v.045a3.288 3.288 0 0 0 2.632 3.218 3.203 3.203 0 0 1-.865.115 3.23 3.23 0 0 1-.614-.057 3.283 3.283 0 0 0 3.067 2.277A6.588 6.588 0 0 1 .78 13.58a6.32 6.32 0 0 1-.78-.045A9.344 9.344 0 0 0 5.026 15z"
+    
+[<ReactComponent>]
+let Navigation () = 
+    Html.nav [
+        prop.className "bg-gray-100 mb-4 border-b-2 border-gray-200"
+        prop.children [
+            Html.div [
+                prop.className "container max-w-2xl h-16 mx-auto flex justify-between items-center"
+                prop.children [
+                    Html.a [
+                        prop.className "px-3 py-2 rounded-md text-lg text-gray-800 font-medium cursor-pointer hover:bg-gray-200"
+                        prop.href "/"
+                        prop.text "Andrew's Thoughts"
+                    ]
+                    Html.div [
+                        prop.className "flex items-center"
+                        prop.children [
+                            Html.a [
+                                prop.className "px-3 py-2 rounded-md text-md font-medium text-gray-500 cursor-pointer hover:bg-gray-200"
+                                prop.href "/about"
+                                prop.text "About"
                             ]
+                            Icon TwitterPath "https://twitter.com/ameier38"
+                            Icon GitHubPath "https://github.com/ameier38"
                         ]
                     ]
                 ]
             ]
-            Html.div [
-                prop.className c.appBarOffset
-            ]
         ]
-    )
+    ]
 
-let renderPage (state:State) (dispatch:Msg -> unit) =
-    match state.CurrentUrl with
-    | HomeUrl ->
-        Page.Home.render state.Home (HomeMsg >> dispatch)
-    | PostUrl _ ->
-        Page.Post.render state.Post (PostMsg >> dispatch)
-
-type AppProps =
-    { state: State
-      dispatch: Msg -> unit }
-
-let renderApp =
-    React.functionComponent<AppProps>(fun props ->
-        let isGteMd = Hooks.useMediaQuery("max-width: 960px")
-        Mui.container [
-            container.disableGutters (not isGteMd)
-            container.maxWidth.md
-            container.children [
-                renderNavigation { dispatch = props.dispatch; isGteMd = isGteMd }
-                renderPage props.state props.dispatch
-            ]
+[<ReactComponent>]
+let Page (currentUrl:Url) =
+    Html.div [
+        prop.className "container mx-auto max-w-2xl px-4 md:px-0"
+        prop.children [
+            match currentUrl with
+            | HomeUrl ->
+                Page.Home.HomePage()
+            | PostUrl permalink ->
+                Page.Post.PostPage permalink
         ]
-    )
+    ]
 
-let render (state:State) (dispatch:Msg -> unit) =
+[<ReactComponent>]
+let App () =
+    let state, dispatch = React.useElmish(init, update)
     React.router [
         router.pathMode
         router.onUrlChanged (UrlChanged >> dispatch)
-        router.children [ 
-            Mui.cssBaseline []
-            renderApp { state = state; dispatch = dispatch }
+        router.children [
+            Blog.provider [
+                Navigation()
+                Page state.CurrentUrl
+            ]
         ]
     ]

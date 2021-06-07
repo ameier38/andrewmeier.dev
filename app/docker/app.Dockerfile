@@ -6,6 +6,13 @@ WORKDIR /app
 # prevent sending metrics to microsoft
 ENV DOTNET_CLI_TELEMETRY_OPTOUT 1
 
+# update packages
+RUN apt update && apt upgrade -y
+
+# install Node
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
+    && apt-get install -y nodejs
+
 # restore tools
 COPY .config .config
 RUN dotnet tool restore
@@ -14,6 +21,14 @@ RUN dotnet tool restore
 COPY paket.dependencies paket.lock ./
 RUN dotnet paket install
 RUN dotnet paket restore
+
+WORKDIR /app/src/Client
+
+# install JavaScript dependencies
+COPY src/Client/package.json src/Client/package-lock.json ./
+RUN npm install
+
+WORKDIR /app
 
 # copy projects and build script
 COPY src src
@@ -26,21 +41,14 @@ ENV RUNTIME_ID ${RUNTIME_ID}
 
 # run unit tests, build the client, and publish the server 
 RUN ./fake.sh TestUnits
-RUN ./fake.sh PublishIntegrationTests
+RUN ./fake.sh BuildClient
+RUN ./fake.sh PublishServer
 
 FROM mcr.microsoft.com/dotnet/runtime:${RUNTIME_IMAGE_TAG} as runner
 
-# install packages needed for chrome driver
-RUN apt-get update \
-    && apt-get -y install --no-install-recommends \
-        libgdiplus \
-    # clean up
-    && apt-get autoremove -y \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
-COPY --from=builder /app/src/IntegrationTests/out .
+COPY --from=builder /app/src/Server/out .
+COPY --from=builder /app/src/Client/out ./wwwroot
 
-ENTRYPOINT ["dotnet", "IntegrationTests.dll", "--remote"]
+ENTRYPOINT ["dotnet", "Server.dll"]

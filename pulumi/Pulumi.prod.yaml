@@ -3,9 +3,3 @@ config:
     secure: AAABAD4cHKqL2GeG/IrV/XOww7BVakvYuO0nCbw9uJW28rXh7XrTtOBnGUg3Kt64tg==
   airtable:baseId:
     secure: AAABAI+uqUXOiKMWhW42g5NwPmBBhYyf8w3NYy7H1RzAVmgOFpYMeXrT0sNBZY6QFA==
-  cloudflare:apiKey:
-    secure: AAABAAvISMAxNanYzljn8jK2fc9Hn93dLd2FJ/O6iPMVf8J1ii7YijLeNGJb3Qvu4TdulfglNn/FChwp43ErQRDkcrJm
-  cloudflare:email:
-    secure: AAABAKFWq2wJXwz4WjQTj8BOYnA1S0k0VoGGZvodmKBx/UQxzz57sjKZMXMbyhGklLw=
-  digitalocean:token:
-    secure: AAABAM1W5IzPSKSxLENBYSUa3eZMwnVu6e+40Lf6G9f/Tee5EqIphiKZQAzlVeYD+lp1vCgZi2FC/IVRL7e3VMvPlfKOBsIc+E/PxSXVwMFQrV7K0LL7TIF0aaTvpTZP

@@ -6,7 +6,8 @@ type PostSummary =
     { PostId: string
       Permalink: string
       Title: string
-      CreatedAt: DateTimeOffset }
+      Summary: string
+      UpdatedAt: DateTimeOffset }
 
 type Post =
     { PostId: string

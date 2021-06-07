@@ -3,7 +3,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: docker/server.Dockerfile
+      dockerfile: docker/app.Dockerfile
       args: 
         RUNTIME_IMAGE_TAG: 5.0
         RUNTIME_ID: linux-x64
@@ -19,7 +19,7 @@ services:
   integration-tests:
     build:
       context: .
-      dockerfile: docker/tester.Dockerfile
+      dockerfile: docker/integration-tests.Dockerfile
       args: 
         RUNTIME_IMAGE_TAG: 5.0
         RUNTIME_ID: linux-x64
@@ -31,3 +31,6 @@ services:
       CHROME_PORT: 3000
     volumes:
       - ./.screenshots:/var/screenshots
+    depends_on:
+      - app
+      - chrome

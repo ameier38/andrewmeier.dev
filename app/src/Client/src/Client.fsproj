@@ -7,7 +7,7 @@
   <ItemGroup>
     <Compile Include="Infrastructure.fs" />
     <Compile Include="Config.fs" />
-    <Compile Include="Api.fs" />
+    <Compile Include="UseBlog.fs" />
     <Compile Include="Page/Post.fs" />
     <Compile Include="Page/Home.fs" />
     <Compile Include="App.fs" />
