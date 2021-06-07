@@ -49,6 +49,6 @@ FROM mcr.microsoft.com/dotnet/runtime:${RUNTIME_IMAGE_TAG} as runner
 WORKDIR /app
 
 COPY --from=builder /app/src/Server/out .
-COPY --from=builder /app/src/Client/dist ./wwwroot
+COPY --from=builder /app/src/Client/out ./wwwroot
 
 ENTRYPOINT ["dotnet", "Server.dll"]

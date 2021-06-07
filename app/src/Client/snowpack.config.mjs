@@ -23,7 +23,7 @@ export default {
     tailwindConfig: './tailwind.config.mjs',
   },
   buildOptions: {
-    out: 'dist'
+    out: 'out'
   },
   routes: [
     { src: '/api/.*', dest: (req, res) => proxy.web(req, res, { hostname: 'localhost', port: 5000 }) },

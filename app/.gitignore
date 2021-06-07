@@ -8,6 +8,5 @@
 paket-files
 bin
 obj
-out
 dist
 client/build
