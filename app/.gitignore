@@ -4,9 +4,8 @@
 .paket
 .fable
 .screenshots
-*.fs.js
 paket-files
 bin
 obj
-dist
-client/build
+out
+compiled

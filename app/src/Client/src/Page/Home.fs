@@ -28,7 +28,7 @@ let PostListItem (postSummary:PostSummary) =
                 ]
             ]
             Html.p [
-                prop.className "text-sm text-gray-500"
+                prop.className "post-summary text-sm text-gray-500"
                 prop.text postSummary.Summary
             ]
         ]

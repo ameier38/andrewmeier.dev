@@ -162,7 +162,7 @@ type AirtablePostClient(config:AirtableConfig) =
                     let query =
                         [ "pageSize", pageSize |> string
                           "filterByFormula", formula
-                          for field in ["permalink"; "title"; "created_at"; "updated_at"] do
+                          for field in ["permalink"; "title"; "summary"; "created_at"; "updated_at"] do
                             "fields[]", field
                           if offset.IsSome then 
                             "offset", offset.Value ]
