@@ -26,7 +26,14 @@ export default {
     out: 'out'
   },
   routes: [
+    // NB: proxy api to server
     { src: '/api/.*', dest: (req, res) => proxy.web(req, res, { hostname: 'localhost', port: 5000 }) },
+    // NB: fallback to index.html on all other routes
     { match: "routes", src: ".*", dest: "/index.html" }
-  ]
+  ],
+  optimize: {
+    bundle: true,
+    minify: true,
+    target: 'es2018',
+  },
 };
