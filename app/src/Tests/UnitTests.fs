@@ -1,16 +1,14 @@
+﻿module Tests.UnitTests
+
 open Expecto
-open Markdig
 open Shared.PostStore
 open Server.PostStore
 open Server.PostClient
-
-let markdownPipeline = MarkdownPipelineBuilder().Build() 
 
 let postClient = MockPostClient()
 
 let mockPostStore = postStore postClient
 
-[<Tests>]
 let testPostStore =
     testAsync "PostStore" {
         // GIVEN a list posts request
@@ -22,6 +20,11 @@ let testPostStore =
         let actualPermalinks = res.Posts |> List.map (fun p -> p.Permalink)
         Expect.sequenceEqual actualPermalinks expectedPermalinks "permalinks should match"
     }
+    
+let tests =
+    testList "Tests" [
+        testPostStore
+    ]
 
-[<EntryPoint>]
-let main argv = runTestsInAssembly defaultConfig argv
+let run () =
+    runTests defaultConfig tests

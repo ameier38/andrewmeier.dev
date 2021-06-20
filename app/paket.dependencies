@@ -3,6 +3,7 @@ version 5.257.0
 storage none
 source https://api.nuget.org/v3/index.json
 
+nuget Argu
 nuget canopy
 nuget Expecto
 nuget Fable.Core
@@ -20,7 +21,7 @@ nuget Markdig
 nuget Microsoft.AspNetCore.Hosting
 nuget Microsoft.AspNetCore.StaticFiles
 nuget Microsoft.AspNetCore.Server.Kestrel
-nuget Selenium.WebDriver.ChromeDriver 87.0.4280.8800
+nuget Selenium.WebDriver.ChromeDriver 91.0.4472.10100
 nuget Serilog
 nuget Serilog.AspNetCore
 nuget Serilog.Sinks.Console
@@ -29,7 +30,6 @@ nuget Serilog.Sinks.Seq
 group Build
     storage none
     source https://api.nuget.org/v3/index.json
-    
     nuget BlackFox.Fake.BuildTask
     nuget Fake.DotNet.Cli
     nuget Fake.IO.FileSystem

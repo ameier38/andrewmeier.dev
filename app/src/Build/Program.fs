@@ -6,17 +6,14 @@ open Fake.IO.FileSystemOperators
 open Fake.JavaScript
 open BlackFox.Fake
 
-let src =
-    __SOURCE_DIRECTORY__ // Build
-    |> Path.getDirectory // src
+let src = Path.getDirectory __SOURCE_DIRECTORY__
     
 let root = Path.getDirectory src
 
 let sln = root </> "andrewmeier.dev.sln"
 let clientProj = src </> "Client" </> "src" </> "Client.fsproj"
 let serverProj = src </> "Server" </> "Server.fsproj"
-let unitTestsProj = src </> "UnitTests" </> "UnitTests.fsproj"
-let integrationTestsProj = src </> "IntegrationTests" </> "IntegrationTests.fsproj"
+let testsProj = src </> "Tests" </> "Tests.fsproj"
 
 let registerTasks() =
 
@@ -25,7 +22,7 @@ let registerTasks() =
         ++ $"{src}/**/obj"
         ++ $"{src}/**/out"
         -- $"{src}/Build/**"
-        -- $"{src}/**/node_modules/**/bin"
+        -- $"{src}/**/node_modules/**"
         |> Seq.map (fun p -> printfn "cleaning: %s" p; p)
         |> Shell.cleanDirs 
     }
@@ -38,33 +35,66 @@ let registerTasks() =
         DotNet.restore id sln
     } |> ignore
 
+    let watchServer =
+        async {
+            let env = Map.ofList [ "CI", "true" ]
+            let res =
+                DotNet.exec
+                    (fun opts -> { opts with Environment = env })
+                    "watch"
+                    $"-p {serverProj} run"
+            if not res.OK then
+                failwithf $"{res.Errors}"
+            
+        }
+    
+    BuildTask.create "WatchServer" [] {
+        Async.RunSynchronously(watchServer)
+    } |> ignore
+    
+    let installClient = BuildTask.create "InstallClient" [] {
+        let clientRoot = src </> "Client"
+        Npm.install (fun opts -> { opts with WorkingDirectory = clientRoot })
+    }
+    
+    let watchClient =
+        async {
+            let clientRoot = src </> "Client"
+            Npm.run "start" (fun opts -> { opts with WorkingDirectory = clientRoot})
+        }
+
+    BuildTask.create "WatchClient" [installClient] {
+        Async.RunSynchronously(watchClient)
+    } |> ignore
+    
+    BuildTask.create "Watch" [installClient] {
+        [watchServer; watchClient]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+    } |> ignore
+
+    BuildTask.create "BuildClient" [cleanClient; installClient] {
+        let clientRoot = src </> "Client"
+        Npm.run "build" (fun opts -> { opts with WorkingDirectory = clientRoot})
+    } |> ignore
+
     BuildTask.create "TestUnits" [] {
         let res =
             DotNet.exec
                 id
                 "run"
-                $"-p {unitTestsProj}"
+                $"-p {testsProj} unit"
         if not res.OK then
             failwithf $"{res.Errors}"
     } |> ignore
-
-    BuildTask.create "WatchServer" [] {
-        let env = Map.ofList [ "CI", "true" ]
-        let res =
-            DotNet.exec
-                (fun opts -> { opts with Environment = env })
-                "watch"
-                $"-p {serverProj} run"
-        if not res.OK then
-            failwithf $"{res.Errors}"
-    } |> ignore
-
+    
     BuildTask.create "TestIntegrations" [] {
         let res =
             DotNet.exec
                 id
                 "run"
-                $"-p {integrationTestsProj}"
+                $"-p {testsProj} integration"
         if not res.OK then
             failwithf $"{res.Errors}"
     } |> ignore
@@ -74,7 +104,7 @@ let registerTasks() =
             DotNet.exec
                 id
                 "run"
-                $"-p {integrationTestsProj} --headless"
+                $"-p {testsProj} integration --headless"
         if not res.OK then
             failwithf $"{res.Errors}"
     } |> ignore
@@ -94,23 +124,8 @@ let registerTasks() =
         publish serverProj
     } |> ignore
 
-    BuildTask.create "PublishIntegrationTests" [] {
-        publish integrationTestsProj
-    } |> ignore
-
-    let installClient = BuildTask.create "InstallClient" [] {
-        let clientRoot = src </> "Client"
-        Npm.install (fun opts -> { opts with WorkingDirectory = clientRoot })
-    }
-
-    BuildTask.create "StartClient" [installClient] {
-        let clientRoot = src </> "Client"
-        Npm.run "start" (fun opts -> { opts with WorkingDirectory = clientRoot})
-    } |> ignore
-
-    BuildTask.create "BuildClient" [cleanClient; installClient] {
-        let clientRoot = src </> "Client"
-        Npm.run "build" (fun opts -> { opts with WorkingDirectory = clientRoot})
+    BuildTask.create "PublishTests" [] {
+        publish testsProj
     } |> ignore
 
 [<EntryPoint>]

@@ -27,8 +27,8 @@ RUN chmod +x fake.sh
 ARG RUNTIME_ID=linux-x64
 ENV RUNTIME_ID ${RUNTIME_ID}
 
-# publish the integration test project
-RUN ./fake.sh PublishIntegrationTests
+# publish the test project
+RUN ./fake.sh PublishTests
 
 FROM mcr.microsoft.com/dotnet/runtime:${RUNTIME_IMAGE_TAG} as runner
 
@@ -43,6 +43,6 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY --from=builder /app/src/IntegrationTests/out .
+COPY --from=builder /app/src/Tests/out .
 
-ENTRYPOINT ["dotnet", "IntegrationTests.dll", "--remote"]
+ENTRYPOINT ["dotnet", "Tests.dll", "integration", "--remote"]
