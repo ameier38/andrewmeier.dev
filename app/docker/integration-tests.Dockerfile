@@ -45,4 +45,4 @@ WORKDIR /app
 
 COPY --from=builder /app/src/Tests/out .
 
-ENTRYPOINT ["dotnet", "Tests.dll", "integration", "--remote"]
+ENTRYPOINT ["dotnet", "Tests.dll", "integration", "--browser-mode", "remote"]
