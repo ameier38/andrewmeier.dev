@@ -23,11 +23,11 @@ jobs:
       - name: Run Unit Tests
         working-directory: ./app
         run: ./fake.sh TestUnits
-      - name: Check Chrome
+      - name: Check Chrome Version
         run: google-chrome --version
       - name: Run Integration Tests
         working-directory: ./app
-        run: ./fake.sh TestIntegrationsHeadless
+        run: dotnet run -p ./app/src/Tests.fsproj test-integrations --browser-mode headless
       - name: Upload screenshots
         uses: actions/upload-artifact@v2
         with:
