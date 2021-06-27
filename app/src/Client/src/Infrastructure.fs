@@ -1,8 +1,6 @@
 namespace Client
 
 open Fable.Core
-open Fable.Core.JsInterop
-open Fable.React.Helpers
 
 type Deferred<'T> =
     | HasNotStarted

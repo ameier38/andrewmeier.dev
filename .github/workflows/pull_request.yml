@@ -7,12 +7,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Run Integration Tests
+      - name: Start Server
+        working-directory: ./app
+        run: docker-compose up -d app
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.x'
+      - name: Restore Tools and Packages 
         working-directory: ./app
         run: |
-          docker-compose build
-          docker-compose up -d app chrome
-          docker-compose run --rm integration-tests
+          dotnet tool restore
+          dotnet paket install
+          dotnet paket restore
+      - name: Run Unit Tests
+        working-directory: ./app
+        run: ./fake.sh TestUnits
+      - name: Check Chrome Version
+        run: google-chrome --version
+      - name: Run Integration Tests
+        working-directory: ./app
+        run: ./fake.sh TestIntegrationsHeadless
       - name: Upload screenshots
         uses: actions/upload-artifact@v2
         with:

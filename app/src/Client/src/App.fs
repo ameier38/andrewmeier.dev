@@ -23,10 +23,10 @@ type Msg =
     | UrlChanged of string list
 
 let init () : State * Cmd<Msg> =
-    let currentUrl = Router.currentPath() |> Url.parse
-    { CurrentUrl = currentUrl },
+    let url = Router.currentPath() |> Url.parse
+    { CurrentUrl = url },
     Cmd.none
-
+    
 let update (msg:Msg) (state:State): State * Cmd<Msg> =
     match msg with
     | UrlChanged url ->
@@ -58,7 +58,7 @@ let [<Literal>] TwitterPath = "M5.026 15c6.038 0 9.341-5.003 9.341-9.334 0-.14 0
 [<ReactComponent>]
 let Navigation () = 
     Html.nav [
-        prop.className "bg-gray-100 mb-4 border-b-2 border-gray-200"
+        prop.className "bg-gray-100 border-b-2 border-gray-200"
         prop.children [
             Html.div [
                 prop.className "container max-w-2xl h-16 mx-auto flex justify-between items-center"
@@ -88,7 +88,7 @@ let Navigation () =
 [<ReactComponent>]
 let Page (currentUrl:Url) =
     Html.div [
-        prop.className "container mx-auto max-w-2xl px-4 md:px-0"
+        prop.className "container mx-auto max-w-2xl"
         prop.children [
             match currentUrl with
             | HomeUrl ->

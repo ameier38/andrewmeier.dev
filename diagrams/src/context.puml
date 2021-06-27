@@ -1,0 +1,19 @@
+@startuml context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title System Context diagram for andrewmeier.dev
+
+Person(user, "User")
+System_Boundary(system, "andrewmeier.dev") {
+    Container(server, "Server", "F#, ASP.NET, Fable.Remoting")
+    Container(client, "Client", "F#, Fable, Fable.Remoting, Feliz")
+}
+System_Ext(airtable, "Airtable", "Content management system")
+Rel(user, server, "Visits andrewmeier.dev", "HTTPS")
+Rel(user, client, "Interacts with")
+Rel_R(server, client, "Delivers static content to browser")
+Rel_L(client, server, "Makes API calls to", "HTTPS")
+Rel(server, airtable, "Reads content from")
+@enduml

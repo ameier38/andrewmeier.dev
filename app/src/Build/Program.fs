@@ -6,17 +6,15 @@ open Fake.IO.FileSystemOperators
 open Fake.JavaScript
 open BlackFox.Fake
 
-let src =
-    __SOURCE_DIRECTORY__ // Build
-    |> Path.getDirectory // src
+let src = Path.getDirectory __SOURCE_DIRECTORY__
     
 let root = Path.getDirectory src
 
 let sln = root </> "andrewmeier.dev.sln"
 let clientProj = src </> "Client" </> "src" </> "Client.fsproj"
 let serverProj = src </> "Server" </> "Server.fsproj"
-let unitTestsProj = src </> "UnitTests" </> "UnitTests.fsproj"
-let integrationTestsProj = src </> "IntegrationTests" </> "IntegrationTests.fsproj"
+let testsProj = src </> "Tests" </> "Tests.fsproj"
+let screenshotsDir = root </> ".screenshots"
 
 let registerTasks() =
 
@@ -25,7 +23,7 @@ let registerTasks() =
         ++ $"{src}/**/obj"
         ++ $"{src}/**/out"
         -- $"{src}/Build/**"
-        -- $"{src}/**/node_modules/**/bin"
+        -- $"{src}/**/node_modules/**"
         |> Seq.map (fun p -> printfn "cleaning: %s" p; p)
         |> Shell.cleanDirs 
     }
@@ -38,79 +36,93 @@ let registerTasks() =
         DotNet.restore id sln
     } |> ignore
 
-    BuildTask.create "TestUnits" [] {
-        let res =
-            DotNet.exec
-                id
-                "run"
-                $"-p {unitTestsProj}"
-        if not res.OK then
-            failwithf $"{res.Errors}"
-    } |> ignore
-
+    let watchServer =
+        async {
+            let env = Map.ofList [ "CI", "true" ]
+            let res =
+                DotNet.exec
+                    (fun opts -> { opts with Environment = env })
+                    "watch"
+                    $"-p {serverProj} run"
+            if not res.OK then
+                failwithf $"{res.Errors}"
+            
+        }
+    
     BuildTask.create "WatchServer" [] {
-        let env = Map.ofList [ "CI", "true" ]
-        let res =
-            DotNet.exec
-                (fun opts -> { opts with Environment = env })
-                "watch"
-                $"-p {serverProj} run"
-        if not res.OK then
-            failwithf $"{res.Errors}"
+        Async.RunSynchronously(watchServer)
     } |> ignore
-
-    BuildTask.create "TestIntegrations" [] {
-        let res =
-            DotNet.exec
-                id
-                "run"
-                $"-p {integrationTestsProj}"
-        if not res.OK then
-            failwithf $"{res.Errors}"
-    } |> ignore
-
-    BuildTask.create "TestIntegrationsHeadless" [] {
-        let res =
-            DotNet.exec
-                id
-                "run"
-                $"-p {integrationTestsProj} --headless"
-        if not res.OK then
-            failwithf $"{res.Errors}"
-    } |> ignore
-
-    let publish projPath =
-        let runtime = Environment.environVarOrDefault "RUNTIME_ID" "linux-x64"
-        let projRoot = Path.getDirectory projPath
-        Trace.tracefn "Publishing with runtime %s" runtime
-        DotNet.publish
-            (fun args -> 
-                { args with
-                    OutputPath = Some $"%s{projRoot}/out"
-                    Runtime = Some runtime })
-            $"%s{projPath}"
-
-    BuildTask.create "PublishServer" [] {
-        publish serverProj
-    } |> ignore
-
-    BuildTask.create "PublishIntegrationTests" [] {
-        publish integrationTestsProj
-    } |> ignore
-
+    
     let installClient = BuildTask.create "InstallClient" [] {
         let clientRoot = src </> "Client"
         Npm.install (fun opts -> { opts with WorkingDirectory = clientRoot })
     }
+    
+    let watchClient =
+        async {
+            let clientRoot = src </> "Client"
+            Npm.run "start" (fun opts -> { opts with WorkingDirectory = clientRoot})
+        }
 
-    BuildTask.create "StartClient" [installClient] {
-        let clientRoot = src </> "Client"
-        Npm.run "start" (fun opts -> { opts with WorkingDirectory = clientRoot})
+    BuildTask.create "WatchClient" [installClient] {
+        Async.RunSynchronously(watchClient)
+    } |> ignore
+    
+    BuildTask.create "Watch" [installClient] {
+        [watchServer; watchClient]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
     } |> ignore
 
     BuildTask.create "BuildClient" [cleanClient; installClient] {
         let clientRoot = src </> "Client"
         Npm.run "build" (fun opts -> { opts with WorkingDirectory = clientRoot})
+    } |> ignore
+
+    BuildTask.create "TestUnits" [] {
+        let res =
+            DotNet.exec
+                id
+                "run"
+                $"-p {testsProj} test-units"
+        if not res.OK then
+            failwithf $"{res.Errors}"
+    } |> ignore
+    
+    BuildTask.create "TestIntegrations" [] {
+        Environment.setEnvironVar "SCREENSHOTS_DIR" screenshotsDir
+        let res =
+            DotNet.exec
+                id
+                "run"
+                $"-p {testsProj} test-integrations"
+        if not res.OK then
+            failwithf $"{res.Errors}"
+    } |> ignore
+
+    BuildTask.create "TestIntegrationsHeadless" [] {
+        Environment.setEnvironVar "SCREENSHOTS_DIR" screenshotsDir
+        let res =
+            DotNet.exec
+                id
+                "run"
+                $"-p {testsProj} test-integrations --browser-mode headless"
+        if not res.OK then
+            failwithf $"{res.Errors}"
+    } |> ignore
+
+    BuildTask.create "PublishServer" [] {
+        let runtime = Environment.environVarOrDefault "RUNTIME_ID" "linux-x64"
+        let serverRoot = Path.getDirectory serverProj
+        Trace.tracefn "Publishing with runtime %s" runtime
+        DotNet.publish
+            (fun args ->
+                { args with
+                    OutputPath = Some $"%s{serverRoot}/out"
+                    Runtime = Some runtime
+                    SelfContained = Some false })
+            serverProj
     } |> ignore
 
 [<EntryPoint>]

@@ -8,6 +8,11 @@ F#, ASP.NET, Fable, Fable.Remoting, Feliz, Tailwind CSS, Snowpack, and Airtable.
     ```
     dotnet tool restore
     ```
+3. Install packages.
+   ```
+   dotnet paket install
+   dotnet paket restore
+   ```
 
 ## Usage
 List build targets.
@@ -19,16 +24,26 @@ The following targets are available:
    BuildClient
    Clean
    CleanClient
-   Empty
    InstallClient
    PublishServer
    Restore
-   StartClient
-   StartServer
+   TestIntegrations
+   TestIntegrationsHeadless
    TestUnits
+   Watch
+   WatchClient
+   WatchServer
 ```
 
-Run the application
+Watch the server and client for local development.
+```
+./fake.cmd Watch
+```
+> Navigate to http://localhost:3000.
+Server code changes will automatically rebuild the server.
+Client code changes will automatically hot reload in the browser.
+
+Run the application locally.
 ```
 docker-compose up -d --build app
 ```

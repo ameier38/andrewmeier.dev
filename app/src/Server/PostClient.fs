@@ -124,7 +124,7 @@ let [<Literal>] ListPostsResponse = """
                     }
                 ],
                 "title": "Windows Development Environment",
-                "content": "## Table of Contents\n- [Computer and Windows](#computer-and-windows): Recommended specs for computer\n```fsharp\nlet x = 2\n```\n\n![computer](computer.png)\nAnd some `markup`\nAnd a blockquote\n> This is a quote\n",
+                "content": "## Table of Contents\n- [Computer and Windows](#computer-and-windows): Recommended specs for computer\n```fsharp\nlet x = 2\n```\n\n## Computer and Windows\n![computer](computer.png)\nAnd some `markup`\nAnd a blockquote\n> This is a quote\n",
                 "summary": "Set up a Window's machine for development.",
                 "created_at": "2020-04-04T15:53:36.000Z",
                 "updated_at": "2020-04-12T18:08:23.000Z"
