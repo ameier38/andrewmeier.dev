@@ -19,14 +19,18 @@ and Arguments =
 
 [<EntryPoint>]
 let main argv =
-    let parser = ArgumentParser.Create<Arguments>()
-    let arguments = parser.Parse(argv)
-    match arguments.GetAllResults() with
-    | [ Test_Integrations integrationTestArguments ] ->
-        let browserMode =
-            integrationTestArguments.TryGetResult Browser_Mode
-            |> Option.defaultValue IntegrationTests.BrowserMode.Local
-        IntegrationTests.run browserMode
-    | [ Test_Units ] ->
-        UnitTests.run ()
-    | other -> failwith $"invalid arguments: {other}"
+    try
+        let parser = ArgumentParser.Create<Arguments>()
+        let arguments = parser.Parse(argv)
+        match arguments.GetAllResults() with
+        | [ Test_Integrations integrationTestArguments ] ->
+            let browserMode =
+                integrationTestArguments.TryGetResult Browser_Mode
+                |> Option.defaultValue IntegrationTests.BrowserMode.Local
+            IntegrationTests.run browserMode
+        | [ Test_Units ] ->
+            UnitTests.run ()
+        | other -> failwith $"invalid arguments: {other}"
+    with ex ->
+        printfn $"Error!: {ex}"
+        1
