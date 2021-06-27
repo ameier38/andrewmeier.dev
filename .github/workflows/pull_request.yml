@@ -14,9 +14,12 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '5.0.x'
-      - name: Restore Tools 
+      - name: Restore Tools and Packages 
         working-directory: ./app
-        run: dotnet tool restore
+        run:
+          dotnet tool restore
+          dotnet paket install
+          dotnet paket restore
       - name: Run Integration Tests
         working-directory: ./app
         run: ./fake.sh TestIntegrationsHeadless
