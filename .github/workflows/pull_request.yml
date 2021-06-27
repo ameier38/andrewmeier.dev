@@ -16,7 +16,7 @@ jobs:
           dotnet-version: '5.0.x'
       - name: Restore Tools and Packages 
         working-directory: ./app
-        run:
+        run: |
           dotnet tool restore
           dotnet paket install
           dotnet paket restore
