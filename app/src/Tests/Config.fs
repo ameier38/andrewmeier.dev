@@ -7,7 +7,6 @@ open System.IO
 type CanopyConfig =
     { ClientUrl: string
       ChromeDriverDir: string
-      WebDriverPort: int
       ScreenshotsDir: string }
     static member Load() =
         let clientScheme = Env.getEnv "CLIENT_SCHEME" "http"
@@ -15,5 +14,4 @@ type CanopyConfig =
         let clientPort = Env.getEnv "CLIENT_PORT" "5000" |> int
         { ClientUrl = sprintf "%s://%s:%i" clientScheme clientHost clientPort
           ChromeDriverDir = Env.getEnv "CHROME_DRIVER_DIR" AppContext.BaseDirectory
-          WebDriverPort = Env.getEnv "WEB_DRIVER_PORT" "4444" |> int
           ScreenshotsDir = Env.getEnv "SCREENSHOTS_DIR" (Path.Join(AppContext.BaseDirectory, "screenshots")) }

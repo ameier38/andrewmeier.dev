@@ -13,7 +13,6 @@ type BrowserMode =
 
 let configureCanopy (config:CanopyConfig) =
     canopy.configuration.chromeDir <- config.ChromeDriverDir
-    canopy.configuration.webdriverPort <- Some config.WebDriverPort
     canopy.configuration.failScreenshotPath <- config.ScreenshotsDir
     canopy.configuration.failureScreenshotsEnabled <- true
 

@@ -22,6 +22,7 @@ let main argv =
     try
         let parser = ArgumentParser.Create<Arguments>()
         let arguments = parser.Parse(argv)
+        printfn $"received arguments: {arguments}"
         match arguments.GetAllResults() with
         | [ Test_Integrations integrationTestArguments ] ->
             let browserMode =
