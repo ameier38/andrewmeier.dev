@@ -20,31 +20,31 @@ jobs:
           dotnet tool restore
           dotnet paket install
           dotnet paket restore
-      - name: Run Unit Tests
-        working-directory: ./app
-        run: ./fake.sh TestUnits
+      # - name: Run Unit Tests
+      #   working-directory: ./app
+      #   run: ./fake.sh TestUnits
       - name: Check Chrome Version
         run: google-chrome --version
       - name: Run Integration Tests
         working-directory: ./app
-        run: dotnet run -p ./app/src/Tests.fsproj test-integrations --browser-mode headless
+        run: dotnet run -p ./src/Tests/Tests.fsproj test-integrations --browser-mode headless
       - name: Upload screenshots
         uses: actions/upload-artifact@v2
         with:
           name: screenshots
           path: ./app/.screenshots/*.jpg
-      - name: Setup Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: 14.x
-      - name: Install Packages
-        run: npm install
-        working-directory: ./pulumi
-      - name: Preview
-        uses: pulumi/actions@v3
-        with:
-          work-dir: ./pulumi
-          command: preview
-          stack-name: prod
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      # - name: Setup Node
+      #   uses: actions/setup-node@v1
+      #   with:
+      #     node-version: 14.x
+      # - name: Install Packages
+      #   run: npm install
+      #   working-directory: ./pulumi
+      # - name: Preview
+      #   uses: pulumi/actions@v3
+      #   with:
+      #     work-dir: ./pulumi
+      #     command: preview
+      #     stack-name: prod
+      #   env:
+      #     PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
