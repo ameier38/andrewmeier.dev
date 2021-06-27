@@ -110,24 +110,17 @@ let registerTasks() =
             failwithf $"{res.Errors}"
     } |> ignore
 
-    let publish projPath =
+    BuildTask.create "PublishServer" [] {
         let runtime = Environment.environVarOrDefault "RUNTIME_ID" "linux-x64"
-        let projRoot = Path.getDirectory projPath
+        let serverRoot = Path.getDirectory serverProj
         Trace.tracefn "Publishing with runtime %s" runtime
         DotNet.publish
             (fun args ->
                 { args with
-                    OutputPath = Some $"%s{projRoot}/out"
+                    OutputPath = Some $"%s{serverRoot}/out"
                     Runtime = Some runtime
                     SelfContained = Some false })
-            $"%s{projPath}"
-
-    BuildTask.create "PublishServer" [] {
-        publish serverProj
-    } |> ignore
-
-    BuildTask.create "PublishTests" [] {
-        publish testsProj
+            serverProj
     } |> ignore
 
 [<EntryPoint>]

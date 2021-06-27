@@ -8,6 +8,11 @@ F#, ASP.NET, Fable, Fable.Remoting, Feliz, Tailwind CSS, Snowpack, and Airtable.
     ```
     dotnet tool restore
     ```
+3. Install packages.
+   ```
+   dotnet paket install
+   dotnet paket restore
+   ```
 
 ## Usage
 List build targets.
@@ -20,7 +25,6 @@ The following targets are available:
    Clean
    CleanClient
    InstallClient
-   PublishTests
    PublishServer
    Restore
    TestIntegrations
@@ -37,7 +41,7 @@ Watch the server and client for local development.
 ```
 > Navigate to http://localhost:3000.
 Server code changes will automatically rebuild the server.
-Client code changes will automatically hot reload
+Client code changes will automatically hot reload in the browser.
 
 Run the application locally.
 ```

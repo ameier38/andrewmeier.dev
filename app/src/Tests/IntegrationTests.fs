@@ -12,12 +12,12 @@ type BrowserMode =
     | Headless
 
 let configureCanopy (config:CanopyConfig) =
-    canopy.configuration.chromeDir <- config.DriverDir
-    canopy.configuration.webdriverPort <- Some config.DriverPort
+    canopy.configuration.chromeDir <- config.ChromeDriverDir
+    canopy.configuration.webdriverPort <- Some config.WebDriverPort
     canopy.configuration.failScreenshotPath <- config.ScreenshotsDir
     canopy.configuration.failureScreenshotsEnabled <- true
 
-let startBrowser (browserMode:BrowserMode, config:CanopyConfig) =
+let startBrowser (browserMode:BrowserMode) =
     let browserStartMode =
         let chromeOptions = ChromeOptions()
         chromeOptions.AddArgument("--no-sandbox")
@@ -32,7 +32,7 @@ let startBrowser (browserMode:BrowserMode, config:CanopyConfig) =
 
 let startApp (config:CanopyConfig) =
     let clientUrl = config.ClientUrl
-    printfn $"clientUrl: {clientUrl}"
+    describe $"starting app {clientUrl}"
     url clientUrl
     waitForElement "#app"
 
@@ -69,7 +69,7 @@ let run (browserMode:BrowserMode) =
         let config = CanopyConfig.Load()
         printfn $"config: {config}"
         registerTestApp config
-        startBrowser (browserMode, config)
+        startBrowser browserMode
         run()
         onFail (fun _ -> failed <- true)
         quit()
