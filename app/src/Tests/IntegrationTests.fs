@@ -68,6 +68,7 @@ let run (browserMode:BrowserMode) =
     try
         let config = CanopyConfig.Load()
         printfn $"config: {config}"
+        configureCanopy config
         registerTestApp config
         startBrowser browserMode
         run()
