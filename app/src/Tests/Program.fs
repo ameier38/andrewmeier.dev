@@ -9,26 +9,24 @@ type IntegrationTestArguments =
             | Browser_Mode _ -> "how to run the browser"
     
 and Arguments =
-    | [<CliPrefix(CliPrefix.None)>] All of ParseResults<IntegrationTestArguments>
-    | [<CliPrefix(CliPrefix.None)>] Unit
-    | [<CliPrefix(CliPrefix.None)>] Integration of ParseResults<IntegrationTestArguments>
+    | [<CliPrefix(CliPrefix.None)>] Test_Units
+    | [<CliPrefix(CliPrefix.None)>] Test_Integrations of ParseResults<IntegrationTestArguments>
     interface IArgParserTemplate with
         member this.Usage =
             match this with
-            | All _ -> "run all the tests"
-            | Unit -> "run the unit tests"
-            | Integration _ -> "run the integration tests"
+            | Test_Units -> "run the unit tests"
+            | Test_Integrations _ -> "run the integration tests"
 
 [<EntryPoint>]
 let main argv =
     let parser = ArgumentParser.Create<Arguments>()
     let arguments = parser.Parse(argv)
     match arguments.GetAllResults() with
-    | [ All integrationTestArguments ] | [ Integration integrationTestArguments ] ->
+    | [ Test_Integrations integrationTestArguments ] ->
         let browserMode =
             integrationTestArguments.TryGetResult Browser_Mode
             |> Option.defaultValue IntegrationTests.BrowserMode.Local
         IntegrationTests.run browserMode
-    | [ Unit ] ->
+    | [ Test_Units ] ->
         UnitTests.run ()
     | other -> failwith $"invalid arguments: {other}"

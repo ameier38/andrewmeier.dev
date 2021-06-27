@@ -10,12 +10,11 @@ open OpenQA.Selenium.Chrome
 type BrowserMode =
     | Local
     | Headless
-    | Remote
 
 let configureCanopy (config:CanopyConfig) =
     canopy.configuration.chromeDir <- config.DriverDir
     canopy.configuration.webdriverPort <- Some config.DriverPort
-    canopy.configuration.failScreenshotPath <- config.ScreenshotDir
+    canopy.configuration.failScreenshotPath <- config.ScreenshotsDir
     canopy.configuration.failureScreenshotsEnabled <- true
 
 let startBrowser (browserMode:BrowserMode, config:CanopyConfig) =
@@ -23,14 +22,10 @@ let startBrowser (browserMode:BrowserMode, config:CanopyConfig) =
         let chromeOptions = ChromeOptions()
         chromeOptions.AddArgument("--no-sandbox")
         match browserMode with
-        | BrowserMode.Local ->
-            ChromeWithOptions chromeOptions
+        | BrowserMode.Local -> ()
         | BrowserMode.Headless ->
             chromeOptions.AddArgument("--headless")
-            ChromeWithOptions chromeOptions
-        | BrowserMode.Remote ->
-            chromeOptions.AddArgument("--headless")
-            Remote(config.DriverUrl, chromeOptions.ToCapabilities())
+        ChromeWithOptions chromeOptions
     start browserStartMode
     pin Left 
     resize (1000, 600)
@@ -47,7 +42,7 @@ let registerTestApp (config:CanopyConfig) =
         describe "should be on home page"
         on config.ClientUrl
         waitForElement "#win-dev"
-        screenshot config.ScreenshotDir "home" |> ignore
+        screenshot config.ScreenshotsDir "home" |> ignore
         describe "should be two posts"
         count ".post-item" 2
         describe "post item should have summary"
@@ -57,7 +52,7 @@ let registerTestApp (config:CanopyConfig) =
         describe "should be on 'win-dev' post"
         on $"{config.ClientUrl}/win-dev"
         waitForElement "#title"
-        screenshot config.ScreenshotDir "win-dev" |> ignore
+        screenshot config.ScreenshotsDir "win-dev" |> ignore
         let expectedTitle = "Windows Development Environment"
         describe $"title should be '{expectedTitle}'"
         "#title" == expectedTitle

@@ -20,16 +20,17 @@ jobs:
           dotnet tool restore
           dotnet paket install
           dotnet paket restore
+      - name: Run Unit Tests
+        working-directory: ./app
+        run: ./fake.sh TestUnits
       - name: Run Integration Tests
         working-directory: ./app
         run: ./fake.sh TestIntegrationsHeadless
-        env:
-          SCREENSHOTS_DIR: ${{ github.workspace }}/.screenshots
       - name: Upload screenshots
         uses: actions/upload-artifact@v2
         with:
           name: screenshots
-          path: ${{ github.workspace }}/.screenshots/*.jpg
+          path: ./app/.screenshots/*.jpg
       - name: Setup Node
         uses: actions/setup-node@v1
         with:

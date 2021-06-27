@@ -32,14 +32,12 @@ WORKDIR /app
 # copy projects and build script
 COPY src src
 COPY fake.sh .
-RUN chmod +x fake.sh
 
 # set the runtime identifier
 ARG RUNTIME_ID=linux-x64
 ENV RUNTIME_ID ${RUNTIME_ID}
 
-# run unit tests, build the client, and publish the server 
-RUN ./fake.sh TestUnits
+# build the client and publish the server 
 RUN ./fake.sh BuildClient
 RUN ./fake.sh PublishServer
 
@@ -47,6 +45,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:5.0 as runner
 
 WORKDIR /app
 
+# copy compiled code from build image
 COPY --from=builder /app/src/Server/out .
 COPY --from=builder /app/src/Client/out ./wwwroot
 

@@ -9,7 +9,7 @@ type CanopyConfig =
       DriverUrl: string
       DriverDir: string
       DriverPort: int
-      ScreenshotDir: string }
+      ScreenshotsDir: string }
     static member Load() =
         let clientScheme = Env.getEnv "CLIENT_SCHEME" "http"
         let clientHost = Env.getEnv "CLIENT_HOST" "localhost"
@@ -21,4 +21,4 @@ type CanopyConfig =
           DriverUrl = sprintf "%s://%s:%i/webdriver" chromeScheme chromeHost chromePort
           DriverDir = Env.getEnv "CHROME_DRIVER_DIR" AppContext.BaseDirectory
           DriverPort = 4444
-          ScreenshotDir = Env.getEnv "SCREENSHOT_DIR" (Path.Join(AppContext.BaseDirectory, "screenshots")) }
+          ScreenshotsDir = Env.getEnv "SCREENSHOTS_DIR" (Path.Join(AppContext.BaseDirectory, "screenshots")) }

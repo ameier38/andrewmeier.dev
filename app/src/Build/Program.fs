@@ -14,6 +14,7 @@ let sln = root </> "andrewmeier.dev.sln"
 let clientProj = src </> "Client" </> "src" </> "Client.fsproj"
 let serverProj = src </> "Server" </> "Server.fsproj"
 let testsProj = src </> "Tests" </> "Tests.fsproj"
+let screenshotsDir = root </> ".screenshots"
 
 let registerTasks() =
 
@@ -84,7 +85,7 @@ let registerTasks() =
             DotNet.exec
                 id
                 "run"
-                $"-p {testsProj} unit"
+                $"-p {testsProj} test-units"
         if not res.OK then
             failwithf $"{res.Errors}"
     } |> ignore
@@ -92,9 +93,9 @@ let registerTasks() =
     BuildTask.create "TestIntegrations" [] {
         let res =
             DotNet.exec
-                id
+                (fun opts -> { opts with Environment = Map.ofList [ "SCREENSHOTS_DIR", screenshotsDir ] })
                 "run"
-                $"-p {testsProj} integration"
+                $"-p {testsProj} test-integrations"
         if not res.OK then
             failwithf $"{res.Errors}"
     } |> ignore
@@ -102,19 +103,9 @@ let registerTasks() =
     BuildTask.create "TestIntegrationsHeadless" [] {
         let res =
             DotNet.exec
-                id
+                (fun opts -> { opts with Environment = Map.ofList [ "SCREENSHOTS_DIR", screenshotsDir ] })
                 "run"
-                $"-p {testsProj} integration --browser-mode headless"
-        if not res.OK then
-            failwithf $"{res.Errors}"
-    } |> ignore
-
-    BuildTask.create "TestIntegrationsRemote" [] {
-        let res =
-            DotNet.exec
-                id
-                "run"
-                $"-p {testsProj} integration --browser-mode remote"
+                $"-p {testsProj} test-integrations --browser-mode headless"
         if not res.OK then
             failwithf $"{res.Errors}"
     } |> ignore
