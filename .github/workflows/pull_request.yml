@@ -11,9 +11,9 @@ jobs:
         working-directory: ./app
         run: docker-compose up -d app
       - name: Setup .NET
-        - uses: actions/setup-dotnet@v1
-          with:
-            dotnet-version: '5.0.x'
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.x'
       - name: Restore Tools 
         working-directory: ./app
         run: dotnet tool restore
