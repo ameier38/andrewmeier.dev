@@ -1,4 +1,3 @@
-ARG RUNTIME_IMAGE_TAG=5.0
 FROM mcr.microsoft.com/dotnet/sdk:5.0 as builder
 
 WORKDIR /app
@@ -7,7 +6,7 @@ WORKDIR /app
 ENV DOTNET_CLI_TELEMETRY_OPTOUT 1
 
 # update packages
-RUN apt update && apt upgrade -y
+RUN apt-get update && apt-get upgrade -y
 
 # install Node
 RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
@@ -44,7 +43,7 @@ RUN ./fake.sh TestUnits
 RUN ./fake.sh BuildClient
 RUN ./fake.sh PublishServer
 
-FROM mcr.microsoft.com/dotnet/runtime:${RUNTIME_IMAGE_TAG} as runner
+FROM mcr.microsoft.com/dotnet/aspnet:5.0 as runner
 
 WORKDIR /app
 

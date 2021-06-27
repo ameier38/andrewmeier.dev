@@ -1,4 +1,3 @@
-ARG RUNTIME_IMAGE_TAG=5.0
 FROM mcr.microsoft.com/dotnet/sdk:5.0 as builder
 
 WORKDIR /app
@@ -7,7 +6,7 @@ WORKDIR /app
 ENV DOTNET_CLI_TELEMETRY_OPTOUT 1
 
 # update packages
-RUN apt update && apt upgrade -y
+RUN apt-get update && apt-get upgrade -y
 
 # restore tools
 COPY .config .config
@@ -30,7 +29,7 @@ ENV RUNTIME_ID ${RUNTIME_ID}
 # publish the test project
 RUN ./fake.sh PublishTests
 
-FROM mcr.microsoft.com/dotnet/runtime:${RUNTIME_IMAGE_TAG} as runner
+FROM mcr.microsoft.com/dotnet/aspnet:5.0 as runner
 
 # install packages needed for chrome driver
 RUN apt-get update \

@@ -104,7 +104,17 @@ let registerTasks() =
             DotNet.exec
                 id
                 "run"
-                $"-p {testsProj} integration --headless"
+                $"-p {testsProj} integration --browser-mode headless"
+        if not res.OK then
+            failwithf $"{res.Errors}"
+    } |> ignore
+
+    BuildTask.create "TestIntegrationsRemote" [] {
+        let res =
+            DotNet.exec
+                id
+                "run"
+                $"-p {testsProj} integration --browser-mode remote"
         if not res.OK then
             failwithf $"{res.Errors}"
     } |> ignore
@@ -114,10 +124,11 @@ let registerTasks() =
         let projRoot = Path.getDirectory projPath
         Trace.tracefn "Publishing with runtime %s" runtime
         DotNet.publish
-            (fun args -> 
+            (fun args ->
                 { args with
                     OutputPath = Some $"%s{projRoot}/out"
-                    Runtime = Some runtime })
+                    Runtime = Some runtime
+                    SelfContained = Some false })
             $"%s{projPath}"
 
     BuildTask.create "PublishServer" [] {

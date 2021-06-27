@@ -37,6 +37,7 @@ let startBrowser (browserMode:BrowserMode, config:CanopyConfig) =
 
 let startApp (config:CanopyConfig) =
     let clientUrl = config.ClientUrl
+    printfn $"clientUrl: {clientUrl}"
     url clientUrl
     waitForElement "#app"
 
@@ -71,6 +72,7 @@ let run (browserMode:BrowserMode) =
     let mutable failed = false
     try
         let config = CanopyConfig.Load()
+        printfn $"config: {config}"
         registerTestApp config
         startBrowser (browserMode, config)
         run()
