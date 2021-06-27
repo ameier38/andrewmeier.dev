@@ -91,9 +91,10 @@ let registerTasks() =
     } |> ignore
     
     BuildTask.create "TestIntegrations" [] {
+        Environment.setEnvironVar "SCREENSHOTS_DIR" screenshotsDir
         let res =
             DotNet.exec
-                (fun opts -> { opts with Environment = Map.ofList [ "SCREENSHOTS_DIR", screenshotsDir ] })
+                id
                 "run"
                 $"-p {testsProj} test-integrations"
         if not res.OK then
@@ -101,9 +102,10 @@ let registerTasks() =
     } |> ignore
 
     BuildTask.create "TestIntegrationsHeadless" [] {
+        Environment.setEnvironVar "SCREENSHOTS_DIR" screenshotsDir
         let res =
             DotNet.exec
-                (fun opts -> { opts with Environment = Map.ofList [ "SCREENSHOTS_DIR", screenshotsDir ] })
+                id
                 "run"
                 $"-p {testsProj} test-integrations --browser-mode headless"
         if not res.OK then
