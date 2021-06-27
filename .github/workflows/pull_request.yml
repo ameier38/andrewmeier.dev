@@ -17,6 +17,7 @@ jobs:
       - name: Restore Tools and Packages 
         working-directory: ./app
         run: |
+          apt-get update && apt-get upgrade -y
           dotnet tool restore
           dotnet paket install
           dotnet paket restore
