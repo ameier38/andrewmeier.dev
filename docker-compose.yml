@@ -2,7 +2,7 @@ version: '3.7'
 services:
   app:
     build:
-      context: .
+      context: ./app
       args: 
         RUNTIME_ID: linux-x64
     environment:

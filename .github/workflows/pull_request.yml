@@ -23,11 +23,13 @@ jobs:
       - name: Run Integration Tests
         working-directory: ./app
         run: ./fake.sh TestIntegrationsHeadless
+        env:
+          SCREENSHOTS_DIR: ${{ github.workspace }}/.screenshots
       - name: Upload screenshots
         uses: actions/upload-artifact@v2
         with:
           name: screenshots
-          path: ./app/.screenshots/*.jpg
+          path: ${{ github.workspace }}/.screenshots/*.jpg
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
