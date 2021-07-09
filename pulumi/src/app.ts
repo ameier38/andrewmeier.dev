@@ -50,6 +50,12 @@ const chart = new k8s.helm.v3.Chart(identifier, {
         backendType: 'http',
         containerPort: 5000,
         image: image.imageName,
+        podAnnotations: {
+            'prometheus.io/scrape': 'true',
+            'prometheus.io/path': '/metrics',
+            'prometheus.io/port': '5000',
+
+        },
         env: {
             DEBUG: "false",
             AIRTABLE_SECRET: airtableSecret.metadata.name,

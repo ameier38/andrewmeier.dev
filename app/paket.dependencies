@@ -21,6 +21,7 @@ nuget Markdig
 nuget Microsoft.AspNetCore.Hosting
 nuget Microsoft.AspNetCore.StaticFiles
 nuget Microsoft.AspNetCore.Server.Kestrel
+nuget prometheus-net.AspNetCore
 nuget Selenium.WebDriver.ChromeDriver 91.0.4472.10100
 nuget Serilog
 nuget Serilog.AspNetCore

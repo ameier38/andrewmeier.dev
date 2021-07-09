@@ -2,6 +2,7 @@
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Hosting
 open Microsoft.Extensions.DependencyInjection
+open Prometheus
 open Server.PostClient
 open Serilog
 open Serilog.Events
@@ -35,11 +36,13 @@ let main _ =
         appBuilder.UseRemoting(Server.Api.postApi)
         appBuilder
             .UseRouting()
+            .UseHttpMetrics()
             .UseDefaultFiles()
             .UseStaticFiles()
             .UseEndpoints(fun endpoints ->
                 endpoints.MapHealthChecks("/healthz") |> ignore
-                endpoints.MapFallbackToFile("index.html") |> ignore)
+                endpoints.MapFallbackToFile("index.html") |> ignore
+                endpoints.MapMetrics() |> ignore)
             |> ignore
         
     WebHostBuilder()
