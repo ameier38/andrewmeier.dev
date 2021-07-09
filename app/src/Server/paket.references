@@ -5,6 +5,7 @@ Markdig
 Microsoft.AspNetCore.Hosting
 Microsoft.AspNetCore.StaticFiles
 Microsoft.AspNetCore.Server.Kestrel
+prometheus-net.AspNetCore
 Serilog
 Serilog.AspNetCore
 Serilog.Sinks.Console
