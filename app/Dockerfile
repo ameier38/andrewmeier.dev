@@ -1,3 +1,4 @@
+ARG RUNTIME_IMAGE_TAG=5.0
 FROM mcr.microsoft.com/dotnet/sdk:5.0 as builder
 
 WORKDIR /app
@@ -41,7 +42,7 @@ ENV RUNTIME_ID ${RUNTIME_ID}
 RUN ./fake.sh BuildClient
 RUN ./fake.sh PublishServer
 
-FROM mcr.microsoft.com/dotnet/aspnet:5.0 as runner
+FROM mcr.microsoft.com/dotnet/aspnet:${RUNTIME_IMAGE_TAG} as runner
 
 WORKDIR /app
 
