@@ -45,7 +45,7 @@ Client code changes will automatically hot reload in the browser.
 
 Run the application locally.
 ```
-docker-compose up -d --build app
+docker compose up -d --build app
 ```
 > Navigate to http://localhost:5000
 
