@@ -17,16 +17,16 @@ let Post (post: Post) =
         prop.className "w-full"
         prop.children [
             Html.div [
-                prop.className "relative h-40 bg-blend-overlay bg-gray-800 mb-2"
+                prop.className "bg-blend-overlay bg-gray-800 mb-2"
                 prop.style [
                     style.backgroundImageUrl post.Cover
                 ]
                 prop.children [
                     Html.div [
-                        prop.className "absolute top-0 left-0 px-2"
+                        prop.className "p-2"
                         prop.children [
                             Html.h1 [
-                                prop.className "text-3xl text-gray-200 font-bold mt-2 mb-2"
+                                prop.className "text-3xl text-gray-200 font-bold mb-2"
                                 prop.id "title"
                                 prop.text post.Title
                             ]
