@@ -28,8 +28,8 @@ const image = new docker.Image(identifier, {
     build: {
         context: path.join(config.root, 'app'),
         args: { 
-            RUNTIME_IMAGE_TAG: '5.0-focal-arm32v7',
-            RUNTIME_ID: 'linux-arm'
+            RUNTIME_IMAGE_TAG: '5.0',
+            RUNTIME_ID: 'linux-x64'
         }
     },
     registry: config.imageRegistry
@@ -66,7 +66,7 @@ const chart = new k8s.helm.v3.Chart(identifier, {
         secrets: [
             airtableSecret.metadata.name
         ],
-        nodeSelector: { 'kubernetes.io/arch': 'arm' }
+        nodeSelector: { 'kubernetes.io/arch': 'amd64' }
     }
 }, { provider: config.k8sProvider })
 
