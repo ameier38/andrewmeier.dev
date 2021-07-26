@@ -1,5 +1,5 @@
 config:
   airtable:apiKey:
-    secure: AAABAICIFWESC9d0S1rl00rAtLjA4uM89+aZf0oXhn0rFO2VRSLInAeqgKDAIozYOw==
+    secure: AAABAHezy/iwCXcTtXUyq52wAPhW/tMzFu5MFZRzsZktgfvHYrckaZL8kb8pzxmL5Q==
   airtable:baseId:
-    secure: AAABAAXlZVXptzCkgvvseoO+U7Zlb5VwD+8gdAozDV5+8CvEHOAKB3IUJwlwq2aw9A==
+    secure: AAABAJKOgT6iUY+HjaEpb7ELOgb4wVjh10HYZy0h+bZjEaJvbn8NmYyVuPvWymXukg==
