@@ -63,17 +63,17 @@ let registerTestApp (config:CanopyConfig) =
         "#title" == expectedTitle
     
 let run (browserMode:BrowserMode) =
-    let mutable failed = false
+    let mutable fail = false
     try
         let config = CanopyConfig.Load()
         printfn $"config: {config}"
         configureCanopy config
         registerTestApp config
         startBrowser browserMode
+        onFail (fun _ -> fail <- true)
         run()
-        onFail (fun _ -> failed <- true)
         quit()
-        if failed then 1 else 0
+        if fail then 1 else 0
     with ex ->
         printfn $"Error! {ex}"
         quit()
