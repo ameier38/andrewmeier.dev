@@ -57,7 +57,8 @@ const chart = new k8s.helm.v3.Chart(identifier, {
 
         },
         env: {
-            DEBUG: "false",
+            APP_ENV: 'PROD',
+            DEBUG: 'false',
             AIRTABLE_SECRET: airtableSecret.metadata.name,
             SERVER_PORT: 5000,
             SEQ_HOST: config.seqHost,
