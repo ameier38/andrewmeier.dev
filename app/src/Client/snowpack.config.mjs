@@ -7,8 +7,6 @@ import proxy from 'http2-proxy';
 export default {
   mount: {
     static: '/',
-    scripts: '/scripts',
-    styles: '/styles',
     compiled: '/compiled'
   },
   plugins: [

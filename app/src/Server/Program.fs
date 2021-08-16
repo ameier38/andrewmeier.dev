@@ -13,22 +13,24 @@ let main _ =
     let config = Server.Config.Load()
     let logger = 
         LoggerConfiguration()
+            .Enrich.WithProperty("Application", config.AppName)
+            .Enrich.WithProperty("Environment", config.AppEnv)
             .MinimumLevel.Is(if config.Debug then LogEventLevel.Debug else LogEventLevel.Information)
             .WriteTo.Console()
             .WriteTo.Seq(config.SeqConfig.Url)
             .CreateLogger()
     Log.Logger <- logger
     Log.Debug("Debug mode")
-    if config.Debug then
-        Log.Debug("Config {@Config}", config)
+    Log.Debug("{Config}", config)
 
     let configureServices (serviceCollection:IServiceCollection) =
         serviceCollection
             .AddRouting()
             .AddHealthChecks() |> ignore
-        if config.CI then
+        match config.AppEnv with
+        | AppEnv.Dev ->
             serviceCollection.AddSingleton<IPostClient, MockPostClient>() |> ignore
-        else
+        | AppEnv.Prod ->
             serviceCollection.AddSingleton<IPostClient, AirtablePostClient>(fun _ ->
                 AirtablePostClient(config.AirtableConfig)) |> ignore
 
@@ -45,12 +47,19 @@ let main _ =
                 endpoints.MapMetrics() |> ignore)
             |> ignore
         
-    WebHostBuilder()
-        .UseSerilog()
-        .UseKestrel()
-        .ConfigureServices(configureServices)
-        .Configure(System.Action<IApplicationBuilder> configureApp)
-        .UseUrls(config.ServerConfig.Url)
-        .Build()
-        .Run()
-    0
+    try
+        try
+            WebHostBuilder()
+                .UseSerilog()
+                .UseKestrel()
+                .ConfigureServices(configureServices)
+                .Configure(System.Action<IApplicationBuilder> configureApp)
+                .UseUrls(config.ServerConfig.Url)
+                .Build()
+                .Run()
+            0
+        with ex ->
+            Log.Error(ex, "Error running server")
+            1
+    finally
+        Log.CloseAndFlush()

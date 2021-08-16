@@ -16,20 +16,20 @@ let postApi =
     
 let getPost (permalink:string) =
     async {
-        let req = { Permalink = permalink }
+        let req = { permalink = permalink }
         let! res = postApi.getPost req
-        return res.Post
+        return res.post
     }
     
 let listPosts () =
     let rec recurse (posts:PostSummary list) (pageToken:string option) =
         async {
-            let req = { PageSize = Some 10; PageToken = pageToken }
+            let req = { pageSize = Some 10; pageToken = pageToken }
             let! res = postApi.listPosts req
-            let posts = res.Posts @ posts
-            match res.PageToken with
+            let posts = res.posts @ posts
+            match res.pageToken with
             | None -> return posts
-            | Some _ -> return! recurse posts res.PageToken
+            | Some _ -> return! recurse posts res.pageToken
         }
     recurse [] None
 
@@ -51,11 +51,10 @@ let init () =
     Cmd.none
     
 let update (msg:Msg) (state:State) =
-    printfn $"msg: {msg}"
     match msg with
     | LoadPost permalink ->
         match state.SelectedPost with
-        | Resolved { Permalink = currentPermalink } when permalink = currentPermalink ->
+        | Resolved { permalink = currentPermalink } when permalink = currentPermalink ->
             state,
             Cmd.none
         | _ ->

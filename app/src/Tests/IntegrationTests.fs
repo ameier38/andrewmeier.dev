@@ -42,8 +42,8 @@ let registerTestApp (config:CanopyConfig) =
         on config.ClientUrl
         waitForElement "#win-dev"
         screenshot config.ScreenshotsDir "home" |> ignore
-        describe "should be two posts"
-        count ".post-item" 2
+        describe "should be three posts"
+        count ".post-item" 3
         describe "post item should have summary"
         "#win-dev > .post-summary" == "Set up a Window's machine for development."
         describe "should navigate to 'win-dev' post"

@@ -40,7 +40,7 @@ let Icon (path:string) (href:string) =
         prop.href href
         prop.children [
             Svg.svg [
-                svg.className "h-8 w-8 p-1 mx-1 rounded-md fill-current text-gray-500 cursor-pointer hover:bg-gray-200"
+                svg.className "h-8 w-8 p-1 mx-1 rounded fill-current text-gray-500 cursor-pointer hover:bg-gray-200"
                 svg.viewBox (0, 0, 16, 16)
                 svg.children [
                     Svg.path [
@@ -61,10 +61,10 @@ let Navigation () =
         prop.className "bg-gray-100 border-b-2 border-gray-200"
         prop.children [
             Html.div [
-                prop.className "container max-w-2xl h-16 mx-auto flex justify-between items-center"
+                prop.className "container px-2 max-w-2xl h-16 mx-auto flex justify-between items-center"
                 prop.children [
                     Html.a [
-                        prop.className "px-3 py-2 rounded-md text-lg text-gray-800 font-medium cursor-pointer hover:bg-gray-200"
+                        prop.className "px-2 py-2 rounded text-lg text-gray-800 font-medium cursor-pointer hover:bg-gray-200"
                         prop.href "/"
                         prop.text "Andrew's Thoughts"
                     ]
@@ -72,7 +72,7 @@ let Navigation () =
                         prop.className "flex items-center"
                         prop.children [
                             Html.a [
-                                prop.className "px-3 py-2 rounded-md text-md font-medium text-gray-500 cursor-pointer hover:bg-gray-200"
+                                prop.className "px-2 py-2 rounded text-md font-medium text-gray-500 cursor-pointer hover:bg-gray-200"
                                 prop.href "/about"
                                 prop.text "About"
                             ]

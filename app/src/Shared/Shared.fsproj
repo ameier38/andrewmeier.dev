@@ -4,7 +4,6 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Infrastructure.fs" />
     <Compile Include="Domain.fs" />
     <Compile Include="PostStore.fs" />
   </ItemGroup>

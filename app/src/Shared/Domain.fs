@@ -3,17 +3,17 @@ module Shared.Domain
 open System
 
 type PostSummary =
-    { PostId: string
-      Permalink: string
-      Title: string
-      Summary: string
-      UpdatedAt: DateTimeOffset }
+    { postId: string
+      permalink: string
+      title: string
+      summary: string option
+      updatedAt: DateTimeOffset }
 
 type Post =
-    { PostId: string
-      Permalink: string
-      Title: string
-      Cover: string
-      CreatedAt: DateTimeOffset
-      UpdatedAt: DateTimeOffset
-      Content: string }
+    { postId: string
+      permalink: string
+      title: string
+      cover: string
+      createdAt: DateTimeOffset
+      updatedAt: DateTimeOffset
+      content: string }

@@ -38,15 +38,9 @@ let registerTasks() =
 
     let watchServer =
         async {
-            let env = Map.ofList [ "CI", "true" ]
-            let res =
-                DotNet.exec
-                    (fun opts -> { opts with Environment = env })
-                    "watch"
-                    $"-p {serverProj} run"
+            let res = DotNet.exec id "watch" $"-p {serverProj} run"
             if not res.OK then
                 failwithf $"{res.Errors}"
-            
         }
     
     BuildTask.create "WatchServer" [] {

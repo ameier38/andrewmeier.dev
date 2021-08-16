@@ -21,6 +21,19 @@ let [<Literal>] ListPostsResponse = """
             "createdTime": "2020-04-12T16:55:28.000Z"
         },
         {
+            "id": "reclAnGWapIS5ZG5K",
+            "fields": {
+                "status": "Published",
+                "permalink": "test",
+                "title": "Test",
+                "content": "Testing",
+                "summary": "",
+                "created_at": "2020-04-12T16:55:28.000Z",
+                "updated_at": "2020-04-12T18:07:32.000Z"
+            },
+            "createdTime": "2020-04-12T16:55:28.000Z"
+        },
+        {
             "id": "rec5AMJ3Lah6OSy61",
             "fields": {
                 "status": "Published",
@@ -144,9 +157,9 @@ type IPostClient =
 type AirtablePostClient(config:AirtableConfig) =
 
     let get endpoint query =
-        let auth = sprintf "Bearer %s" config.ApiKey
+        let auth = $"Bearer {config.ApiKey}"
         Http.AsyncRequestString(
-            url = sprintf "%s/%s/%s" config.ApiUrl config.BaseId endpoint,
+            url = $"{config.ApiUrl}/{config.BaseId}/{endpoint}",
             query = query,
             headers = [
                 HttpRequestHeaders.Authorization auth
@@ -183,10 +196,10 @@ type AirtablePostClient(config:AirtableConfig) =
                     let record =
                         match root.Records with
                         | [||] ->
-                            failwithf "%s not found" permalink
+                            failwith $"{permalink} not found"
                         | [| record |] -> record
                         | _ ->
-                            failwithf "found multiple posts with the same permalink: %s" permalink
+                            failwith $"found multiple posts with the same permalink: {permalink}"
                     return record
                 with ex ->
                     Log.Error(ex, "Error getting post")

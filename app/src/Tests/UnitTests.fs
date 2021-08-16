@@ -12,12 +12,12 @@ let mockPostStore = postStore postClient
 let testPostStore =
     testAsync "PostStore" {
         // GIVEN a list posts request
-        let req:ListPostsRequest = { PageSize = Some 10; PageToken = None }
+        let req:ListPostsRequest = { pageSize = Some 10; pageToken = None }
         // WHEN we send the request
         let! res = mockPostStore.listPosts(req)
         // THEN we should receive posts
-        let expectedPermalinks = ["win-dev"; "about"]
-        let actualPermalinks = res.Posts |> List.map (fun p -> p.Permalink)
+        let expectedPermalinks = ["win-dev"; "about"; "test"]
+        let actualPermalinks = res.posts |> List.map (fun p -> p.permalink)
         Expect.sequenceEqual actualPermalinks expectedPermalinks "permalinks should match"
     }
     
