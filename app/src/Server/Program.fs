@@ -13,6 +13,8 @@ let main _ =
     let config = Server.Config.Load()
     let logger = 
         LoggerConfiguration()
+            .Enrich.WithProperty("Application", config.AppName)
+            .Enrich.WithProperty("Environment", config.AppEnv)
             .MinimumLevel.Is(if config.Debug then LogEventLevel.Debug else LogEventLevel.Information)
             .WriteTo.Console()
             .WriteTo.Seq(config.SeqConfig.Url)
