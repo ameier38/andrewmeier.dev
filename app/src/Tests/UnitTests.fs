@@ -16,7 +16,7 @@ let testPostStore =
         // WHEN we send the request
         let! res = mockPostStore.listPosts(req)
         // THEN we should receive posts
-        let expectedPermalinks = ["win-dev"; "about"]
+        let expectedPermalinks = ["win-dev"; "about"; "test"]
         let actualPermalinks = res.posts |> List.map (fun p -> p.permalink)
         Expect.sequenceEqual actualPermalinks expectedPermalinks "permalinks should match"
     }
