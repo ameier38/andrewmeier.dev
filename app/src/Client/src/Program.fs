@@ -5,7 +5,7 @@ open Feliz
 
 #if DEBUG
 open Fable.Core.JsInterop
-importSideEffects "../scripts/hmr.mjs"
+importSideEffects "../static/hmr.mjs"
 #endif
 
 ReactDOM.render(App.App(), document.getElementById "app")

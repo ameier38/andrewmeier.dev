@@ -22,7 +22,7 @@ nuget Microsoft.AspNetCore.Hosting
 nuget Microsoft.AspNetCore.StaticFiles
 nuget Microsoft.AspNetCore.Server.Kestrel
 nuget prometheus-net.AspNetCore
-nuget Selenium.WebDriver.ChromeDriver 91.0.4472.10100
+nuget Selenium.WebDriver.ChromeDriver 92.0.4515.10700
 nuget Serilog
 nuget Serilog.AspNetCore
 nuget Serilog.Sinks.Console

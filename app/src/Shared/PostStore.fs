@@ -2,17 +2,13 @@ module Shared.PostStore
 
 open Domain
 
-type ListPostsRequest =
-    { PageSize: int option
-      PageToken: string option }
+type ListPostsRequest = { pageSize: int option; pageToken: string option }
 
-type ListPostsResponse =
-    { Posts: PostSummary list
-      PageToken: string option }
+type ListPostsResponse = { posts: PostSummary list; pageToken: string option }
 
-type GetPostRequest = { Permalink: string }
+type GetPostRequest = { permalink: string }
 
-type GetPostResponse = { Post: Post }
+type GetPostResponse = { post: Post }
 
 type IPostStore =
     { getPost: GetPostRequest -> Async<GetPostResponse>

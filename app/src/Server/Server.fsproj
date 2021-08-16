@@ -5,6 +5,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Infrastructure.fs" />
     <Compile Include="Config.fs" />
     <Compile Include="PostClient.fs" />
     <Compile Include="PostStore.fs" />

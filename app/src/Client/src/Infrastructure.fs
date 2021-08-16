@@ -10,7 +10,7 @@ type Deferred<'T> =
 
 module Env =
     [<Emit("import.meta.env[$0] ? import.meta.env[$0] : $1")>]
-    let getEnv (key:string) (defaultValue:string): string = jsNative
+    let variable (key:string) (defaultValue:string): string = jsNative
 
 module Prism =
     [<Emit("window.Prism.highlightAllUnder($0)")>]

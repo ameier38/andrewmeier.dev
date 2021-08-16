@@ -13,11 +13,11 @@ module Dto =
 
     module PostSummary =
         let fromRecord(record:PostProvider.Record) =
-            { PostId = record.Id
-              Permalink = record.Fields.Permalink
-              Title = record.Fields.Title
-              Summary = record.Fields.Summary
-              UpdatedAt = record.Fields.UpdatedAt }
+            { postId = record.Id
+              permalink = record.Fields.Permalink
+              title = record.Fields.Title
+              summary = record.Fields.Summary
+              updatedAt = record.Fields.UpdatedAt }
 
     module Post =
         let markdownPipeline = 
@@ -32,7 +32,7 @@ module Dto =
                 record.Fields.Images
                 |> Array.map (fun img -> 
                     String.Format(@"!\[(.*?)\]\({0}\)", img.Filename), 
-                    sprintf "![$1](%s)" img.Url)
+                    $"![$1]({img.Url})")
             let replaceImages (content:string) =
                 imagePatterns
                 |> Array.fold (fun content (pattern, replace) ->
@@ -52,22 +52,22 @@ module Dto =
                 |> Array.tryFind (fun img -> Regex.IsMatch(img.Filename, coverPattern)) 
                 |> Option.map (fun img -> img.Url)
                 |> Option.defaultValue ""
-            { PostId = record.Id
-              Permalink = record.Fields.Permalink
-              Title = record.Fields.Title
-              Cover = cover
-              CreatedAt = record.Fields.CreatedAt
-              UpdatedAt = record.Fields.UpdatedAt
-              Content = parsedContent }
+            { postId = record.Id
+              permalink = record.Fields.Permalink
+              title = record.Fields.Title
+              cover = cover
+              createdAt = record.Fields.CreatedAt
+              updatedAt = record.Fields.UpdatedAt
+              content = parsedContent }
 
 let getPost
     (client:IPostClient) = 
     fun (req:GetPostRequest) ->
         async {
             Log.Information("Getting post {@Request}", req)
-            let! record = client.GetPost(req.Permalink)
+            let! record = client.GetPost(req.permalink)
             let post = Dto.Post.fromRecord record
-            return { Post = post }
+            return { post = post }
         }
 
 
@@ -77,18 +77,18 @@ let listPosts
         async {
             try
                 Log.Information("Listing posts {@Request}", req)
-                let! res = client.ListPosts(req.PageSize, req.PageToken)
+                let! res = client.ListPosts(req.pageSize, req.pageToken)
                 let posts =
                     res.Records
                     |> Array.map Dto.PostSummary.fromRecord
                     |> Array.toList
-                    |> List.sortByDescending (fun post -> post.UpdatedAt)
+                    |> List.sortByDescending (fun post -> post.updatedAt)
                 let pageToken = 
                     res.JsonValue.TryGetProperty("offset")
                     |> Option.map (fun jval -> jval.AsString())
                 let res =
-                    { Posts = posts
-                      PageToken = pageToken }
+                    { posts = posts
+                      pageToken = pageToken }
                 return res
             with ex ->
                 Log.Error(ex, "Error listing posts")
