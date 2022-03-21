@@ -18,8 +18,8 @@ jobs:
             access tcp \
               --hostname=k8s.andrewmeier.dev \
               --url=0.0.0.0:1234 \
-              --service-token-id=${{ secrets.TUNNEL_TOKEN_ID }} \
-              --service-token-secret=${{ secrets.TUNNEL_TOKEN_SECRET }}
+              --service-token-id=${{ secrets.TUNNEL_SERVICE_TOKEN_ID }} \
+              --service-token-secret=${{ secrets.TUNNEL_SERVICE_TOKEN_SECRET }}
       - name: Setup Node
         uses: actions/setup-node@v1
         with:

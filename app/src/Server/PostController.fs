@@ -42,7 +42,7 @@ module Spinner =
                 ]
             ]
         ]
-    
+        
 module RichTextBase =
     let toHtml (text:RichTextBase) =
         let inner =
@@ -63,10 +63,11 @@ module RichTextBase =
                     prop.text text.PlainText
                 ]
         if isNull text.Href then inner
-        else Html.a [
-            prop.href text.Href
-            prop.children inner
-        ]
+        else
+            Html.a [
+                prop.href text.Href
+                prop.children inner
+            ]
     
 module Block =
     let (|Bulleted|Numbered|Other|) (block:IBlock) =
@@ -82,19 +83,19 @@ module Block =
         match block with
         | :? HeadingOneBlock as b ->
             Html.h1 [
-                prop.id b.Id
+                prop.id (b.Id.Replace("-", ""))
                 prop.className "text-3xl font-medium text-gray-800"
                 prop.children (b.Heading_1.Text |> Seq.map RichTextBase.toHtml)
             ]
         | :? HeadingTwoBlock as b ->
             Html.h2 [
-                prop.id b.Id
+                prop.id (b.Id.Replace("-", ""))
                 prop.className "text-2xl font-medium text-gray-800"
                 prop.children (b.Heading_2.Text |> Seq.map RichTextBase.toHtml)
             ]
         | :? HeadingThreeeBlock as b ->
             Html.h3 [
-                prop.id b.Id
+                prop.id (b.Id.Replace("-", ""))
                 prop.className "text-xl font-medium text-gray-800"
                 prop.children (b.Heading_3.Text |> Seq.map RichTextBase.toHtml)
             ]
@@ -163,6 +164,21 @@ module Block =
                 prop.className "drop-shadow-xl rounded"
                 prop.src url
             ]
+        | :? DividerBlock ->
+            Html.div [ prop.className "border-b-2 border-gray-300" ]
+        | :? QuoteBlock as b ->
+            Html.blockquote [
+                for text in b.Quote.Text do
+                    RichTextBase.toHtml text
+                if b.HasChildren then
+                    Html.div [
+                        prop.className "indent-1"
+                        prop.children [
+                            for child in b.Quote.Children do
+                                toHtml child
+                        ]
+                    ]
+            ]
         | other ->
             Log.Warning("Unsupported block {Block}", other)
             Html.none
@@ -229,7 +245,7 @@ module Components =
                         prop.className "h-16 bg-gray-100 border-b-2 border-gray-200"
                         prop.children [
                             Html.div [
-                                prop.className "container mx-auto max-w-3xl h-full flex justify-between items-center text-gray-600"
+                                prop.className "container mx-auto max-w-3xl h-full flex justify-between items-center text-gray-800"
                                 prop.children [
                                     Html.a [
                                         prop.className "p-2 rounded text-lg font-medium cursor-pointer hover:bg-gray-200"
@@ -274,12 +290,12 @@ module Components =
         
     let postSummary (post:PostSummary) =
         Html.div [
-            prop.id post.slug
+            prop.id post.id
             prop.className "relative border-b-2 border-gray-200 p-2 cursor-pointer hover:bg-gray-100"
-            prop.custom ("hx-get", $"/partial/{post.slug}")
+            prop.custom ("hx-get", $"/partial/{post.id}")
             prop.custom ("hx-target", "#page")
             prop.custom ("hx-swap", "outerHTML")
-            prop.custom ("hx-push-url", $"/{post.slug}")
+            prop.custom ("hx-push-url", $"/{post.id}")
             prop.children [
                 Html.div [
                     Html.div [
@@ -326,9 +342,10 @@ module Components =
             prop.className "w-full"
             prop.children [
                 Html.div [
-                    prop.className "bg-blend-overlay bg-gray-800 mb-2"
+                    prop.className "bg-no-repeat bg-center bg-cover bg-blend-overlay bg-gray-800 mb-2"
                     prop.style [
                         style.backgroundImageUrl post.cover
+                        
                     ]
                     prop.children [
                         Html.div [
@@ -396,10 +413,10 @@ type PostController(client:IPostClient) =
         let htmlContent = Render.htmlView html
         this.Content(htmlContent, "text/html")
         
-    [<Route("partial/{slug:regex(^[[a-z-]]+)}")>]
+    [<Route("partial/{postId:guid}")>]
     [<HttpGet>]
-    member this.PartialPage(slug:string) = async {
-        match! client.Get(slug) with
+    member this.PartialPage(postId:string) = async {
+        match! client.Get(postId) with
         | Some post ->
             let html = Components.postDetail post
             return this.Render(html)
@@ -417,10 +434,10 @@ type PostController(client:IPostClient) =
         return this.Render(html)
     }
         
-    [<Route("{slug:regex(^[[a-z-]]+$)}")>]
+    [<Route("{postId:guid}")>]
     [<HttpGet>]
-    member this.Post(slug:string) = async {
-        match! client.Get(slug) with
+    member this.Post(postId:string) = async {
+        match! client.Get(postId) with
         | Some post ->
             let page = Components.postDetail post
             let html = Components.layout page

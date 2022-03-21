@@ -1,22 +1,21 @@
 ﻿module Server.PostClient
 
-open Microsoft.Extensions.Caching.Memory
 open Notion.Client
 open Server.Config
-open Serilog
 open System
 open System.Collections.Generic
 
 type PostSummary =
-    { title: string
-      slug: string
+    { id: string
+      title: string
       summary: string
       tags: string[]
       createdAt: DateTime
       updatedAt: DateTime }
     
 type PostDetail =
-    { title: string
+    { id: string
+      title: string
       cover: string
       tags: string[]
       createdAt: DateTime
@@ -25,7 +24,7 @@ type PostDetail =
     
 type IPostClient =
     abstract List: unit -> Async<PostSummary[]>
-    abstract Get: slug:string -> Async<PostDetail option>
+    abstract Get: pageId:string -> Async<PostDetail option>
 
 type Props = IDictionary<string,PropertyValue>
 
@@ -81,8 +80,8 @@ module Props =
 module PostSummary =
     let fromDto (page:Page) =
         let props = page.Properties
-        { title = props |> Props.getTitle "title" ""
-          slug = props |> Props.getText "slug" ""
+        { id = page.Id.Replace("-", "")
+          title = props |> Props.getTitle "title" ""
           summary = props |> Props.getText "summary" ""
           tags = props |> Props.getMultiSelect "tags" [||]
           createdAt = props |> Props.getDate "createdAt" DateTime.UtcNow
@@ -91,7 +90,8 @@ module PostSummary =
 module PostDetail =
     let fromDto (page:Page) (blocks:IBlock[]) =
         let props = page.Properties
-        { title = props |> Props.getTitle "title" ""
+        { id = page.Id.Replace("-", "")
+          title = props |> Props.getTitle "title" ""
           cover =
             match page.Cover with
             | :? UploadedFile as f -> f.File.Url
@@ -102,32 +102,9 @@ module PostDetail =
           updatedAt = props |> Props.getDate "updatedAt" DateTime.UtcNow
           content = blocks }
         
-type LivePostClient(config:Config, cache:IMemoryCache) =
+type LivePostClient(config:Config) =
     let clientOpts = ClientOptions(AuthToken=config.NotionConfig.Token)
     let client = NotionClientFactory.Create(clientOpts)
-    
-    let getPageId (slug:string) = async {
-        Log.Information("Getting pageId for slug {Slug}", slug)
-        match cache.TryGetValue(slug) with
-        | true, value ->
-            let pageId = unbox<string> value
-            Log.Information("Found pageId in cache for slug {Slug}: {PageId}", slug, pageId)
-            return Some pageId
-        | _ ->
-            Log.Information("Could not find pageId in cache for slug {Slug}", slug)
-            let filter = TextFilter("slug", slug)
-            let queryParams = DatabasesQueryParameters(Filter=filter)
-            let! res = client.Databases.QueryAsync(config.NotionConfig.DatabaseId, queryParams) |> Async.AwaitTask
-            match res.Results |> Seq.tryHead with
-            | Some page ->
-                let cacheEntryOpts = MemoryCacheEntryOptions(Size=1L)
-                let pageId = cache.Set(slug, page.Id, cacheEntryOpts)
-                Log.Information("Found pageId in database for slug {Slug}: {PageId}", slug, pageId)
-                return Some pageId
-            | None ->
-                Log.Error("Could not find pageId in database for slug {Slug}", slug)
-                return None
-    }
     
     let getPublishedPage (pageId:string) = async {
         let! page = client.Pages.RetrieveAsync(pageId) |> Async.AwaitTask
@@ -172,16 +149,12 @@ type LivePostClient(config:Config, cache:IMemoryCache) =
             return pages |> Array.map PostSummary.fromDto
         }
         
-        member _.Get(slug): Async<PostDetail option> = async {
-            match! getPageId slug with
-            | Some pageId ->
-                match! getPublishedPage pageId with
-                | Some page ->
-                    let! blocks = listBlocks pageId
-                    let postDetail = PostDetail.fromDto page blocks
-                    return Some postDetail
-                | None ->
-                    return None
+        member _.Get(pageId): Async<PostDetail option> = async {
+            match! getPublishedPage pageId with
+            | Some page ->
+                let! blocks = listBlocks pageId
+                let postDetail = PostDetail.fromDto page blocks
+                return Some postDetail
             | None ->
                 return None
         }
@@ -190,8 +163,8 @@ type MockPostClient() =
     interface IPostClient with
         member _.List() = async {
             return [|
-               { title = "Test"
-                 slug = "test"
+               { id = "test"
+                 title = "Test"
                  summary = "This is a test"
                  tags = [| "F#" |]
                  createdAt = DateTime(2022, 3, 11)
@@ -200,13 +173,13 @@ type MockPostClient() =
         }
         
         member _.Get(_slug:string) = async {
-            let post = {
-                title = "Test"
-                cover = ""
-                tags = [| "F#" |]
-                createdAt = DateTime(2022, 3, 11)
-                updatedAt = DateTime(2022, 3, 11)
-                content = [||]
-            }
+            let post =
+                { id = ""
+                  title = "Test"
+                  cover = ""
+                  tags = [| "F#" |]
+                  createdAt = DateTime(2022, 3, 11)
+                  updatedAt = DateTime(2022, 3, 11)
+                  content = [||] }
             return Some post
         }
