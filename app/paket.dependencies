@@ -1,32 +1,18 @@
-version 5.257.0
-
-storage none
+storage: none
 source https://api.nuget.org/v3/index.json
 
-nuget Argu
 nuget canopy
-nuget Expecto
-nuget Fable.Core
-nuget Fable.Browser.Dom
-nuget Fable.Elmish
-nuget Fable.Remoting.Client
-nuget Fable.Remoting.Server
-nuget Fable.Remoting.AspNetCore
-nuget Feliz
-nuget Feliz.Router
-nuget Feliz.UseElmish
-nuget FSharp.Core
-nuget FSharp.Data
-nuget Markdig
-nuget Microsoft.AspNetCore.Hosting
-nuget Microsoft.AspNetCore.StaticFiles
-nuget Microsoft.AspNetCore.Server.Kestrel
+nuget Feliz.ViewEngine
+nuget Microsoft.AspNetCore
+nuget Microsoft.NET.Test.Sdk
+nuget Notion.Net
 nuget prometheus-net.AspNetCore
-nuget Selenium.WebDriver.ChromeDriver 92.0.4515.10700
+nuget Selenium.WebDriver.ChromeDriver 99.0.4844.5100
 nuget Serilog
 nuget Serilog.AspNetCore
 nuget Serilog.Sinks.Console
-nuget Serilog.Sinks.Seq
+nuget xunit
+nuget xunit.runner.visualstudio
 
 group Build
     storage none

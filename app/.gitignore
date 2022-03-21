@@ -2,10 +2,8 @@
 .fake
 .ionide
 .paket
-.fable
 .screenshots
 paket-files
 bin
 obj
 out
-compiled

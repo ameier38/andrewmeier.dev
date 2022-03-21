@@ -1,12 +1,7 @@
-Fable.Remoting.Server
-Fable.Remoting.AspNetCore
-FSharp.Data
-Markdig
-Microsoft.AspNetCore.Hosting
-Microsoft.AspNetCore.StaticFiles
-Microsoft.AspNetCore.Server.Kestrel
+Feliz.ViewEngine
+Microsoft.AspNetCore
+Notion.Net
 prometheus-net.AspNetCore
 Serilog
 Serilog.AspNetCore
 Serilog.Sinks.Console
-Serilog.Sinks.Seq

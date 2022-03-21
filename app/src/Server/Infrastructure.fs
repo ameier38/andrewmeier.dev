@@ -3,11 +3,6 @@
 open System
 open System.IO
 
-[<RequireQualifiedAccess>]
-type AppEnv =
-    | Dev
-    | Prod
-
 module Env =
 
     let variable (key:string) (defaultValue:string) =

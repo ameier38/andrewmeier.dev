@@ -11,7 +11,6 @@ let src = Path.getDirectory __SOURCE_DIRECTORY__
 let root = Path.getDirectory src
 
 let sln = root </> "andrewmeier.dev.sln"
-let clientProj = src </> "Client" </> "src" </> "Client.fsproj"
 let serverProj = src </> "Server" </> "Server.fsproj"
 let testsProj = src </> "Tests" </> "Tests.fsproj"
 let screenshotsDir = root </> ".screenshots"
@@ -23,90 +22,41 @@ let registerTasks() =
         ++ $"{src}/**/obj"
         ++ $"{src}/**/out"
         -- $"{src}/Build/**"
-        -- $"{src}/**/node_modules/**"
         |> Seq.map (fun p -> printfn "cleaning: %s" p; p)
         |> Shell.cleanDirs 
     }
     
-    let cleanClient = BuildTask.create "CleanClient" [] {
-        Shell.cleanDir $"{src}/Client/compiled"
-    }
-
     BuildTask.create "Restore" [clean] {
         DotNet.restore id sln
     } |> ignore
-
-    let watchServer =
-        async {
-            let res = DotNet.exec id "watch" $"-p {serverProj} run"
-            if not res.OK then
-                failwithf $"{res.Errors}"
-        }
     
-    BuildTask.create "WatchServer" [] {
-        Async.RunSynchronously(watchServer)
-    } |> ignore
-    
-    let installClient = BuildTask.create "InstallClient" [] {
-        let clientRoot = src </> "Client"
-        Npm.install (fun opts -> { opts with WorkingDirectory = clientRoot })
+    let watchServer = BuildTask.create "WatchServer" [] {
+        let env = Map.ofList [
+            "SECRETS_DIR", "/dev/secrets/andrewmeier.dev"
+        ]
+        let res =
+            DotNet.exec
+                (fun opts -> { opts with Environment = env })
+                "watch" $"--project {serverProj} run"
+        if not res.OK then
+            failwithf $"{res.Errors}"
     }
     
-    let watchClient =
-        async {
-            let clientRoot = src </> "Client"
-            Npm.run "start" (fun opts -> { opts with WorkingDirectory = clientRoot})
-        }
+    let watchTailwind = BuildTask.create "WatchTailwind" [] {
+        Npm.run "css:watch" (fun opts -> { opts with WorkingDirectory = src </> "Server" })
+    }
 
-    BuildTask.create "WatchClient" [installClient] {
-        Async.RunSynchronously(watchClient)
-    } |> ignore
+    BuildTask.createEmpty "Watch" [watchServer; watchTailwind] |> ignore
     
-    BuildTask.create "Watch" [installClient] {
-        [watchServer; watchClient]
-        |> Async.Parallel
-        |> Async.Ignore
-        |> Async.RunSynchronously
+    BuildTask.create "Test" [] {
+        DotNet.test id testsProj
     } |> ignore
 
-    BuildTask.create "BuildClient" [cleanClient; installClient] {
-        let clientRoot = src </> "Client"
-        Npm.run "build" (fun opts -> { opts with WorkingDirectory = clientRoot})
-    } |> ignore
-
-    BuildTask.create "TestUnits" [] {
-        let res =
-            DotNet.exec
-                id
-                "run"
-                $"-p {testsProj} test-units"
-        if not res.OK then
-            failwithf $"{res.Errors}"
-    } |> ignore
+    let buildTailwind = BuildTask.create "BuildTailwind" [] {
+        Npm.run "css:build" (fun opts -> { opts with WorkingDirectory = src </> "Server" })
+    }
     
-    BuildTask.create "TestIntegrations" [] {
-        Environment.setEnvironVar "SCREENSHOTS_DIR" screenshotsDir
-        let res =
-            DotNet.exec
-                id
-                "run"
-                $"-p {testsProj} test-integrations"
-        if not res.OK then
-            failwithf $"{res.Errors}"
-    } |> ignore
-
-    BuildTask.create "TestIntegrationsHeadless" [] {
-        Environment.setEnvironVar "SCREENSHOTS_DIR" screenshotsDir
-        let res =
-            DotNet.exec
-                id
-                "run"
-                $"-p {testsProj} test-integrations --browser-mode headless"
-        if not res.OK then
-            failwithf $"{res.Errors}"
-    } |> ignore
-
-    BuildTask.create "PublishServer" [] {
+    BuildTask.create "Publish" [ buildTailwind ] {
         let runtime = Environment.environVarOrDefault "RUNTIME_ID" "linux-x64"
         let serverRoot = Path.getDirectory serverProj
         Trace.tracefn "Publishing with runtime %s" runtime
@@ -118,7 +68,7 @@ let registerTasks() =
                     SelfContained = Some false })
             serverProj
     } |> ignore
-
+    
 [<EntryPoint>]
 let main argv =
     BuildTask.setupContextFromArgv argv
