@@ -6,8 +6,20 @@ open canopy.types
 open System
 open Xunit
 
+module Env =
+    let variable (key:string) (defaultValue:string) =
+        match Environment.GetEnvironmentVariable(key) with
+        | s when String.IsNullOrEmpty(s) -> defaultValue
+        | s -> s
+
 type Fixture() =
     do
+        let isCI = Env.variable "CI" "false" |> Boolean.Parse
+        if isCI then
+            let defaultChromeDir = AppContext.BaseDirectory
+            // ref: https://github.com/actions/virtual-environments/blob/main/images/linux/Ubuntu2004-Readme.md
+            let chromeDir = Env.variable "CHROMEWEBDRIVER" defaultChromeDir
+            canopy.configuration.chromeDir <- chromeDir
         start ChromeHeadless
     interface IDisposable with
         member _.Dispose() =
