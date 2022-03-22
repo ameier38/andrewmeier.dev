@@ -1,3 +1,5 @@
+[![Merge](https://github.com/ameier38/andrewmeier.dev/actions/workflows/merge.yml/badge.svg)](https://github.com/ameier38/andrewmeier.dev/actions/workflows/merge.yml)
+
 # andrewmeier.dev
 Repo for [Andrew's blog](https://andrewmeier.dev).
 
