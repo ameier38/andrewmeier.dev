@@ -1,6 +1,5 @@
 # Application
-Client and server for [andrewmeier.dev](https://andrewmeier.dev) using
-F#, ASP.NET, Fable, Fable.Remoting, Feliz, Tailwind CSS, Snowpack, and Airtable.
+Server for [andrewmeier.dev](https://andrewmeier.dev).
 
 ## Setup
 1. Install [.NET SDK](https://dotnet.microsoft.com/download)
@@ -21,37 +20,24 @@ List build targets.
 ```
 ```
 The following targets are available:
-   BuildClient
+   BuildTailwind
    Clean
-   CleanClient
-   InstallClient
-   PublishServer
+   Publish
    Restore
-   TestIntegrations
-   TestIntegrationsHeadless
-   TestUnits
+   Test
    Watch
-   WatchClient
    WatchServer
+   WatchTailwind
 ```
 
-Watch the server and client for local development.
+Watch the server for local development.
 ```
 ./fake.cmd Watch
 ```
-> Navigate to http://localhost:3000.
-Server code changes will automatically rebuild the server.
-Client code changes will automatically hot reload in the browser.
+> Navigate to http://localhost:5000.
 
 Run the application locally.
 ```
 docker compose up -d --build app
 ```
 > Navigate to http://localhost:5000
-
-## Resources
-- [Fable.Remoting](https://zaid-ajaj.github.io/Fable.Remoting/)
-- [Feliz](https://zaid-ajaj.github.io/Feliz/)
-- [Snowpack](https://www.snowpack.dev/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Airtable](https://airtable.com/)
