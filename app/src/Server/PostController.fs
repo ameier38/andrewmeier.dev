@@ -103,16 +103,19 @@ module Block =
             Html.div [
                 prop.className "text-gray-800"
                 prop.children [
-                    for text in b.Paragraph.Text do
-                        RichTextBase.toHtml text
-                    if b.HasChildren then
-                        Html.div [
-                            prop.className "indent-1"
-                            prop.children [
-                                for child in b.Paragraph.Children do
-                                    toHtml child
+                    if Seq.isEmpty b.Paragraph.Text then
+                        Html.br []
+                    else
+                        for text in b.Paragraph.Text do
+                            RichTextBase.toHtml text
+                        if b.HasChildren then
+                            Html.div [
+                                prop.className "indent-1"
+                                prop.children [
+                                    for child in b.Paragraph.Children do
+                                        toHtml child
+                                ]
                             ]
-                        ]
                 ]
             ]
         | :? BulletedListItemBlock as b ->
@@ -229,7 +232,7 @@ module Components =
                     prop.content "width=device-width, initial-scale=1.0"
                 ]
                 Html.link [
-                    prop.href "/css/tailwind.css"
+                    prop.href "/css/compiled.css"
                     prop.rel "stylesheet"
                 ]
                 Html.link [
@@ -288,14 +291,14 @@ module Components =
             ]
         ]
         
-    let postSummary (post:PostSummary) =
+    let postSummary (post:Post) =
         Html.div [
-            prop.id post.id
-            prop.className "relative border-b-2 border-gray-200 p-2 cursor-pointer hover:bg-gray-100"
+            prop.id post.permalink
+            prop.className "post relative border-b-2 border-gray-200 p-2 cursor-pointer hover:bg-gray-100"
             prop.custom ("hx-get", $"/partial/{post.id}")
             prop.custom ("hx-target", "#page")
             prop.custom ("hx-swap", "outerHTML")
-            prop.custom ("hx-push-url", $"/{post.id}")
+            prop.custom ("hx-push-url", $"/{post.permalink}")
             prop.children [
                 Html.div [
                     Html.div [
@@ -328,7 +331,7 @@ module Components =
             ]
         ]
         
-    let postList (posts:PostSummary[]) =
+    let postList (posts:Post[]) =
         Html.div [
             prop.className "container mx-auto max-w-3xl"
             prop.children [
@@ -337,14 +340,14 @@ module Components =
             ]
         ]
         
-    let postDetail (post:PostDetail) =
+    let postDetail (detail:PostDetail) =
         Html.div [
             prop.className "w-full"
             prop.children [
                 Html.div [
                     prop.className "bg-no-repeat bg-center bg-cover bg-blend-overlay bg-gray-800 mb-2"
                     prop.style [
-                        style.backgroundImageUrl post.cover
+                        style.backgroundImageUrl detail.post.cover
                         
                     ]
                     prop.children [
@@ -354,15 +357,15 @@ module Components =
                                 Html.h1 [
                                     prop.className "text-3xl text-gray-200 font-bold mb-14"
                                     prop.id "title"
-                                    prop.text post.title
+                                    prop.text detail.post.title
                                 ]
                                 Html.p [
-                                    let createdAt = post.createdAt.ToString("M/d/yyyy")
+                                    let createdAt = detail.post.createdAt.ToString("M/d/yyyy")
                                     prop.className "text-gray-400"
                                     prop.text $"Created: {createdAt}"
                                 ]
                                 Html.p [
-                                    let updatedAt = post.updatedAt.ToString("M/d/yyyy")
+                                    let updatedAt = detail.post.updatedAt.ToString("M/d/yyyy")
                                     prop.className "text-gray-400"
                                     prop.text $"Updated: {updatedAt}"
                                 ]
@@ -375,8 +378,8 @@ module Components =
                     prop.children [
                         Html.article [
                             prop.id "post"
-                            prop.className "prose max-w-none"
-                            prop.children (Content.toHtml post.content)
+                            prop.className "prose max-w-none mb-8"
+                            prop.children (Content.toHtml detail.content)
                         ]
                     ]
                 ]
@@ -416,7 +419,7 @@ type PostController(client:IPostClient) =
     [<Route("partial/{postId:guid}")>]
     [<HttpGet>]
     member this.PartialPage(postId:string) = async {
-        match! client.Get(postId) with
+        match! client.GetById(postId) with
         | Some post ->
             let html = Components.postDetail post
             return this.Render(html)
@@ -436,8 +439,22 @@ type PostController(client:IPostClient) =
         
     [<Route("{postId:guid}")>]
     [<HttpGet>]
-    member this.Post(postId:string) = async {
-        match! client.Get(postId) with
+    member this.PostById(postId:string) = async {
+        match! client.GetById(postId) with
+        | Some post ->
+            let page = Components.postDetail post
+            let html = Components.layout page
+            return this.Render(html)
+        | None ->
+            let page = Components.notFound
+            let html = Components.layout page
+            return this.Render(html)
+    }
+    
+    [<Route("{permalink:regex(^[[a-z-]]+$)}")>]
+    [<HttpGet>]
+    member this.PostByPermalink(permalink:string) = async {
+        match! client.GetByPermalink(permalink) with
         | Some post ->
             let page = Components.postDetail post
             let html = Components.layout page

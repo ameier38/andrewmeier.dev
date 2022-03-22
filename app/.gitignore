@@ -3,6 +3,8 @@
 .ionide
 .paket
 .screenshots
+*DotSettings.user
+compiled.css
 paket-files
 bin
 obj

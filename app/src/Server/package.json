@@ -1,8 +1,8 @@
 {
   "name": "server",
   "scripts": {
-    "css:watch": "tailwindcss -i ./wwwroot/css/input.css -o ./wwwroot/css/tailwind.css --watch",
-    "css:build": "tailwindcss -i ./wwwroot/css/input.css -o ./wwwroot/css/tailwind.css"
+    "css:watch": "tailwindcss -i ./wwwroot/css/input.css -o ./wwwroot/css/compiled.css --watch",
+    "css:build": "tailwindcss -i ./wwwroot/css/input.css -o ./wwwroot/css/compiled.css"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.2",

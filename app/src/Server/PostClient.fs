@@ -1,30 +1,29 @@
 ﻿module Server.PostClient
 
+open Microsoft.Extensions.Caching.Memory
 open Notion.Client
 open Server.Config
 open System
 open System.Collections.Generic
 
-type PostSummary =
+type Post =
     { id: string
+      permalink: string
       title: string
       summary: string
+      cover: string
       tags: string[]
       createdAt: DateTime
       updatedAt: DateTime }
     
 type PostDetail =
-    { id: string
-      title: string
-      cover: string
-      tags: string[]
-      createdAt: DateTime
-      updatedAt: DateTime
+    { post: Post
       content: IBlock[] }
     
 type IPostClient =
-    abstract List: unit -> Async<PostSummary[]>
-    abstract Get: pageId:string -> Async<PostDetail option>
+    abstract List: unit -> Async<Post[]>
+    abstract GetById: pageId:string -> Async<PostDetail option>
+    abstract GetByPermalink: permalink:string -> Async<PostDetail option>
 
 type Props = IDictionary<string,PropertyValue>
 
@@ -76,35 +75,47 @@ module Props =
                 |> Seq.toArray
             | _ -> Array.empty)
         |> Option.defaultValue defaultValue
+        
+module File =
+    let getUrl (file:FileObject) =
+        match file with
+        | :? UploadedFile as f -> f.File.Url
+        | :? ExternalFile as f -> f.External.Url
+        | _ -> ""
 
-module PostSummary =
+module Post =
     let fromDto (page:Page) =
         let props = page.Properties
         { id = page.Id.Replace("-", "")
+          permalink = props |> Props.getText "permalink" ""
           title = props |> Props.getTitle "title" ""
           summary = props |> Props.getText "summary" ""
+          cover = File.getUrl page.Cover
           tags = props |> Props.getMultiSelect "tags" [||]
           createdAt = props |> Props.getDate "createdAt" DateTime.UtcNow
           updatedAt = props |> Props.getDate "updatedAt" DateTime.UtcNow }
         
-module PostDetail =
-    let fromDto (page:Page) (blocks:IBlock[]) =
-        let props = page.Properties
-        { id = page.Id.Replace("-", "")
-          title = props |> Props.getTitle "title" ""
-          cover =
-            match page.Cover with
-            | :? UploadedFile as f -> f.File.Url
-            | :? ExternalFile as f -> f.External.Url
-            | _ -> ""
-          tags = props |> Props.getMultiSelect "tags" [||]
-          createdAt = props |> Props.getDate "createdAt" DateTime.UtcNow
-          updatedAt = props |> Props.getDate "updatedAt" DateTime.UtcNow
-          content = blocks }
-        
-type LivePostClient(config:Config) =
+type LivePostClient(config:Config, cache:IMemoryCache) =
     let clientOpts = ClientOptions(AuthToken=config.NotionConfig.Token)
     let client = NotionClientFactory.Create(clientOpts)
+    
+    let getPageId(permalink:string) = async {
+        match cache.TryGetValue(permalink) with
+        | true, value ->
+            let pageId = unbox<string> value
+            return Some pageId
+        | _ ->
+            let filter = TextFilter("permalink", permalink)
+            let queryParams = DatabasesQueryParameters(Filter=filter)
+            let! res = client.Databases.QueryAsync(config.NotionConfig.DatabaseId, queryParams) |> Async.AwaitTask
+            match Seq.tryHead res.Results with
+            | Some page ->
+                let cacheEntryOpts = MemoryCacheEntryOptions(Size=1L)
+                let pageId = cache.Set(permalink, page.Id, cacheEntryOpts)
+                return Some pageId
+            | None ->
+                return None
+    }
     
     let getPublishedPage (pageId:string) = async {
         let! page = client.Pages.RetrieveAsync(pageId) |> Async.AwaitTask
@@ -119,7 +130,13 @@ type LivePostClient(config:Config) =
         let mutable hasMore = true
         let mutable cursor = null
         let posts = ResizeArray()
-        let filter = CheckboxFilter("published", true)
+        let publishedFilter = CheckboxFilter("published", true)
+        let hiddenFilter = CheckboxFilter("hidden", false)
+        let combined = List<Filter>([
+            publishedFilter :> Filter
+            hiddenFilter :> Filter
+        ])
+        let filter = CompoundFilter(``and``=combined)
         let queryParams = DatabasesQueryParameters(StartCursor=cursor, Filter=filter)
         while hasMore do
             let! res = client.Databases.QueryAsync(config.NotionConfig.DatabaseId, queryParams) |> Async.AwaitTask
@@ -143,43 +160,77 @@ type LivePostClient(config:Config) =
         return blocks.ToArray()
     }
     
+    let getPostById (pageId:string) = async {
+        match! getPublishedPage pageId with
+        | Some page ->
+            let post = Post.fromDto page
+            let! blocks = listBlocks pageId
+            let postDetail = { post = post; content = blocks  }
+            return Some postDetail
+        | None ->
+            return None
+    }
+    
     interface IPostClient with
-        member _.List(): Async<PostSummary[]> = async {
+        member _.List() = async {
             let! pages = listPublishedPages()
-            return pages |> Array.map PostSummary.fromDto
+            return pages |> Array.map Post.fromDto
         }
         
-        member _.Get(pageId): Async<PostDetail option> = async {
-            match! getPublishedPage pageId with
-            | Some page ->
-                let! blocks = listBlocks pageId
-                let postDetail = PostDetail.fromDto page blocks
-                return Some postDetail
+        member _.GetById(pageId) = getPostById pageId
+        
+        member _.GetByPermalink(permalink) = async {
+            match! getPageId permalink with
+            | Some pageId ->
+                return! getPostById pageId
             | None ->
                 return None
         }
 
 type MockPostClient() =
+    let post1 = 
+       { id = "4d7ac503a7a64cc0ab757df70c7c7f7b"
+         permalink = "test"
+         title = "Test"
+         summary = "This is a test"
+         cover = ""
+         tags = [| "F#" |]
+         createdAt = DateTime(2022, 3, 11)
+         updatedAt = DateTime(2022, 3, 11) }
+    let post2 = 
+       { id = "33f11309306447ce8a48e962f0e0d814"
+         permalink = "another-test"
+         title = "Another Test"
+         summary = "This is another test"
+         cover = ""
+         tags = [| "F#" |]
+         createdAt = DateTime(2022, 3, 11)
+         updatedAt = DateTime(2022, 3, 11) }
+    let lookupById = Map.ofList [
+        post1.id, post1
+        post2.id, post2
+    ]
+    let lookupByPermalink = Map.ofList [
+        post1.permalink, post1
+        post2.permalink, post2
+    ]
     interface IPostClient with
         member _.List() = async {
-            return [|
-               { id = "test"
-                 title = "Test"
-                 summary = "This is a test"
-                 tags = [| "F#" |]
-                 createdAt = DateTime(2022, 3, 11)
-                 updatedAt = DateTime(2022, 3, 11) }
-           |]
+            return [| post1; post2 |]
         }
         
-        member _.Get(_slug:string) = async {
-            let post =
-                { id = ""
-                  title = "Test"
-                  cover = ""
-                  tags = [| "F#" |]
-                  createdAt = DateTime(2022, 3, 11)
-                  updatedAt = DateTime(2022, 3, 11)
-                  content = [||] }
-            return Some post
+        member _.GetById(pageId:string) = async {
+            match lookupById |> Map.tryFind pageId with
+            | Some post ->
+                return Some { post = post; content = [||] }
+            | None ->
+                return None
+        }
+        
+        member _.GetByPermalink(permalink:string) = async {
+            match lookupByPermalink |> Map.tryFind permalink with
+            | Some post ->
+                return Some { post = post; content = [||] }
+            | None ->
+                return None
         }

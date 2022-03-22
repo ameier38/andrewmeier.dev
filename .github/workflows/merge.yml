@@ -33,6 +33,5 @@ jobs:
           work-dir: ./pulumi
           command: up
           stack-name: prod
-          diff: true
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
