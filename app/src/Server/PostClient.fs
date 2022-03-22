@@ -1,227 +1,236 @@
-module Server.PostClient
+﻿module Server.PostClient
 
-open FSharp.Data
-open Server
-open Serilog
+open Microsoft.Extensions.Caching.Memory
+open Notion.Client
+open Server.Config
+open System
+open System.Collections.Generic
 
-let [<Literal>] ListPostsResponse = """
-{
-    "records": [
-        {
-            "id": "reclAnGWapIS5ZG5K",
-            "fields": {
-                "status": "Published",
-                "permalink": "about",
-                "title": "About",
-                "content": "Welcome to the personal blog of Andrew C. Meier! Originally from STL, now living in NYC",
-                "summary": "About Andrew Meier",
-                "created_at": "2020-04-12T16:55:28.000Z",
-                "updated_at": "2020-04-12T18:07:32.000Z"
-            },
-            "createdTime": "2020-04-12T16:55:28.000Z"
-        },
-        {
-            "id": "reclAnGWapIS5ZG5K",
-            "fields": {
-                "status": "Published",
-                "permalink": "test",
-                "title": "Test",
-                "content": "Testing",
-                "summary": "",
-                "created_at": "2020-04-12T16:55:28.000Z",
-                "updated_at": "2020-04-12T18:07:32.000Z"
-            },
-            "createdTime": "2020-04-12T16:55:28.000Z"
-        },
-        {
-            "id": "rec5AMJ3Lah6OSy61",
-            "fields": {
-                "status": "Published",
-                "permalink": "win-dev",
-                "images": [
-                    {
-                        "id": "attG20ekJB53TiXxQ",
-                        "url": "https://dl.airtable.com/.attachments/7a1c3ea12c11feea435aa52b1dc3567e/26f293fd/cover.png",
-                        "filename": "cover.png",
-                        "size": 192563,
-                        "type": "image/png",
-                        "thumbnails": {
-                            "small": {
-                                "url": "https://dl.airtable.com/.attachmentThumbnails/d402a3279b07d7afe6e86bf46e5e0fec/a209239b",
-                                "width": 65,
-                                "height": 36
-                            },
-                            "large": {
-                                "url": "https://dl.airtable.com/.attachmentThumbnails/4f81757b8b11eba11a53cf66b818b0dd/b6c8a76b",
-                                "width": 640,
-                                "height": 353
-                            },
-                            "full": {
-                                "url": "https://dl.airtable.com/.attachmentThumbnails/d91a6369bb2b4a1781f0ea105ab9a8fc/1bfc8523",
-                                "width": 3000,
-                                "height": 3000
-                            }
-                        }
-                    },
-                    {
-                        "id": "attjSTTLlWkbdiin8",
-                        "url": "https://dl.airtable.com/.attachments/4433dfd413ce8693ad3faf4bb236559e/43abe82d/windows.png",
-                        "filename": "computer.png",
-                        "size": 29479,
-                        "type": "image/png",
-                        "thumbnails": {
-                            "small": {
-                                "url": "https://dl.airtable.com/.attachmentThumbnails/2005a6f0f6f24b9a8f0cc1b044a0d931/f80ba1ac",
-                                "width": 52,
-                                "height": 36
-                            },
-                            "large": {
-                                "url": "https://dl.airtable.com/.attachmentThumbnails/11668b8cf40f6ba908c11dae9695efac/74a6b8ae",
-                                "width": 742,
-                                "height": 512
-                            },
-                            "full": {
-                                "url": "https://dl.airtable.com/.attachmentThumbnails/9e9e93edb635664a2b369d780160fc3b/68a8f651",
-                                "width": 3000,
-                                "height": 3000
-                            }
-                        }
-                    },
-                    {
-                        "id": "att3NIcUtCNCMoYgC",
-                        "url": "https://dl.airtable.com/.attachments/2d6c88104f2b2f8802277f6dbb098a26/94aed48e/screen-to-gif.gif",
-                        "filename": "screen-to-gif.gif",
-                        "size": 35362,
-                        "type": "image/gif",
-                        "thumbnails": {
-                            "small": {
-                                "url": "https://dl.airtable.com/.attachmentThumbnails/8cb9d6899882d1fb0cccbf811282fcc6/cd6c8b53",
-                                "width": 96,
-                                "height": 36
-                            },
-                            "large": {
-                                "url": "https://dl.airtable.com/.attachmentThumbnails/1b8eec2b2135a3a1d809cd096c5dbe75/1e8b8528",
-                                "width": 724,
-                                "height": 271
-                            },
-                            "full": {
-                                "url": "https://dl.airtable.com/.attachmentThumbnails/aea0ee2598a5ba239dbdc4c7ce8a7ba4/089bf51e",
-                                "width": 3000,
-                                "height": 3000
-                            }
-                        }
-                    },
-                    {
-                        "id": "atthcnthQJPZjvrbv",
-                        "url": "https://dl.airtable.com/.attachments/8bef4e7c40ce1ad153193cf6e603658e/cbff01f0/kubernetes.png",
-                        "filename": "kubernetes.png",
-                        "size": 62520,
-                        "type": "image/png",
-                        "thumbnails": {
-                            "small": {
-                                "url": "https://dl.airtable.com/.attachmentThumbnails/3e14844f8443ad6a28b63f680ed89438/b3aad183",
-                                "width": 47,
-                                "height": 36
-                            },
-                            "large": {
-                                "url": "https://dl.airtable.com/.attachmentThumbnails/d19a7c95ab5da71103ee2b074a5704a8/f1ab55ba",
-                                "width": 664,
-                                "height": 512
-                            },
-                            "full": {
-                                "url": "https://dl.airtable.com/.attachmentThumbnails/ba8405d387ea92e90723db7cf5f2b450/47d4654b",
-                                "width": 3000,
-                                "height": 3000
-                            }
-                        }
-                    }
-                ],
-                "title": "Windows Development Environment",
-                "content": "## Table of Contents\n- [Computer and Windows](#computer-and-windows): Recommended specs for computer\n```fsharp\nlet x = 2\n```\n\n## Computer and Windows\n![computer](computer.png)\nAnd some `markup`\nAnd a blockquote\n> This is a quote\n",
-                "summary": "Set up a Window's machine for development.",
-                "created_at": "2020-04-04T15:53:36.000Z",
-                "updated_at": "2020-04-12T18:08:23.000Z"
-            },
-            "createdTime": "2020-04-04T15:53:36.000Z"
-        }
-    ]
-}
-"""
-
-type PostProvider = JsonProvider<ListPostsResponse>
-
+type Post =
+    { id: string
+      permalink: string
+      title: string
+      summary: string
+      cover: string
+      tags: string[]
+      createdAt: DateTime
+      updatedAt: DateTime }
+    
+type PostDetail =
+    { post: Post
+      content: IBlock[] }
+    
 type IPostClient =
-    abstract member ListPosts: pageSize:int option * pageToken:string option -> Async<PostProvider.Root>
-    abstract member GetPost: permalink:string -> Async<PostProvider.Record>
+    abstract List: unit -> Async<Post[]>
+    abstract GetById: pageId:string -> Async<PostDetail option>
+    abstract GetByPermalink: permalink:string -> Async<PostDetail option>
 
-type AirtablePostClient(config:AirtableConfig) =
+type Props = IDictionary<string,PropertyValue>
 
-    let get endpoint query =
-        let auth = $"Bearer {config.ApiKey}"
-        Http.AsyncRequestString(
-            url = $"{config.ApiUrl}/{config.BaseId}/{endpoint}",
-            query = query,
-            headers = [
-                HttpRequestHeaders.Authorization auth
-                HttpRequestHeaders.Accept HttpContentTypes.Json
-            ])
+module Props =
+    let tryGetValue (key:string) (props:Props) =
+        match props.TryGetValue(key) with
+        | true, value -> Some value
+        | _ -> None
+    let getTitle key defaultValue props =
+        tryGetValue key props
+        |> Option.bind (fun prop ->
+            match prop with
+            | :? TitlePropertyValue as title ->
+                title.Title |> Seq.tryHead |> Option.map (fun o -> o.PlainText)
+            | _ -> None)
+        |> Option.defaultValue defaultValue
+    let getText key defaultValue props =
+        tryGetValue key props
+        |> Option.bind (fun prop ->
+            match prop with
+            | :? RichTextPropertyValue as text ->
+                text.RichText |> Seq.tryHead |> Option.map (fun o -> o.PlainText)
+            | _ -> None)
+        |> Option.defaultValue defaultValue
+    let getCheckbox key defaultValue props =
+        tryGetValue key props
+        |> Option.bind (fun prop ->
+            match prop with
+            | :? CheckboxPropertyValue as checkbox ->
+                Some checkbox.Checkbox
+            | _ -> None)
+        |> Option.defaultValue defaultValue
+    let getDate key defaultValue props =
+        tryGetValue key props
+        |> Option.bind (fun prop ->
+            match prop with
+            | :? DatePropertyValue as date ->
+                if isNull date.Date then None
+                else Option.ofNullable date.Date.Start
+            | _ -> None)
+        |> Option.defaultValue defaultValue
+    let getMultiSelect key defaultValue props =
+        tryGetValue key props
+        |> Option.map (fun prop ->
+            match prop with
+            | :? MultiSelectPropertyValue as multiSelect ->
+                multiSelect.MultiSelect
+                |> Seq.map (fun s -> s.Name)
+                |> Seq.toArray
+            | _ -> Array.empty)
+        |> Option.defaultValue defaultValue
+        
+module File =
+    let getUrl (file:FileObject) =
+        match file with
+        | :? UploadedFile as f -> f.File.Url
+        | :? ExternalFile as f -> f.External.Url
+        | _ -> ""
 
+module Post =
+    let fromDto (page:Page) =
+        let props = page.Properties
+        { id = page.Id.Replace("-", "")
+          permalink = props |> Props.getText "permalink" ""
+          title = props |> Props.getTitle "title" ""
+          summary = props |> Props.getText "summary" ""
+          cover = File.getUrl page.Cover
+          tags = props |> Props.getMultiSelect "tags" [||]
+          createdAt = props |> Props.getDate "createdAt" DateTime.UtcNow
+          updatedAt = props |> Props.getDate "updatedAt" DateTime.UtcNow }
+        
+type LivePostClient(config:Config, cache:IMemoryCache) =
+    let clientOpts = ClientOptions(AuthToken=config.NotionConfig.Token)
+    let client = NotionClientFactory.Create(clientOpts)
+    
+    let getPageId(permalink:string) = async {
+        match cache.TryGetValue(permalink) with
+        | true, value ->
+            let pageId = unbox<string> value
+            return Some pageId
+        | _ ->
+            let filter = TextFilter("permalink", permalink)
+            let queryParams = DatabasesQueryParameters(Filter=filter)
+            let! res = client.Databases.QueryAsync(config.NotionConfig.DatabaseId, queryParams) |> Async.AwaitTask
+            match Seq.tryHead res.Results with
+            | Some page ->
+                let cacheEntryOpts = MemoryCacheEntryOptions(Size=1L)
+                let pageId = cache.Set(permalink, page.Id, cacheEntryOpts)
+                return Some pageId
+            | None ->
+                return None
+    }
+    
+    let getPublishedPage (pageId:string) = async {
+        let! page = client.Pages.RetrieveAsync(pageId) |> Async.AwaitTask
+        let published = page.Properties |> Props.getCheckbox "published" false
+        if published then
+            return Some page
+        else
+            return None
+    }
+    
+    let listPublishedPages () = async {
+        let mutable hasMore = true
+        let mutable cursor = null
+        let posts = ResizeArray()
+        let publishedFilter = CheckboxFilter("published", true)
+        let hiddenFilter = CheckboxFilter("hidden", false)
+        let combined = List<Filter>([
+            publishedFilter :> Filter
+            hiddenFilter :> Filter
+        ])
+        let filter = CompoundFilter(``and``=combined)
+        let queryParams = DatabasesQueryParameters(StartCursor=cursor, Filter=filter)
+        while hasMore do
+            let! res = client.Databases.QueryAsync(config.NotionConfig.DatabaseId, queryParams) |> Async.AwaitTask
+            hasMore <- res.HasMore
+            cursor <- res.NextCursor
+            for page in res.Results do
+                posts.Add(page)
+        return posts.ToArray()
+    }
+    
+    let listBlocks (pageId:string) = async {
+        let blocks = ResizeArray()
+        let mutable hasMore = true
+        let mutable cursor = null
+        while hasMore do
+            let parameters = BlocksRetrieveChildrenParameters(StartCursor=cursor)
+            let! res = client.Blocks.RetrieveChildrenAsync(pageId, parameters) |> Async.AwaitTask
+            hasMore <- res.HasMore
+            cursor <- res.NextCursor
+            blocks.AddRange(res.Results)
+        return blocks.ToArray()
+    }
+    
+    let getPostById (pageId:string) = async {
+        match! getPublishedPage pageId with
+        | Some page ->
+            let post = Post.fromDto page
+            let! blocks = listBlocks pageId
+            let postDetail = { post = post; content = blocks  }
+            return Some postDetail
+        | None ->
+            return None
+    }
+    
     interface IPostClient with
-        member _.ListPosts(pageSize:int option, offset:string option) =
-            async {
-                try
-                    let pageSize = pageSize |> Option.defaultValue 10
-                    let formula = "AND({status} = 'Published', {permalink} != 'about')"
-                    let query =
-                        [ "pageSize", pageSize |> string
-                          "filterByFormula", formula
-                          for field in ["permalink"; "title"; "summary"; "created_at"; "updated_at"] do
-                            "fields[]", field
-                          if offset.IsSome then 
-                            "offset", offset.Value ]
-                    let! res = get "Post" query
-                    return res |> PostProvider.Parse
-                with ex ->
-                    Log.Error(ex, "Error listing posts")
-                    return raise ex
-            }
-
-        member _.GetPost(permalink:string) =
-            async {
-                try
-                    let formula = sprintf "AND({status} = 'Published', {permalink} = '%s')" permalink
-                    let query = [ "filterByFormula", formula ]
-                    let! res = get "Post" query
-                    let root = res |> PostProvider.Parse
-                    let record =
-                        match root.Records with
-                        | [||] ->
-                            failwith $"{permalink} not found"
-                        | [| record |] -> record
-                        | _ ->
-                            failwith $"found multiple posts with the same permalink: {permalink}"
-                    return record
-                with ex ->
-                    Log.Error(ex, "Error getting post")
-                    return raise ex
-            }
+        member _.List() = async {
+            let! pages = listPublishedPages()
+            return pages |> Array.map Post.fromDto
+        }
+        
+        member _.GetById(pageId) = getPostById pageId
+        
+        member _.GetByPermalink(permalink) = async {
+            match! getPageId permalink with
+            | Some pageId ->
+                return! getPostById pageId
+            | None ->
+                return None
+        }
 
 type MockPostClient() =
-
+    let post1 = 
+       { id = "4d7ac503a7a64cc0ab757df70c7c7f7b"
+         permalink = "test"
+         title = "Test"
+         summary = "This is a test"
+         cover = ""
+         tags = [| "F#" |]
+         createdAt = DateTime(2022, 3, 11)
+         updatedAt = DateTime(2022, 3, 11) }
+    let post2 = 
+       { id = "33f11309306447ce8a48e962f0e0d814"
+         permalink = "another-test"
+         title = "Another Test"
+         summary = "This is another test"
+         cover = ""
+         tags = [| "F#" |]
+         createdAt = DateTime(2022, 3, 11)
+         updatedAt = DateTime(2022, 3, 11) }
+    let lookupById = Map.ofList [
+        post1.id, post1
+        post2.id, post2
+    ]
+    let lookupByPermalink = Map.ofList [
+        post1.permalink, post1
+        post2.permalink, post2
+    ]
     interface IPostClient with
-        member _.ListPosts(_pageSize:int option, _offset:string option) =
-            async {
-                return PostProvider.GetSample()
-            }
-
-        member _.GetPost(permalink:string) = 
-            async {
-                let root = PostProvider.GetSample()
-                let record =
-                    root.Records
-                    |> Array.filter (fun record ->
-                        record.Fields.Status = "Published"
-                        && record.Fields.Permalink = permalink) 
-                    |> Array.head
-                return record
-            }
+        member _.List() = async {
+            return [| post1; post2 |]
+        }
+        
+        member _.GetById(pageId:string) = async {
+            match lookupById |> Map.tryFind pageId with
+            | Some post ->
+                return Some { post = post; content = [||] }
+            | None ->
+                return None
+        }
+        
+        member _.GetByPermalink(permalink:string) = async {
+            match lookupByPermalink |> Map.tryFind permalink with
+            | Some post ->
+                return Some { post = post; content = [||] }
+            | None ->
+                return None
+        }

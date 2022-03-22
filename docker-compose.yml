@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.8'
 services:
   app:
     build:
@@ -6,7 +6,8 @@ services:
       args: 
         RUNTIME_ID: linux-x64
     environment:
-      DEBUG: "true"
-      CI: "true"
+      NOTION_DATABASE_ID: 760a440b656348968e811b16d2cbece1
+      NOTION_TOKEN:
+      CI:
     ports:
-      - "5000:5000"
+      - 5000:5000

@@ -13,30 +13,22 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '5.0.x'
+          dotnet-version: '6.0.x'
       - name: Restore Tools and Packages 
         working-directory: ./app
         run: |
           dotnet tool restore
           dotnet paket install
           dotnet paket restore
-      - name: Run Unit Tests
-        working-directory: ./app
-        run: ./fake.sh TestUnits
       - name: Check Chrome Version
         run: google-chrome --version
       - name: Run Integration Tests
         working-directory: ./app
-        run: ./fake.sh TestIntegrationsHeadless
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v2
-        with:
-          name: screenshots
-          path: ./app/.screenshots/*.jpg
+        run: dotnet test
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
-          node-version: 14.x
+          node-version: 16.x
       - name: Install Packages
         run: npm install
         working-directory: ./pulumi
@@ -46,5 +38,6 @@ jobs:
           work-dir: ./pulumi
           command: preview
           stack-name: prod
+          diff: true
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}

@@ -2,10 +2,10 @@
 .fake
 .ionide
 .paket
-.fable
 .screenshots
+*DotSettings.user
+compiled.css
 paket-files
 bin
 obj
 out
-compiled

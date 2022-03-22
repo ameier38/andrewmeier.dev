@@ -4,8 +4,10 @@
         "@types/node": "^16.4.2"
     },
     "dependencies": {
+        "@pulumi/cloudflare": "^4.4.0",
         "@pulumi/docker": "^3.0.0",
         "@pulumi/kubernetes": "^3.5.1",
-        "@pulumi/pulumi": "^3.8.0"
+        "@pulumi/pulumi": "^3.8.0",
+        "@pulumi/random": "^4.4.0"
     }
 }

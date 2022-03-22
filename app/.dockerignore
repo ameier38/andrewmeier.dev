@@ -3,11 +3,9 @@
 .ionide
 .fake
 .paket
-.fable
 .screenshots
 paket-files
 **/obj
 **/bin
 **/out
-**/compiled
 **/node_modules

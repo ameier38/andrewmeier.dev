@@ -1,43 +1,28 @@
-namespace Server
+module Server.Config
 
 open System
 
 type ServerConfig =
-    { Url: string }
+    { Url:string }
     static member Load() =
         let host = Env.variable "SERVER_HOST" "0.0.0.0"
         let port = Env.variable "SERVER_PORT" "5000" |> int
         { Url = $"http://{host}:{port}" }
-
-type SeqConfig =
-    { Url: string }
+        
+type NotionConfig =
+    { DatabaseId:string
+      Token:string }
     static member Load() =
-        let scheme = Env.variable "SEQ_SCHEME" "http"
-        let host = Env.variable "SEQ_HOST" "localhost"
-        let port = Env.variable "SEQ_PORT" "5341"
-        { Url = $"{scheme}://{host}:{port}" }
-
-type AirtableConfig =
-    { ApiUrl: string
-      ApiKey: string
-      BaseId: string }
-    static member Load() =
-        let secretName = Env.variable "AIRTABLE_SECRET" "airtable"
-        { ApiUrl = "https://api.airtable.com/v0"
-          ApiKey = Env.secret secretName "api-key" "AIRTABLE_API_KEY" "test"
-          BaseId = Env.secret secretName "base-id" "AIRTABLE_BASE_ID" "test" }
+        { DatabaseId = Env.variable "NOTION_DATABASE_ID" "760a440b656348968e811b16d2cbece1"
+          Token = Env.secret "notion" "token" "NOTION_TOKEN" "" }
 
 type Config =
-    { AppName: string
-      AppEnv: AppEnv
-      Debug: bool
+    { Debug: bool
+      CI: bool
       ServerConfig: ServerConfig
-      SeqConfig: SeqConfig
-      AirtableConfig: AirtableConfig }
+      NotionConfig:NotionConfig }
     static member Load() =
-        { AppName = Env.variable "APP_NAME" "andrewmeier.dev"
-          AppEnv = match Env.variable "APP_ENV" "DEV" with "PROD" -> AppEnv.Prod | _ -> AppEnv.Dev
-          Debug = Env.variable "DEBUG" "true" |> Boolean.Parse
+        { Debug = Env.variable "DEBUG" "true" |> Boolean.Parse
+          CI = Env.variable "CI" "false" |> Boolean.Parse
           ServerConfig = ServerConfig.Load()
-          SeqConfig = SeqConfig.Load()
-          AirtableConfig = AirtableConfig.Load() }
+          NotionConfig = NotionConfig.Load() }

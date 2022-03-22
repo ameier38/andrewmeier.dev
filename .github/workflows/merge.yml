@@ -9,10 +9,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Start Tunnel
+        run: |
+          docker run \
+            -d \
+            -p 1234:1234 \
+            cloudflare/cloudflared:2022.3.2 \
+            access tcp \
+              --hostname=k8s.andrewmeier.dev \
+              --url=0.0.0.0:1234 \
+              --service-token-id=${{ secrets.TUNNEL_SERVICE_TOKEN_ID }} \
+              --service-token-secret=${{ secrets.TUNNEL_SERVICE_TOKEN_SECRET }}
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
-          node-version: 14.x
+          node-version: 16.x
       - name: Install Packages
         run: npm install
         working-directory: ./pulumi
