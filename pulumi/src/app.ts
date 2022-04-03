@@ -7,7 +7,7 @@ import * as config from './config'
 const identifier = 'blog'
 
 const image = new docker.Image(identifier, {
-    imageName: pulumi.interpolate `${config.registryEndpoint}/${identifier}`,
+    imageName: pulumi.interpolate `${config.registryServer}/${config.registryName}/${identifier}`,
     build: {
         context: path.join(config.root, 'app'),
         args: { 
@@ -16,19 +16,23 @@ const image = new docker.Image(identifier, {
         },
         extraOptions: ['--quiet']
     },
-    registry: config.imageRegistry
+    registry: {
+        server: config.registryServer,
+        username: config.registryUser,
+        password: config.registryPassword
+    }
 })
 
 const registrySecret = new k8s.core.v1.Secret(`${identifier}-registry`, {
-    metadata: { namespace: config.blogNamespace },
+    metadata: { namespace: config.andrewmeierNamespace },
     type: 'kubernetes.io/dockerconfigjson',
     stringData: {
-        '.dockerconfigjson': config.dockerCredentials
+        '.dockerconfigjson': config.dockerconfigjson
     }
 })
 
 let notionSecret = new k8s.core.v1.Secret(`${identifier}-notion`, {
-    metadata: { namespace: config.blogNamespace },
+    metadata: { namespace: config.andrewmeierNamespace },
     immutable: true,
     stringData: {
         'token': config.notionConfig.token
@@ -40,7 +44,7 @@ const labels = { 'app.kubernetes.io/name': identifier }
 const deployment = new k8s.apps.v1.Deployment(identifier, {
     metadata: {
         name: identifier,
-        namespace: config.blogNamespace
+        namespace: config.andrewmeierNamespace
     },
     spec: {
         replicas: 1,
@@ -96,10 +100,10 @@ const deployment = new k8s.apps.v1.Deployment(identifier, {
     }
 })
 
-new k8s.core.v1.Service(identifier, {
+const service = new k8s.core.v1.Service(identifier, {
     metadata: {
         name: identifier,
-        namespace: config.blogNamespace },
+        namespace: config.andrewmeierNamespace },
     spec: {
         type: 'ClusterIP',
         selector: labels,
@@ -110,3 +114,21 @@ new k8s.core.v1.Service(identifier, {
         }]
     }
 }, { dependsOn: deployment })
+
+new k8s.apiextensions.CustomResource(identifier, {
+    apiVersion: 'traefik.containo.us/v1alpha1',
+    kind: 'IngressRoute',
+    metadata: { namespace: config.andrewmeierNamespace },
+    spec: {
+        entrypoints: ['web'],
+        routes: [{
+            kind: 'Rule',
+            match: pulumi.interpolate `Host(\`${config.blogHost}\`)`,
+            services: [{
+                name: service.metadata.name,
+                namespace: service.metadata.namespace,
+                port: service.spec.ports[0].port
+            }]
+        }]
+    }
+})
