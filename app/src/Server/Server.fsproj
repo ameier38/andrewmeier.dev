@@ -4,11 +4,11 @@
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Infrastructure.fs" />
-    <Compile Include="Config.fs" />
-    <Compile Include="PostClient.fs" />
-    <Compile Include="PostController.fs" />
-    <Compile Include="Program.fs" />
+    <Compile Include="src\Infrastructure.fs" />
+    <Compile Include="src\Config.fs" />
+    <Compile Include="src\PostClient.fs" />
+    <Compile Include="src\PostController.fs" />
+    <Compile Include="src\Program.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
