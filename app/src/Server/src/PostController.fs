@@ -145,7 +145,6 @@ module Block =
                     ]
             ]
         | :? CodeBlock as b ->
-            Log.Information("Language: {Language}", b.Code.Language)
             let language =
                 match b.Code.Language with
                 | "f#" -> "fsharp"
