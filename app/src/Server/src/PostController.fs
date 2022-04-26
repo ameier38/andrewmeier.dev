@@ -145,11 +145,16 @@ module Block =
                     ]
             ]
         | :? CodeBlock as b ->
+            Log.Information("Language: {Language}", b.Code.Language)
+            let language =
+                match b.Code.Language with
+                | "f#" -> "fsharp"
+                | other -> other
             Html.pre [
-                prop.className $"language-{b.Code.Language}"
+                prop.className $"language-{language}"
                 prop.children [
                     Html.code [
-                        prop.className $"language-{b.Code.Language}"
+                        prop.className $"language-{language}"
                         prop.children [
                             for text in b.Code.Text do
                                 RichTextBase.toHtml text
@@ -239,7 +244,6 @@ module Components =
                     prop.href "/css/prism.css"
                     prop.rel "stylesheet"
                 ]
-                Html.script [ prop.src "https://unpkg.com/htmx.org@1.7.0" ]
             ]
             Html.body [
                 prop.className "bg-gray-50"
@@ -283,11 +287,9 @@ module Components =
                         prop.id "page"
                         prop.children page
                     ]    
+                    Html.script [ prop.src "/scripts/htmx.min.js" ]
+                    Html.script [ prop.src "/scripts/prism.js"; prop.custom ("data-manual", true) ]
                 ]
-            ]
-            Html.script [
-                prop.src "/scripts/prism.js"
-                prop.custom ("data-manual", true)
             ]
         ]
         
@@ -412,7 +414,11 @@ module Components =
 type PostController(client:IPostClient) =
     inherit Controller()
     
-    member private this.Render(html: ReactElement) =
+    member private this.RenderDocument(html: ReactElement) =
+        let htmlContent = Render.htmlDocument html
+        this.Content(htmlContent, "text/html")
+        
+    member private this.RenderView(html: ReactElement) =
         let htmlContent = Render.htmlView html
         this.Content(htmlContent, "text/html")
         
@@ -422,11 +428,11 @@ type PostController(client:IPostClient) =
         match! client.GetById(postId) with
         | Some post ->
             let html = Components.postDetail post
-            return this.Render(html)
+            return this.RenderView(html)
         | None ->
             let page = Components.notFound
             let html = Components.layout page
-            return this.Render(html)
+            return this.RenderView(html)
     }
         
     [<HttpGet>]
@@ -434,7 +440,7 @@ type PostController(client:IPostClient) =
         let! posts = client.List()
         let page = Components.postList posts
         let html = Components.layout page
-        return this.Render(html)
+        return this.RenderDocument(html)
     }
         
     [<Route("{postId:guid}")>]
@@ -444,11 +450,11 @@ type PostController(client:IPostClient) =
         | Some post ->
             let page = Components.postDetail post
             let html = Components.layout page
-            return this.Render(html)
+            return this.RenderDocument(html)
         | None ->
             let page = Components.notFound
             let html = Components.layout page
-            return this.Render(html)
+            return this.RenderDocument(html)
     }
     
     [<Route("{permalink:regex(^[[a-z-]]+$)}")>]
@@ -458,9 +464,9 @@ type PostController(client:IPostClient) =
         | Some post ->
             let page = Components.postDetail post
             let html = Components.layout page
-            return this.Render(html)
+            return this.RenderDocument(html)
         | None ->
             let page = Components.notFound
             let html = Components.layout page
-            return this.Render(html)
+            return this.RenderDocument(html)
     }

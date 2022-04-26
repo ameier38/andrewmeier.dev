@@ -2,11 +2,11 @@ version: '3.8'
 services:
   app:
     build:
-      context: ./app
+      context: .
       args: 
         RUNTIME_ID: linux-x64
     environment:
-      NOTION_DATABASE_ID: 760a440b656348968e811b16d2cbece1
+      NOTION_DATABASE_ID:
       NOTION_TOKEN:
       CI:
     ports:
