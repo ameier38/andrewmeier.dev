@@ -12,8 +12,9 @@ type Post =
       permalink: string
       title: string
       summary: string
+      icon: string
+      iconAlt: string
       cover: string
-      coverAlt: string
       tags: string[]
       createdAt: DateTime
       updatedAt: DateTime }
@@ -79,6 +80,10 @@ module Props =
         |> Option.defaultValue defaultValue
         
 module File =
+    let getIconUrl (icon:IPageIcon) =
+        match icon with
+        | :? ExternalFile as f -> f.External.Url
+        | _ -> ""
     let getUrl (file:FileObject) =
         match file with
         | :? UploadedFile as f -> f.File.Url
@@ -92,8 +97,9 @@ module Post =
           permalink = props |> Props.getText "permalink" ""
           title = props |> Props.getTitle "title" ""
           summary = props |> Props.getText "summary" ""
+          icon = File.getIconUrl page.Icon
+          iconAlt = props |> Props.getText "iconAlt" ""
           cover = File.getUrl page.Cover
-          coverAlt = props |> Props.getText "coverAlt" ""
           tags = props |> Props.getMultiSelect "tags" [||]
           createdAt = props |> Props.getDate "createdAt" DateTime.UtcNow
           updatedAt = props |> Props.getDate "updatedAt" DateTime.UtcNow }
@@ -195,8 +201,9 @@ type MockPostClient() =
          permalink = "test"
          title = "Test"
          summary = "This is a test"
+         icon = ""
+         iconAlt = ""
          cover = ""
-         coverAlt = ""
          tags = [| "F#" |]
          createdAt = DateTime(2022, 3, 11)
          updatedAt = DateTime(2022, 3, 11) }
@@ -205,8 +212,9 @@ type MockPostClient() =
          permalink = "another-test"
          title = "Another Test"
          summary = "This is another test"
+         icon = ""
+         iconAlt = ""
          cover = ""
-         coverAlt = ""
          tags = [| "F#" |]
          createdAt = DateTime(2022, 3, 11)
          updatedAt = DateTime(2022, 3, 11) }
