@@ -3,11 +3,15 @@ Server for [andrewmeier.dev](https://andrewmeier.dev).
 
 ## Setup
 1. Install [.NET SDK](https://dotnet.microsoft.com/download)
-2. Restore tools
+2. Install development certificates.
+   ```
+   dotnet dev-certs https --trust
+   ```
+3. Restore tools
     ```
     dotnet tool restore
     ```
-3. Install packages.
+4. Install packages.
    ```
    dotnet paket install
    dotnet paket restore
@@ -21,13 +25,9 @@ List build targets.
 ```
 The following targets are available:
    BuildTailwind
-   Clean
    Publish
-   Restore
    Test
    Watch
-   WatchServer
-   WatchTailwind
 ```
 
 Watch the server for local development.

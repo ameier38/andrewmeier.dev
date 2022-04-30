@@ -4,6 +4,7 @@ open Microsoft.Extensions.Caching.Memory
 open Notion.Client
 open Server.Config
 open System
+open System.Threading.Tasks
 open System.Collections.Generic
 
 type Post =
@@ -12,6 +13,7 @@ type Post =
       title: string
       summary: string
       cover: string
+      coverAlt: string
       tags: string[]
       createdAt: DateTime
       updatedAt: DateTime }
@@ -21,9 +23,9 @@ type PostDetail =
       content: IBlock[] }
     
 type IPostClient =
-    abstract List: unit -> Async<Post[]>
-    abstract GetById: pageId:string -> Async<PostDetail option>
-    abstract GetByPermalink: permalink:string -> Async<PostDetail option>
+    abstract List: unit -> Task<Post[]>
+    abstract GetById: pageId:string -> Task<PostDetail option>
+    abstract GetByPermalink: permalink:string -> Task<PostDetail option>
 
 type Props = IDictionary<string,PropertyValue>
 
@@ -91,15 +93,16 @@ module Post =
           title = props |> Props.getTitle "title" ""
           summary = props |> Props.getText "summary" ""
           cover = File.getUrl page.Cover
+          coverAlt = props |> Props.getText "coverAlt" ""
           tags = props |> Props.getMultiSelect "tags" [||]
           createdAt = props |> Props.getDate "createdAt" DateTime.UtcNow
           updatedAt = props |> Props.getDate "updatedAt" DateTime.UtcNow }
         
-type LivePostClient(config:Config, cache:IMemoryCache) =
-    let clientOpts = ClientOptions(AuthToken=config.NotionConfig.Token)
+type LivePostClient(config:NotionConfig, cache:IMemoryCache) =
+    let clientOpts = ClientOptions(AuthToken=config.Token)
     let client = NotionClientFactory.Create(clientOpts)
     
-    let getPageId(permalink:string) = async {
+    let getPageId(permalink:string) = task {
         match cache.TryGetValue(permalink) with
         | true, value ->
             let pageId = unbox<string> value
@@ -107,7 +110,7 @@ type LivePostClient(config:Config, cache:IMemoryCache) =
         | _ ->
             let filter = TextFilter("permalink", permalink)
             let queryParams = DatabasesQueryParameters(Filter=filter)
-            let! res = client.Databases.QueryAsync(config.NotionConfig.DatabaseId, queryParams) |> Async.AwaitTask
+            let! res = client.Databases.QueryAsync(config.DatabaseId, queryParams)
             match Seq.tryHead res.Results with
             | Some page ->
                 let cacheEntryOpts = MemoryCacheEntryOptions(Size=1L)
@@ -117,8 +120,8 @@ type LivePostClient(config:Config, cache:IMemoryCache) =
                 return None
     }
     
-    let getPublishedPage (pageId:string) = async {
-        let! page = client.Pages.RetrieveAsync(pageId) |> Async.AwaitTask
+    let getPublishedPage (pageId:string) = task {
+        let! page = client.Pages.RetrieveAsync(pageId)
         let published = page.Properties |> Props.getCheckbox "published" false
         if published then
             return Some page
@@ -126,7 +129,7 @@ type LivePostClient(config:Config, cache:IMemoryCache) =
             return None
     }
     
-    let listPublishedPages () = async {
+    let listPublishedPages () = task {
         let mutable hasMore = true
         let mutable cursor = null
         let posts = ResizeArray()
@@ -139,28 +142,28 @@ type LivePostClient(config:Config, cache:IMemoryCache) =
         let filter = CompoundFilter(``and``=combined)
         let queryParams = DatabasesQueryParameters(StartCursor=cursor, Filter=filter)
         while hasMore do
-            let! res = client.Databases.QueryAsync(config.NotionConfig.DatabaseId, queryParams) |> Async.AwaitTask
+            let! res = client.Databases.QueryAsync(config.DatabaseId, queryParams)
             hasMore <- res.HasMore
             cursor <- res.NextCursor
             for page in res.Results do
                 posts.Add(page)
-        return posts.ToArray()
+        return posts |> Seq.map Post.fromDto |> Seq.toArray
     }
     
-    let listBlocks (pageId:string) = async {
+    let listBlocks (pageId:string) = task {
         let blocks = ResizeArray()
         let mutable hasMore = true
         let mutable cursor = null
         while hasMore do
             let parameters = BlocksRetrieveChildrenParameters(StartCursor=cursor)
-            let! res = client.Blocks.RetrieveChildrenAsync(pageId, parameters) |> Async.AwaitTask
+            let! res = client.Blocks.RetrieveChildrenAsync(pageId, parameters)
             hasMore <- res.HasMore
             cursor <- res.NextCursor
             blocks.AddRange(res.Results)
         return blocks.ToArray()
     }
     
-    let getPostById (pageId:string) = async {
+    let getPostById (pageId:string) = task {
         match! getPublishedPage pageId with
         | Some page ->
             let post = Post.fromDto page
@@ -171,21 +174,20 @@ type LivePostClient(config:Config, cache:IMemoryCache) =
             return None
     }
     
+    let getPostByPermalink (permalink:string) = task {
+        match! getPageId permalink with
+        | Some pageId ->
+            return! getPostById pageId
+        | None ->
+            return None
+    }
+    
     interface IPostClient with
-        member _.List() = async {
-            let! pages = listPublishedPages()
-            return pages |> Array.map Post.fromDto
-        }
+        member _.List() = listPublishedPages()
         
         member _.GetById(pageId) = getPostById pageId
         
-        member _.GetByPermalink(permalink) = async {
-            match! getPageId permalink with
-            | Some pageId ->
-                return! getPostById pageId
-            | None ->
-                return None
-        }
+        member _.GetByPermalink(permalink) = getPostByPermalink(permalink)
 
 type MockPostClient() =
     let post1 = 
@@ -194,6 +196,7 @@ type MockPostClient() =
          title = "Test"
          summary = "This is a test"
          cover = ""
+         coverAlt = ""
          tags = [| "F#" |]
          createdAt = DateTime(2022, 3, 11)
          updatedAt = DateTime(2022, 3, 11) }
@@ -203,6 +206,7 @@ type MockPostClient() =
          title = "Another Test"
          summary = "This is another test"
          cover = ""
+         coverAlt = ""
          tags = [| "F#" |]
          createdAt = DateTime(2022, 3, 11)
          updatedAt = DateTime(2022, 3, 11) }
@@ -215,11 +219,11 @@ type MockPostClient() =
         post2.permalink, post2
     ]
     interface IPostClient with
-        member _.List() = async {
+        member _.List() = task {
             return [| post1; post2 |]
         }
         
-        member _.GetById(pageId:string) = async {
+        member _.GetById(pageId:string) = task {
             match lookupById |> Map.tryFind pageId with
             | Some post ->
                 return Some { post = post; content = [||] }
@@ -227,7 +231,7 @@ type MockPostClient() =
                 return None
         }
         
-        member _.GetByPermalink(permalink:string) = async {
+        member _.GetByPermalink(permalink:string) = task {
             match lookupByPermalink |> Map.tryFind permalink with
             | Some post ->
                 return Some { post = post; content = [||] }

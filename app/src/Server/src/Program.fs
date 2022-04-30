@@ -1,5 +1,7 @@
 ﻿open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.DependencyInjection
+open Microsoft.Extensions.Hosting
+open Microsoft.Extensions.Logging
 open Prometheus
 open Server.Config
 open Server.PostClient
@@ -11,6 +13,7 @@ let main _ =
     let config = Config.Load()
     let logger = 
         LoggerConfiguration()
+            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
             .MinimumLevel.Is(if config.Debug then LogEventLevel.Debug else LogEventLevel.Information)
             .WriteTo.Console()
             .CreateLogger()
@@ -21,12 +24,17 @@ let main _ =
     try
         try
             let builder = WebApplication.CreateBuilder()
-            builder.Services.AddSingleton<Config>(fun _ -> config) |> ignore
+            let configureLogger (_ctx:HostBuilderContext) (lc:LoggerConfiguration) = lc.WriteTo.Console() |> ignore
+            builder.Host.UseSerilog(System.Action<HostBuilderContext,LoggerConfiguration>(configureLogger)) |> ignore
             builder.Services.AddMemoryCache(fun opts -> opts.SizeLimit <- 1000L) |> ignore
-            if config.CI then builder.Services.AddSingleton<IPostClient,MockPostClient>() |> ignore
-            else builder.Services.AddSingleton<IPostClient,LivePostClient>() |> ignore
+            builder.Services.AddSingleton<NotionConfig>(config.NotionConfig) |> ignore
+            if config.AppEnv = AppEnv.Dev then
+                builder.Services.AddSingleton<IPostClient,MockPostClient>() |> ignore
+            else
+                builder.Services.AddSingleton<IPostClient,LivePostClient>() |> ignore
             builder.Services.AddControllers() |> ignore
             builder.Services.AddHealthChecks() |> ignore
+            
             let app = builder.Build()
             app.UseStaticFiles() |> ignore
             app.MapControllers() |> ignore

@@ -7,6 +7,7 @@
     <Compile Include="src\Infrastructure.fs" />
     <Compile Include="src\Config.fs" />
     <Compile Include="src\PostClient.fs" />
+    <Compile Include="src\ViewEngine.fs" />
     <Compile Include="src\PostController.fs" />
     <Compile Include="src\Program.fs" />
   </ItemGroup>

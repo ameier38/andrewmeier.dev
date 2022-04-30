@@ -1,52 +1,38 @@
 open Fake.Core
 open Fake.DotNet
 open Fake.IO
-open Fake.IO.Globbing.Operators
 open Fake.IO.FileSystemOperators
 open Fake.JavaScript
 open BlackFox.Fake
 
 let src = Path.getDirectory __SOURCE_DIRECTORY__
-    
 let root = Path.getDirectory src
-
 let sln = root </> "andrewmeier.dev.sln"
 let serverProj = src </> "Server" </> "Server.fsproj"
 let testsProj = src </> "Tests" </> "Tests.fsproj"
-let screenshotsDir = root </> ".screenshots"
 
 let registerTasks() =
 
-    let clean = BuildTask.create "Clean" [] {
-        !! $"{src}/**/bin"
-        ++ $"{src}/**/obj"
-        ++ $"{src}/**/out"
-        -- $"{src}/Build/**"
-        |> Seq.map (fun p -> printfn "cleaning: %s" p; p)
-        |> Shell.cleanDirs 
+    let watchServer = async {
+        let res = DotNet.exec id "watch" $"--project {serverProj} run"
+        if not res.OK then failwithf $"{res.Errors}"
     }
-    
-    BuildTask.create "Restore" [clean] {
-        DotNet.restore id sln
-    } |> ignore
-    
-    let watchServer = BuildTask.create "WatchServer" [] {
-        let env = Map.ofList [
-            "SECRETS_DIR", "/dev/secrets/andrewmeier.dev"
-        ]
-        let res =
-            DotNet.exec
-                (fun opts -> { opts with Environment = env })
-                "watch" $"--project {serverProj} run"
-        if not res.OK then
-            failwithf $"{res.Errors}"
-    }
-    
-    let watchTailwind = BuildTask.create "WatchTailwind" [] {
+
+    let watchTailwind = async {
         Npm.run "css:watch" (fun opts -> { opts with WorkingDirectory = src </> "Server" })
     }
 
-    BuildTask.createEmpty "Watch" [watchServer; watchTailwind] |> ignore
+    BuildTask.create "Watch" [] {
+        let res =
+            [watchServer; watchTailwind]
+            |> Async.Parallel
+            |> Async.Catch
+            |> Async.RunSynchronously
+        match res with
+        | Choice2Of2 exn ->
+            failwith $"Error: {exn.Message}"
+        | _ -> ()
+    } |> ignore
     
     BuildTask.create "Test" [] {
         DotNet.test id testsProj

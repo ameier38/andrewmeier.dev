@@ -9,7 +9,7 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT 1
 # update packages
 RUN apt-get update && apt-get upgrade -y
 
-# install Node
+# install Node (needed to build Tailwind CSS)
 RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - \
     && apt-get install -y nodejs
 
