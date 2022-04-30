@@ -2,6 +2,11 @@ module Server.Config
 
 open System
 
+[<RequireQualifiedAccess>]
+type AppEnv =
+    | Prod
+    | Dev
+
 type ServerConfig =
     { Url:string }
     static member Load() =
@@ -17,12 +22,12 @@ type NotionConfig =
           Token = Env.secret "notion" "token" "NOTION_TOKEN" "" }
 
 type Config =
-    { Debug: bool
-      CI: bool
+    { AppEnv: AppEnv
+      Debug: bool
       ServerConfig: ServerConfig
       NotionConfig:NotionConfig }
     static member Load() =
-        { Debug = Env.variable "DEBUG" "true" |> Boolean.Parse
-          CI = Env.variable "CI" "false" |> Boolean.Parse
+        { AppEnv = match Env.variable "APP_ENV" "prod" with "prod" -> AppEnv.Prod | _ -> AppEnv.Dev
+          Debug = Env.variable "DEBUG" "true" |> Boolean.Parse
           ServerConfig = ServerConfig.Load()
           NotionConfig = NotionConfig.Load() }

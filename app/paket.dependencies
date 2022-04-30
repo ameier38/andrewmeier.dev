@@ -2,12 +2,12 @@ storage: none
 source https://api.nuget.org/v3/index.json
 
 nuget canopy
-nuget Feliz.ViewEngine
+nuget FSharp.Core
 nuget Microsoft.AspNetCore
 nuget Microsoft.NET.Test.Sdk
 nuget Notion.Net
 nuget prometheus-net.AspNetCore
-nuget Selenium.WebDriver.ChromeDriver 99.0.4844.5100
+nuget Selenium.WebDriver.ChromeDriver 100.0.4896.6000
 nuget Serilog
 nuget Serilog.AspNetCore
 nuget Serilog.Sinks.Console

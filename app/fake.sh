@@ -1,1 +1,1 @@
-dotnet run --project ./src/Build/Build.fsproj $1 --parallel 2
+dotnet run --project ./src/Build/Build.fsproj $1
