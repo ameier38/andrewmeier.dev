@@ -343,15 +343,15 @@ module Page =
                 _name "twitter:description"
                 _content post.summary
             ]
-        if post.cover <> "" then
+        if post.icon <> "" then
             meta [
                 _name "twitter:image"
-                _content post.cover
+                _content post.icon
             ]
-        if post.coverAlt <> "" then
+        if post.iconAlt <> "" then
             meta [
                 _name "twitter:image:alt"
-                _content post.coverAlt
+                _content post.iconAlt
             ]
     ]
         
