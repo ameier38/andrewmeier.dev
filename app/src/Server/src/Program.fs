@@ -1,7 +1,6 @@
 ﻿open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
-open Microsoft.Extensions.Logging
 open Prometheus
 open Server.Config
 open Server.PostClient
