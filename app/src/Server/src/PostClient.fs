@@ -82,6 +82,7 @@ module Props =
 module File =
     let getIconUrl (icon:IPageIcon) =
         match icon with
+        | :? UploadedFile as f -> f.File.Url
         | :? ExternalFile as f -> f.External.Url
         | _ -> ""
     let getUrl (file:FileObject) =
