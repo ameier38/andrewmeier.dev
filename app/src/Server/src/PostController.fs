@@ -359,8 +359,10 @@ module Page =
     let private postSummary (post:Post) =
         div [
             _id post.permalink
-            _class "post relative border-b-2 border-gray-200 p-2 cursor-pointer hover:bg-gray-100"
+            _class "relative border-b-2 border-gray-200 p-2 cursor-pointer hover:bg-gray-100"
+            // i.e., when we click this div, make a GET request to /<post-id>
             _hxGet $"/{post.id}"
+            // i.e., take the response from the above GET request and replace the element with id 'page'
             _hxTarget "#page"
             _children [
                 div [
@@ -377,7 +379,7 @@ module Page =
                     ]
                 ]
                 p [
-                    _class "post-summary text-sm text-gray-500"
+                    _class "text-sm text-gray-500"
                     _children post.summary
                 ]
                 div [
