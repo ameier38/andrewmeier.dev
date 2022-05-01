@@ -483,6 +483,7 @@ type PostController(client:IPostClient) =
     member this.Index() = task {
         let! posts = client.List()
         let page = Page.postList posts
+        if this.IsHtmx then this.HxPush("/")
         return this.Render(page)
     }
         
@@ -490,6 +491,7 @@ type PostController(client:IPostClient) =
     [<HttpGet>]
     member this.NotFound() =
         let page = Page.notFound
+        if this.IsHtmx then this.HxPush("/404")
         this.Render(page)
         
     [<Route("{postId:guid}")>]
