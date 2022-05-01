@@ -468,6 +468,7 @@ module Page =
         ]
     
 
+// Specifies that this controller handles the index route (i.e., https://andrewmeier.dev/)
 [<Route("")>]
 type PostController(client:IPostClient) =
     inherit Controller()
@@ -479,10 +480,14 @@ type PostController(client:IPostClient) =
             else page |> Layout.main extraMetas |> Render.document
         this.Html(html)
     
+    // No route specified so use the controller route
     [<HttpGet>]
     member this.Index() = task {
         let! posts = client.List()
-        let page = Page.postList posts
+        let page =
+            posts
+            |> Array.filter (fun p -> p.permalink <> "about")
+            |> Page.postList
         if this.IsHtmx then this.HxPush("/")
         return this.Render(page)
     }
@@ -494,6 +499,7 @@ type PostController(client:IPostClient) =
         if this.IsHtmx then this.HxPush("/404")
         this.Render(page)
         
+    // Routes matching post ids, e.g., /<guid>
     [<Route("{postId:guid}")>]
     [<HttpGet>]
     member this.PostById(postId:string) = task {
@@ -509,6 +515,7 @@ type PostController(client:IPostClient) =
             return this.Render(page)
     }
     
+    // Routes matching permalinks, e.g., /blogging-with-fsharp
     [<Route("{permalink:regex(^[[a-z-]]+$)}")>]
     [<HttpGet>]
     member this.PostByPermalink(permalink:string) = task {
