@@ -32,7 +32,7 @@ type Tests() =
     member _.``Navigating to home shows list of posts`` () =
         url "http://localhost:5000"
         describe "there should be two posts"
-        count ".post" 2
+        count "h3" 2
         "#test h3" == "Test"
         
     [<Fact>]
