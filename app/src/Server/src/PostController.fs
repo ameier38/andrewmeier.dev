@@ -374,7 +374,7 @@ module Page =
                         ]
                         p [
                             _class "text-sm text-gray-500 leading-7"
-                            _children (post.updatedAt.ToString("MM/dd/yyyy"))
+                            _children (post.createdAt.ToString("MM/dd/yyyy"))
                         ]
                     ]
                 ]

@@ -159,7 +159,11 @@ type LivePostClient(config:NotionConfig, cache:IMemoryCache) =
             cursor <- res.NextCursor
             for page in res.Results do
                 posts.Add(page)
-        return posts |> Seq.map Post.fromDto |> Seq.toArray
+        return
+            posts
+            |> Seq.map Post.fromDto
+            |> Seq.sortByDescending (fun p -> p.createdAt)
+            |> Seq.toArray
     }
     
     let listBlocks (pageId:string) = task {
