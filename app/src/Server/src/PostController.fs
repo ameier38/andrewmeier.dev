@@ -359,8 +359,10 @@ module Page =
     let private postSummary (post:Post) =
         div [
             _id post.permalink
-            _class "post relative border-b-2 border-gray-200 p-2 cursor-pointer hover:bg-gray-100"
+            _class "relative border-b-2 border-gray-200 p-2 cursor-pointer hover:bg-gray-100"
+            // i.e., when we click this div, make a GET request to /<post-id>
             _hxGet $"/{post.id}"
+            // i.e., take the response from the above GET request and replace the element with id 'page'
             _hxTarget "#page"
             _children [
                 div [
@@ -377,7 +379,7 @@ module Page =
                     ]
                 ]
                 p [
-                    _class "post-summary text-sm text-gray-500"
+                    _class "text-sm text-gray-500"
                     _children post.summary
                 ]
                 div [
@@ -468,6 +470,7 @@ module Page =
         ]
     
 
+// Specifies that this controller handles the index route (i.e., https://andrewmeier.dev/)
 [<Route("")>]
 type PostController(client:IPostClient) =
     inherit Controller()
@@ -479,10 +482,15 @@ type PostController(client:IPostClient) =
             else page |> Layout.main extraMetas |> Render.document
         this.Html(html)
     
+    // No route specified so use the controller route
     [<HttpGet>]
     member this.Index() = task {
         let! posts = client.List()
-        let page = Page.postList posts
+        let page =
+            posts
+            |> Array.filter (fun p -> p.permalink <> "about")
+            |> Page.postList
+        if this.IsHtmx then this.HxPush("/")
         return this.Render(page)
     }
         
@@ -490,8 +498,10 @@ type PostController(client:IPostClient) =
     [<HttpGet>]
     member this.NotFound() =
         let page = Page.notFound
+        if this.IsHtmx then this.HxPush("/404")
         this.Render(page)
         
+    // Routes matching post ids, e.g., /<guid>
     [<Route("{postId:guid}")>]
     [<HttpGet>]
     member this.PostById(postId:string) = task {
@@ -507,6 +517,7 @@ type PostController(client:IPostClient) =
             return this.Render(page)
     }
     
+    // Routes matching permalinks, e.g., /blogging-with-fsharp
     [<Route("{permalink:regex(^[[a-z-]]+$)}")>]
     [<HttpGet>]
     member this.PostByPermalink(permalink:string) = task {

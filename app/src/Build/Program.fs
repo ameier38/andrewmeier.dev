@@ -23,15 +23,10 @@ let registerTasks() =
     }
 
     BuildTask.create "Watch" [] {
-        let res =
-            [watchServer; watchTailwind]
-            |> Async.Parallel
-            |> Async.Catch
-            |> Async.RunSynchronously
-        match res with
-        | Choice2Of2 exn ->
-            failwith $"Error: {exn.Message}"
-        | _ -> ()
+        [watchServer; watchTailwind]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
     } |> ignore
     
     BuildTask.create "Test" [] {

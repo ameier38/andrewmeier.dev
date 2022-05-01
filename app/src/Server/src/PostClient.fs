@@ -68,6 +68,13 @@ module Props =
                 else Option.ofNullable date.Date.Start
             | _ -> None)
         |> Option.defaultValue defaultValue
+    let getSelect key defaultValue props =
+        tryGetValue key props
+        |> Option.bind (fun prop ->
+            match prop with
+            | :? SelectPropertyValue as select -> Some select.Select.Name
+            | _ -> None)
+        |> Option.defaultValue defaultValue
     let getMultiSelect key defaultValue props =
         tryGetValue key props
         |> Option.map (fun prop ->
@@ -109,6 +116,7 @@ type LivePostClient(config:NotionConfig, cache:IMemoryCache) =
     let clientOpts = ClientOptions(AuthToken=config.Token)
     let client = NotionClientFactory.Create(clientOpts)
     
+    // Get the page id from the permalink and cache the result
     let getPageId(permalink:string) = task {
         match cache.TryGetValue(permalink) with
         | true, value ->
@@ -120,6 +128,8 @@ type LivePostClient(config:NotionConfig, cache:IMemoryCache) =
             let! res = client.Databases.QueryAsync(config.DatabaseId, queryParams)
             match Seq.tryHead res.Results with
             | Some page ->
+                // The cache entry will take up 1/1000 entries.
+                // The entries limit is defined in Program.fs when adding the cache.
                 let cacheEntryOpts = MemoryCacheEntryOptions(Size=1L)
                 let pageId = cache.Set(permalink, page.Id, cacheEntryOpts)
                 return Some pageId
@@ -129,8 +139,8 @@ type LivePostClient(config:NotionConfig, cache:IMemoryCache) =
     
     let getPublishedPage (pageId:string) = task {
         let! page = client.Pages.RetrieveAsync(pageId)
-        let published = page.Properties |> Props.getCheckbox "published" false
-        if published then
+        let status = page.Properties |> Props.getSelect "status" ""
+        if status = "Published" then
             return Some page
         else
             return None
@@ -140,13 +150,8 @@ type LivePostClient(config:NotionConfig, cache:IMemoryCache) =
         let mutable hasMore = true
         let mutable cursor = null
         let posts = ResizeArray()
-        let publishedFilter = CheckboxFilter("published", true)
-        let hiddenFilter = CheckboxFilter("hidden", false)
-        let combined = List<Filter>([
-            publishedFilter :> Filter
-            hiddenFilter :> Filter
-        ])
-        let filter = CompoundFilter(``and``=combined)
+        // Filter for pages where the 'status' select field is 'Published'
+        let filter = SelectFilter("status", "Published")
         let queryParams = DatabasesQueryParameters(StartCursor=cursor, Filter=filter)
         while hasMore do
             let! res = client.Databases.QueryAsync(config.DatabaseId, queryParams)

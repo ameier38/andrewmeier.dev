@@ -1,6 +1,5 @@
 ﻿open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.DependencyInjection
-open Microsoft.Extensions.Hosting
 open Prometheus
 open Server.Config
 open Server.PostClient
@@ -23,8 +22,7 @@ let main _ =
     try
         try
             let builder = WebApplication.CreateBuilder()
-            let configureLogger (_ctx:HostBuilderContext) (lc:LoggerConfiguration) = lc.WriteTo.Console() |> ignore
-            builder.Host.UseSerilog(System.Action<HostBuilderContext,LoggerConfiguration>(configureLogger)) |> ignore
+            builder.Host.UseSerilog() |> ignore
             builder.Services.AddMemoryCache(fun opts -> opts.SizeLimit <- 1000L) |> ignore
             builder.Services.AddSingleton<NotionConfig>(config.NotionConfig) |> ignore
             if config.AppEnv = AppEnv.Dev then
@@ -36,6 +34,7 @@ let main _ =
             
             let app = builder.Build()
             app.UseStaticFiles() |> ignore
+            app.UseSerilogRequestLogging() |> ignore
             app.MapControllers() |> ignore
             app.MapHealthChecks("/healthz") |> ignore
             app.MapMetrics() |> ignore
