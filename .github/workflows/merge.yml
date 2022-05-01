@@ -1,6 +1,8 @@
 name: Merge
 on:
   push:
+    paths-ignore:
+      - '**.md'
     branches:
       - main
 jobs:
