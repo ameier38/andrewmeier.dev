@@ -1,13 +1,13 @@
 {
     "name": "blog",
     "devDependencies": {
-        "@types/node": "^16.4.2"
+        "@types/node": "^16.11.49"
     },
     "dependencies": {
-        "@pulumi/cloudflare": "^4.4.0",
-        "@pulumi/docker": "^3.0.0",
-        "@pulumi/kubernetes": "^3.5.1",
-        "@pulumi/pulumi": "^3.8.0",
-        "@pulumi/random": "^4.4.0"
+        "@pulumi/aws": "^5.11.0",
+        "@pulumi/awsx": "^0.40.0",
+        "@pulumi/kubernetes": "^3.20.5",
+        "@pulumi/pulumi": "^3.38.0",
+        "@pulumi/random": "^4.8.2"
     }
 }

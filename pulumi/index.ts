@@ -1,1 +1,1 @@
-import './src/app'
+import './src/k8s/app'
