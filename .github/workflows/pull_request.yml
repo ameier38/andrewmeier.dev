@@ -7,8 +7,18 @@ jobs:
   preview:
     name: Preview
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: us-east-1
+          role-to-assume: arn:aws:iam::400689721046:role/blog-deployer
+          role-session-name: github
       - name: Start Server
         working-directory: ./app
         run: docker-compose up -d app

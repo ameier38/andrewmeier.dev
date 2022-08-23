@@ -1,33 +1,15 @@
 import * as pulumi from '@pulumi/pulumi'
-import * as docker from '@pulumi/docker'
 import * as k8s from '@pulumi/kubernetes'
-import * as path from 'path'
-import * as config from './config'
+import * as repository from '../aws/repository'
+import * as config from '../config'
 
 const identifier = 'blog'
-
-const image = new docker.Image(identifier, {
-    imageName: pulumi.interpolate `${config.registryServer}/${config.registryName}/${identifier}`,
-    build: {
-        context: path.join(config.root, 'app'),
-        args: { 
-            RUNTIME_IMAGE_TAG: '6.0-alpine-arm64v8',
-            RUNTIME_ID: 'linux-arm64'
-        },
-        extraOptions: ['--quiet']
-    },
-    registry: {
-        server: config.registryServer,
-        username: config.registryUser,
-        password: config.registryPassword
-    }
-})
 
 const registrySecret = new k8s.core.v1.Secret(`${identifier}-registry`, {
     metadata: { namespace: config.andrewmeierNamespace },
     type: 'kubernetes.io/dockerconfigjson',
     stringData: {
-        '.dockerconfigjson': config.dockerconfigjson
+        '.dockerconfigjson': repository.blogDockerconfigjson
     }
 })
 
@@ -64,7 +46,7 @@ const deployment = new k8s.apps.v1.Deployment(identifier, {
                 }],
                 containers: [{
                     name: 'app',
-                    image: image.imageName,
+                    image: repository.blogImageName,
                     imagePullPolicy: 'IfNotPresent',
                     env: [
                         { name: 'SECRETS_DIR', value: '/var/secrets' },
