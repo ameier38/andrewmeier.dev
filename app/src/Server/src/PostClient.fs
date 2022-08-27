@@ -123,7 +123,7 @@ type LivePostClient(config:NotionConfig, cache:IMemoryCache) =
             let pageId = unbox<string> value
             return Some pageId
         | _ ->
-            let filter = TextFilter("permalink", permalink)
+            let filter = RichTextFilter("permalink", permalink)
             let queryParams = DatabasesQueryParameters(Filter=filter)
             let! res = client.Databases.QueryAsync(config.DatabaseId, queryParams)
             match Seq.tryHead res.Results with
@@ -166,13 +166,13 @@ type LivePostClient(config:NotionConfig, cache:IMemoryCache) =
             |> Seq.toArray
     }
     
-    let listBlocks (pageId:string) = task {
-        let blocks = ResizeArray()
+    let listBlocks (blockId:string): Task<IBlock[]> = task {
+        let blocks = ResizeArray<IBlock>()
         let mutable hasMore = true
         let mutable cursor = null
         while hasMore do
             let parameters = BlocksRetrieveChildrenParameters(StartCursor=cursor)
-            let! res = client.Blocks.RetrieveChildrenAsync(pageId, parameters)
+            let! res = client.Blocks.RetrieveChildrenAsync(blockId, parameters)
             hasMore <- res.HasMore
             cursor <- res.NextCursor
             blocks.AddRange(res.Results)

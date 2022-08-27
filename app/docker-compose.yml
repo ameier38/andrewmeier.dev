@@ -6,8 +6,15 @@ services:
       args: 
         RUNTIME_ID: linux-x64
     environment:
+      DEBUG: 'true'
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_Kestrel__Certificates__Default__Path: /var/certs/localhost.pfx
+      ASPNETCORE_Kestrel__Certificates__Default__Password: changeit
+      SERVER_URL: 'https://0.0.0.0:5000'
       APP_ENV: dev
       NOTION_DATABASE_ID:
       NOTION_TOKEN:
     ports:
       - 5000:5000
+    volumes:
+      - ./certs:/var/certs

@@ -1,5 +1,6 @@
-﻿canopy
-Microsoft.NET.Test.Sdk
-Selenium.WebDriver.ChromeDriver
-xunit
-xunit.runner.visualstudio
+﻿group Tests
+    canopy
+    Microsoft.NET.Test.Sdk
+    Selenium.WebDriver.ChromeDriver
+    xunit
+    xunit.runner.visualstudio

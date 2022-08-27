@@ -30,29 +30,29 @@ type Tests() =
     
     [<Fact>]
     member _.``Navigating to home shows list of posts`` () =
-        url "http://localhost:5000"
+        url "https://localhost:5000"
         describe "there should be two posts"
         count "h3" 2
         "#test h3" == "Test"
         
     [<Fact>]
     member _.``Clicking post should navigate to detail`` () =
-        url "http://localhost:5000"
+        url "https://localhost:5000"
         describe "navigating to post"
         click "#test"
-        on "http://localhost:5000/test"
+        on "https://localhost:5000/test"
         describe "post title should be 'Test'"
         "h1" == "Test"
         
     [<Fact>]
     member _.``Permalink url should navigate to post`` () =
-        url "http://localhost:5000/another-test"
-        on "http://localhost:5000/another-test"
+        url "https://localhost:5000/another-test"
+        on "https://localhost:5000/another-test"
         describe "post title should be 'Another Test'"
         "h1" == "Another Test"
         
     [<Fact>]
     member _.``Non existent post should show not found`` () =
-        url "http://localhost:5000/blah"
+        url "https://localhost:5000/blah"
         describe "should be on not found page"
         "h1" == "Page not found"

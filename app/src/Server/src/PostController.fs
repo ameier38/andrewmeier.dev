@@ -101,74 +101,51 @@ module Block =
         match block with
         | :? HeadingOneBlock as b ->
             h1 [
+                _class "mt-8"
                 _id (b.Id.Replace("-", ""))
-                _class "text-3xl font-medium text-gray-800"
-                _children (b.Heading_1.Text |> Seq.map RichTextBase.toHtml |> Seq.toList)
+                _children (b.Heading_1.RichText |> Seq.map RichTextBase.toHtml |> Seq.toList)
             ]
         | :? HeadingTwoBlock as b ->
             h2 [
+                _class "mt-6"
                 _id (b.Id.Replace("-", ""))
-                _class "text-2xl font-medium text-gray-800"
-                _children (b.Heading_2.Text |> Seq.map RichTextBase.toHtml |> Seq.toList)
+                _children (b.Heading_2.RichText |> Seq.map RichTextBase.toHtml |> Seq.toList)
             ]
         | :? HeadingThreeeBlock as b ->
             h3 [
+                _class "mt-4"
                 _id (b.Id.Replace("-", ""))
-                _class "text-xl font-medium text-gray-800"
-                _children (b.Heading_3.Text |> Seq.map RichTextBase.toHtml |> Seq.toList)
+                _children (b.Heading_3.RichText |> Seq.map RichTextBase.toHtml |> Seq.toList)
             ]
         | :? ParagraphBlock as b ->
             div [
-                _class "text-gray-800"
                 _children [
-                    if Seq.isEmpty b.Paragraph.Text then br
+                    if Seq.isEmpty b.Paragraph.RichText then br
                     else
-                        for text in b.Paragraph.Text do
+                        for text in b.Paragraph.RichText do
                             RichTextBase.toHtml text
-                        if b.HasChildren then
-                            div [
-                                _class "indent-1"
-                                _children [
-                                    for child in b.Paragraph.Children do
-                                        toHtml child
-                                ]
-                            ]
                 ]
             ]
         | :? BulletedListItemBlock as b ->
             li [
                 _children [
-                    for text in b.BulletedListItem.Text do
+                    for text in b.BulletedListItem.RichText do
                         RichTextBase.toHtml text
-                    if b.HasChildren then
-                        div [
-                            _class "indent-1"
-                            _children [
-                                for child in b.BulletedListItem.Children do
-                                    toHtml child
-                            ]
-                        ]
                 ]
             ]
         | :? NumberedListItemBlock as b ->
             li [
                 _children [
-                    for text in b.NumberedListItem.Text do
+                    for text in b.NumberedListItem.RichText do
                         RichTextBase.toHtml text
-                    if b.HasChildren then
-                        div [
-                            _class "indent-1"
-                            _children [
-                                for child in b.NumberedListItem.Children do
-                                    toHtml child
-                            ]
-                        ]
                 ]
             ]
         | :? CodeBlock as b ->
             let language =
                 match b.Code.Language with
                 | "f#" -> "fsharp"
+                | "JSON" -> "json"
+                | "TOML" -> "toml"
                 | other -> other
             pre [
                 _class $"language-{language}"
@@ -176,7 +153,7 @@ module Block =
                     code [
                         _class $"language-{language}"
                         _children [
-                            for text in b.Code.Text do
+                            for text in b.Code.RichText do
                                 RichTextBase.toHtml text
                         ]
                     ]
@@ -197,16 +174,16 @@ module Block =
         | :? QuoteBlock as b ->
             blockquote [
                 _children [
-                    for text in b.Quote.Text do
+                    for text in b.Quote.RichText do
                         RichTextBase.toHtml text
-                    if b.HasChildren then
-                        div [
-                            _class "indent-1"
-                            _children [
-                                for child in b.Quote.Children do
-                                    toHtml child
-                            ]
-                        ]
+                ]
+            ]
+        | :? CalloutBlock as b ->
+            div [
+                _class "bg-gray-200 rounded p-2"
+                _children [
+                    for text in b.Callout.RichText do
+                        RichTextBase.toHtml text
                 ]
             ]
         | other ->
