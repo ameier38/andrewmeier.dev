@@ -1,18 +1,21 @@
 storage: none
 source https://api.nuget.org/v3/index.json
 
-nuget canopy
 nuget FSharp.Core
 nuget Microsoft.AspNetCore
-nuget Microsoft.NET.Test.Sdk
 nuget Notion.Net
 nuget prometheus-net.AspNetCore
-nuget Selenium.WebDriver.ChromeDriver 100.0.4896.6000
-nuget Serilog
 nuget Serilog.AspNetCore
 nuget Serilog.Sinks.Console
-nuget xunit
-nuget xunit.runner.visualstudio
+
+group Tests
+    storage none
+    source https://api.nuget.org/v3/index.json
+    nuget canopy
+    nuget Microsoft.NET.Test.Sdk
+    nuget Selenium.WebDriver.ChromeDriver 104.0.5112.7900
+    nuget xunit
+    nuget xunit.runner.visualstudio
 
 group Build
     storage none

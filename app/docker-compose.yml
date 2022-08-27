@@ -10,7 +10,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_Kestrel__Certificates__Default__Path: /var/certs/localhost.pfx
       ASPNETCORE_Kestrel__Certificates__Default__Password: changeit
-      APP_ENV: prod
+      SERVER_URL: 'https://0.0.0.0:5000'
+      APP_ENV: dev
       NOTION_DATABASE_ID:
       NOTION_TOKEN:
     ports:

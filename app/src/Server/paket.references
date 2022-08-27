@@ -2,6 +2,5 @@ FSharp.Core
 Microsoft.AspNetCore
 Notion.Net
 prometheus-net.AspNetCore
-Serilog
 Serilog.AspNetCore
 Serilog.Sinks.Console
