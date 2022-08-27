@@ -40,7 +40,7 @@ type Tests() =
         url "https://localhost:5000"
         describe "navigating to post"
         click "#test"
-        on "http://localhost:5000/test"
+        on "https://localhost:5000/test"
         describe "post title should be 'Test'"
         "h1" == "Test"
         
