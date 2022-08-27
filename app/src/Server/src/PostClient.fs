@@ -166,7 +166,7 @@ type LivePostClient(config:NotionConfig, cache:IMemoryCache) =
             |> Seq.toArray
     }
     
-    let rec listBlocks (blockId:string): Task<IBlock[]> = task {
+    let listBlocks (blockId:string): Task<IBlock[]> = task {
         let blocks = ResizeArray<IBlock>()
         let mutable hasMore = true
         let mutable cursor = null
