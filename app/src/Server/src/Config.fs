@@ -10,9 +10,8 @@ type AppEnv =
 type ServerConfig =
     { Url:string }
     static member Load() =
-        let host = Env.variable "SERVER_HOST" "0.0.0.0"
-        let port = Env.variable "SERVER_PORT" "5000" |> int
-        { Url = $"http://{host}:{port}" }
+        let url = Env.variable "SERVER_URL" "https://0.0.0.0:5000"
+        { Url = url }
         
 type NotionConfig =
     { DatabaseId:string
