@@ -1,6 +1,6 @@
-﻿namespace Server.Controllers
+﻿module Server.PostHandler
 
-open Microsoft.AspNetCore.Mvc
+open Giraffe
 open Notion.Client
 open Server.PostClient
 open Server.ViewEngine
@@ -445,67 +445,62 @@ module Page =
                 ]
             ]
         ]
+        
+let private render (page:HtmlElement) (extraMetas:HtmlElement list) (push:string) : HttpHandler =
+    handleContext(fun ctx ->
+        match ctx.TryGetRequestHeader "HX-Request" with
+        | Some "true" ->
+            ctx.SetHttpHeader("HX-Push", push)
+            page |> Render.view |> ctx.WriteHtmlStringAsync
+        | _ -> page |> Layout.main extraMetas |> Render.document |> ctx.WriteHtmlStringAsync)
     
-
-// Specifies that this controller handles the index route (i.e., https://andrewmeier.dev/)
-[<Route("")>]
-type PostController(client:IPostClient) =
-    inherit Controller()
-    
-    member private this.Render(page:HtmlElement, ?extraMetas:HtmlElement list) =
-        let extraMetas = extraMetas |> Option.defaultValue List.empty
-        let html =
-            if this.IsHtmx then Render.view page
-            else page |> Layout.main extraMetas |> Render.document
-        this.Html(html)
-    
-    // No route specified so use the controller route
-    [<HttpGet>]
-    member this.Index() = task {
+let private indexHandler : HttpHandler =
+    fun next ctx -> task {
+        let client = ctx.GetService<IPostClient>()
         let! posts = client.List()
         let page =
             posts
             |> Array.filter (fun p -> p.permalink <> "about")
             |> Page.postList
-        if this.IsHtmx then this.HxPush("/")
-        return this.Render(page)
+        return! render page [] "/" next ctx
     }
-        
-    [<Route("404")>]
-    [<HttpGet>]
-    member this.NotFound() =
-        let page = Page.notFound
-        if this.IsHtmx then this.HxPush("/404")
-        this.Render(page)
-        
-    // Routes matching post ids, e.g., /<guid>
-    [<Route("{postId:guid}")>]
-    [<HttpGet>]
-    member this.PostById(postId:string) = task {
-        match! client.GetById(postId) with
+    
+let private postByIdHandler (postId:System.Guid) : HttpHandler =
+    fun next ctx -> task {
+        let client = ctx.GetService<IPostClient>()
+        let pageId = postId.ToString("N")
+        match! client.GetById(pageId) with
         | Some postDetail ->
             let metas = Page.postTwitterMetas postDetail.post
             let page = Page.postDetail postDetail
-            if this.IsHtmx then this.HxPush($"/{postDetail.post.permalink}")
-            return this.Render(page, metas)
+            let path = $"/{postDetail.post.permalink}"
+            return! render page metas path next ctx
         | None ->
-            let page = Page.notFound
-            if this.IsHtmx then this.HxPush("/404")
-            return this.Render(page)
+            return! render Page.notFound [] "/404" next ctx
     }
     
-    // Routes matching permalinks, e.g., /blogging-with-fsharp
-    [<Route("{permalink:regex(^[[a-z-]]+$)}")>]
-    [<HttpGet>]
-    member this.PostByPermalink(permalink:string) = task {
+let private postByPermalinkHandler (permalink:string) : HttpHandler =
+    fun next ctx -> task {
+        let client = ctx.GetService<IPostClient>()
         match! client.GetByPermalink(permalink) with
         | Some postDetail ->
             let metas = Page.postTwitterMetas postDetail.post
             let page = Page.postDetail postDetail
-            if this.IsHtmx then this.HxPush($"/{permalink}")
-            return this.Render(page, metas)
+            let path = $"/{permalink}"
+            return! render page metas path next ctx
         | None ->
-            let page = Page.notFound
-            if this.IsHtmx then this.HxPush("/404")
-            return this.Render(page)
+            return! render Page.notFound [] "/404" next ctx
     }
+    
+let private notFoundHandler: HttpHandler =
+    render Page.notFound [] "/404"
+    
+let postApp : HttpHandler =
+    choose [
+        GET >=> choose [
+            route "/" >=> indexHandler
+            routef "/%O" postByIdHandler
+            routef "/%s" postByPermalinkHandler
+        ]
+        notFoundHandler
+    ]

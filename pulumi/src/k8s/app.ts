@@ -51,7 +51,7 @@ const deployment = new k8s.apps.v1.Deployment(identifier, {
                     env: [
                         { name: 'SECRETS_DIR', value: '/var/secrets' },
                         { name: 'SERVER_URL', value: 'http://0.0.0.0:5000' },
-                        { name: 'NOTION_DATABASE_ID', value: config.notionConfig.databaseId }
+                        { name: 'NOTION_BLOG_DATABASE_ID', value: config.notionConfig.blogDatabaseId }
                     ],
                     volumeMounts: [{
                         name: 'notion',

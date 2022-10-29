@@ -1,5 +1,5 @@
 FSharp.Core
-Microsoft.AspNetCore
+Giraffe
 Notion.Net
 prometheus-net.AspNetCore
 Serilog.AspNetCore

@@ -17,7 +17,7 @@ type NotionConfig =
     { DatabaseId:string
       Token:string }
     static member Load() =
-        { DatabaseId = Env.variable "NOTION_DATABASE_ID" ""
+        { DatabaseId = Env.variable "NOTION_BLOG_DATABASE_ID" ""
           Token = Env.secret "notion" "token" "NOTION_TOKEN" "" }
 
 type Config =

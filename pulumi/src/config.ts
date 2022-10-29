@@ -12,6 +12,6 @@ export const blogHost = appServicesStack.requireOutput('blogHost')
 
 const rawNotionConfig = new pulumi.Config('notion')
 export const notionConfig = {
-    databaseId: rawNotionConfig.requireSecret('databaseId'),
+    blogDatabaseId: rawNotionConfig.requireSecret('blogDatabaseId'),
     token: rawNotionConfig.requireSecret('token')
 }
