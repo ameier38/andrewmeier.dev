@@ -12,12 +12,11 @@ let configureServices (config:Config) (services:IServiceCollection) =
     services.AddMemoryCache(fun opts -> opts.SizeLimit <- 1000L) |> ignore
     // Add the Notion configuration which is a dependency of the Notion client
     services.AddSingleton<NotionConfig>(config.NotionConfig) |> ignore
+    match config.AppEnv with
     // When testing use the mock post client
-    if config.AppEnv = AppEnv.Dev then
-        services.AddSingleton<IPostClient,MockPostClient>() |> ignore
+    | AppEnv.Dev -> services.AddSingleton<IPostClient,MockPostClient>() |> ignore
     // Otherwise use the live post client
-    else
-        services.AddSingleton<IPostClient,LivePostClient>() |> ignore
+    | _ -> services.AddSingleton<IPostClient,LivePostClient>() |> ignore
     services.AddHealthChecks() |> ignore
     services.AddGiraffe() |> ignore
     
