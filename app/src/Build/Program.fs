@@ -1,57 +1,63 @@
 open Fake.Core
+open Fake.Core.TargetOperators
 open Fake.DotNet
 open Fake.IO
 open Fake.IO.FileSystemOperators
-open Fake.JavaScript
-open BlackFox.Fake
+open System.Threading.Tasks
 
 let src = Path.getDirectory __SOURCE_DIRECTORY__
 let root = Path.getDirectory src
 let sln = root </> "andrewmeier.dev.sln"
-let serverProj = src </> "Server" </> "Server.fsproj"
-let testsProj = src </> "Tests" </> "Tests.fsproj"
+let serverDir = src </> "Server"
+let testsDir = src </> "Tests"
 
-let registerTasks() =
+let tailwindcss workDir args =
+    CreateProcess.fromRawCommand "tailwindcss" args
+    |> CreateProcess.withWorkingDirectory workDir
+    |> CreateProcess.ensureExitCode
+    |> Proc.start
 
-    let watchServer = async {
-        let res = DotNet.exec id "watch" $"--project {serverProj} run"
-        if not res.OK then failwithf $"{res.Errors}"
-    }
+let inline (==>!) x y = x ==> y |> ignore
 
-    let watchTailwind = async {
-        Npm.run "css:watch" (fun opts -> { opts with WorkingDirectory = src </> "Server" })
-    }
-
-    BuildTask.create "Watch" [] {
-        [watchServer; watchTailwind]
-        |> Async.Parallel
-        |> Async.Ignore
-        |> Async.RunSynchronously
-    } |> ignore
+let registerTargets() =
     
-    BuildTask.create "Test" [] {
-        DotNet.test id testsProj
-    } |> ignore
-
-    let buildTailwind = BuildTask.create "BuildTailwind" [] {
-        Npm.run "css:build" (fun opts -> { opts with WorkingDirectory = src </> "Server" })
-    }
-    
-    BuildTask.create "Publish" [ buildTailwind ] {
+    Target.create "Watch" <| fun _ ->
+        let watchCss = tailwindcss serverDir [ "--input"; "./input.css"; "--output"; "./wwwroot/css/compiled.css"; "--watch" ]
+        let watchServer = task {
+            let res = DotNet.exec id "watch" $"--project {serverDir} run"
+            if not res.OK then failwith $"Error: {res.Errors}"
+        }
+        Task.WaitAny(watchCss, watchServer) |> ignore
+        
+    Target.create "Test" <| fun _ ->
+        DotNet.test id testsDir
+        
+    Target.create "BuildCss" <| fun _ ->
+        let buildCss = tailwindcss serverDir [ "--input"; "./input.css"; "--output"; "./wwwroot/css/compiled.css"; "--minify" ]
+        buildCss.Wait()
+        
+    Target.create "Publish" <| fun _ ->
         let runtime = Environment.environVarOrDefault "RUNTIME_ID" "linux-x64"
-        let serverRoot = Path.getDirectory serverProj
-        Trace.tracefn "Publishing with runtime %s" runtime
         DotNet.publish
-            (fun args ->
-                { args with
-                    OutputPath = Some $"%s{serverRoot}/out"
+            (fun opts ->
+                { opts with
+                    OutputPath = Some $"{serverDir}/out"
                     Runtime = Some runtime
                     SelfContained = Some false })
-            serverProj
-    } |> ignore
+            serverDir
+            
+    Target.create "Default" <| fun _ ->
+        Target.listAvailable()
+        
+    "BuildCss" ==>! "Publish"
     
 [<EntryPoint>]
 let main argv =
-    BuildTask.setupContextFromArgv argv
-    registerTasks()
-    BuildTask.runOrListApp() 
+    argv
+    |> Array.toList
+    |> Context.FakeExecutionContext.Create false "build.fsx"
+    |> Context.RuntimeContext.Fake
+    |> Context.setExecutionContext
+    registerTargets()
+    Target.runOrDefaultWithArguments "Default"
+    0

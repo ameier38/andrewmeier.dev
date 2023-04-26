@@ -1,4 +1,4 @@
-﻿module Server.PostClient
+﻿module Server.NotionClient
 
 open Microsoft.Extensions.Caching.Memory
 open Notion.Client
@@ -7,26 +7,26 @@ open System
 open System.Threading.Tasks
 open System.Collections.Generic
 
-type Post =
-    { id: string
-      permalink: string
-      title: string
-      summary: string
-      icon: string
-      iconAlt: string
-      cover: string
-      tags: string[]
-      createdAt: DateTime
-      updatedAt: DateTime }
+type PageProperties =
+    { id:string
+      permalink:string
+      title:string
+      summary:string
+      icon:string
+      iconAlt:string
+      cover:string
+      tags:string[]
+      createdAt:DateTimeOffset
+      updatedAt:DateTimeOffset }
     
-type PostDetail =
-    { post: Post
-      content: IBlock[] }
+type PageDetail =
+    { properties:PageProperties
+      content:IBlock[] }
     
-type IPostClient =
-    abstract List: unit -> Task<Post[]>
-    abstract GetById: pageId:string -> Task<PostDetail option>
-    abstract GetByPermalink: permalink:string -> Task<PostDetail option>
+type INotionClient =
+    abstract List: unit -> Task<PageProperties[]>
+    abstract GetByPermalink: permalink:string -> Task<PageDetail option>
+    abstract GetById: pageId:string -> Task<PageDetail option>
 
 type Props = IDictionary<string,PropertyValue>
 
@@ -65,7 +65,14 @@ module Props =
             match prop with
             | :? DatePropertyValue as date ->
                 if isNull date.Date then None
-                else Option.ofNullable date.Date.Start
+                else date.Date.Start |> Option.ofNullable |> Option.map DateTimeOffset
+            | _ -> None)
+        |> Option.defaultValue defaultValue
+    let getStatus key defaultValue props =
+        tryGetValue key props
+        |> Option.bind (fun prop ->
+            match prop with
+            | :? StatusPropertyValue as status -> Some status.Status.Name
             | _ -> None)
         |> Option.defaultValue defaultValue
     let getSelect key defaultValue props =
@@ -98,26 +105,26 @@ module File =
         | :? ExternalFile as f -> f.External.Url
         | _ -> ""
 
-module Post =
-    let fromDto (page:Page) =
-        let props = page.Properties
-        { id = page.Id.Replace("-", "")
+module PageProperties =
+    let fromDto (dto:Page) : PageProperties =
+        let props = dto.Properties
+        { id = dto.Id.Replace("-", "")
           permalink = props |> Props.getText "permalink" ""
           title = props |> Props.getTitle "title" ""
           summary = props |> Props.getText "summary" ""
-          icon = File.getIconUrl page.Icon
+          icon = File.getIconUrl dto.Icon
           iconAlt = props |> Props.getText "iconAlt" ""
-          cover = File.getUrl page.Cover
+          cover = File.getUrl dto.Cover
           tags = props |> Props.getMultiSelect "tags" [||]
-          createdAt = props |> Props.getDate "createdAt" DateTime.UtcNow
-          updatedAt = props |> Props.getDate "updatedAt" DateTime.UtcNow }
+          createdAt = props |> Props.getDate "createdAt" DateTimeOffset.UtcNow
+          updatedAt = props |> Props.getDate "updatedAt" DateTimeOffset.UtcNow }
         
-type LivePostClient(config:NotionConfig, cache:IMemoryCache) =
+type LiveNotionClient(config:NotionConfig, cache:IMemoryCache) =
     let clientOpts = ClientOptions(AuthToken=config.Token)
     let client = NotionClientFactory.Create(clientOpts)
     
     // Get the page id from the permalink and cache the result
-    let getPageId(permalink:string) = task {
+    let getPageId (permalink:string) = task {
         match cache.TryGetValue(permalink) with
         | true, value ->
             let pageId = unbox<string> value
@@ -139,7 +146,7 @@ type LivePostClient(config:NotionConfig, cache:IMemoryCache) =
     
     let getPublishedPage (pageId:string) = task {
         let! page = client.Pages.RetrieveAsync(pageId)
-        let status = page.Properties |> Props.getSelect "status" ""
+        let status = page.Properties |> Props.getStatus "Status" ""
         if status = "Published" then
             return Some page
         else
@@ -149,21 +156,16 @@ type LivePostClient(config:NotionConfig, cache:IMemoryCache) =
     let listPublishedPages () = task {
         let mutable hasMore = true
         let mutable cursor = null
-        let posts = ResizeArray()
+        let pages = ResizeArray()
         // Filter for pages where the 'status' select field is 'Published'
-        let filter = SelectFilter("status", "Published")
+        let filter = StatusFilter("Status", "Published")
         let queryParams = DatabasesQueryParameters(StartCursor=cursor, Filter=filter)
         while hasMore do
             let! res = client.Databases.QueryAsync(config.DatabaseId, queryParams)
             hasMore <- res.HasMore
             cursor <- res.NextCursor
-            for page in res.Results do
-                posts.Add(page)
-        return
-            posts
-            |> Seq.map Post.fromDto
-            |> Seq.sortByDescending (fun p -> p.createdAt)
-            |> Seq.toArray
+            for page in res.Results do pages.Add(page)
+        return pages
     }
     
     let listBlocks (blockId:string): Task<IBlock[]> = task {
@@ -179,33 +181,42 @@ type LivePostClient(config:NotionConfig, cache:IMemoryCache) =
         return blocks.ToArray()
     }
     
-    let getPostById (pageId:string) = task {
+    let listPages () = task {
+        let! pages = listPublishedPages ()
+        return
+            pages
+            |> Seq.map PageProperties.fromDto
+            |> Seq.sortByDescending (fun p -> p.createdAt)
+            |> Seq.toArray
+    }
+    
+    let getPageById (pageId:string) = task {
         match! getPublishedPage pageId with
         | Some page ->
-            let post = Post.fromDto page
+            let properties = PageProperties.fromDto page
             let! blocks = listBlocks pageId
-            let postDetail = { post = post; content = blocks  }
-            return Some postDetail
+            let detail = { properties = properties; content = blocks  }
+            return Some detail
         | None ->
             return None
     }
     
-    let getPostByPermalink (permalink:string) = task {
+    let getPageByPermalink (permalink:string) = task {
         match! getPageId permalink with
         | Some pageId ->
-            return! getPostById pageId
+            return! getPageById pageId
         | None ->
             return None
     }
     
-    interface IPostClient with
-        member _.List() = listPublishedPages()
+    interface INotionClient with
+        member _.List() = listPages ()
         
-        member _.GetById(pageId) = getPostById pageId
+        member _.GetByPermalink(permalink) = getPageByPermalink permalink
         
-        member _.GetByPermalink(permalink) = getPostByPermalink(permalink)
+        member _.GetById(pageId) = getPageById pageId
 
-type MockPostClient() =
+type MockNotionClient() =
     let post1 = 
        { id = "4d7ac503a7a64cc0ab757df70c7c7f7b"
          permalink = "test"
@@ -215,8 +226,8 @@ type MockPostClient() =
          iconAlt = ""
          cover = ""
          tags = [| "F#" |]
-         createdAt = DateTime(2022, 3, 11)
-         updatedAt = DateTime(2022, 3, 11) }
+         createdAt = DateTimeOffset(DateTime(2022, 3, 11))
+         updatedAt = DateTimeOffset(DateTime(2022, 3, 11)) }
     let post2 = 
        { id = "33f11309306447ce8a48e962f0e0d814"
          permalink = "another-test"
@@ -226,8 +237,8 @@ type MockPostClient() =
          iconAlt = ""
          cover = ""
          tags = [| "F#" |]
-         createdAt = DateTime(2022, 3, 11)
-         updatedAt = DateTime(2022, 3, 11) }
+         createdAt = DateTimeOffset(DateTime(2022, 3, 11))
+         updatedAt = DateTimeOffset(DateTime(2022, 3, 11)) }
     let lookupById = Map.ofList [
         post1.id, post1
         post2.id, post2
@@ -236,23 +247,23 @@ type MockPostClient() =
         post1.permalink, post1
         post2.permalink, post2
     ]
-    interface IPostClient with
+    interface INotionClient with
         member _.List() = task {
             return [| post1; post2 |]
         }
         
+        member _.GetByPermalink(permalink:string) = task {
+            match lookupByPermalink |> Map.tryFind permalink with
+            | Some properties ->
+                return Some { properties = properties; content = [||] }
+            | None ->
+                return None
+        }
         member _.GetById(pageId:string) = task {
             match lookupById |> Map.tryFind pageId with
-            | Some post ->
-                return Some { post = post; content = [||] }
+            | Some properties ->
+                return Some { properties = properties; content = [||] }
             | None ->
                 return None
         }
         
-        member _.GetByPermalink(permalink:string) = task {
-            match lookupByPermalink |> Map.tryFind permalink with
-            | Some post ->
-                return Some { post = post; content = [||] }
-            | None ->
-                return None
-        }

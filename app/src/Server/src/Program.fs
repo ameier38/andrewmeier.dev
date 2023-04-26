@@ -3,7 +3,7 @@ open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.DependencyInjection
 open Prometheus
 open Server.Config
-open Server.PostClient
+open Server.NotionClient
 open Serilog
 open Serilog.Events
 
@@ -14,9 +14,9 @@ let configureServices (config:Config) (services:IServiceCollection) =
     services.AddSingleton<NotionConfig>(config.NotionConfig) |> ignore
     match config.AppEnv with
     // When testing use the mock post client
-    | AppEnv.Dev -> services.AddSingleton<IPostClient,MockPostClient>() |> ignore
+    | AppEnv.Dev -> services.AddSingleton<INotionClient,MockNotionClient>() |> ignore
     // Otherwise use the live post client
-    | _ -> services.AddSingleton<IPostClient,LivePostClient>() |> ignore
+    | _ -> services.AddSingleton<INotionClient,LiveNotionClient>() |> ignore
     services.AddHealthChecks() |> ignore
     services.AddGiraffe() |> ignore
     
@@ -30,7 +30,7 @@ let configureApp (app:WebApplication) =
     // Add Prometheus /metrics endpoint
     app.MapMetrics() |> ignore
     // Add application routes
-    app.UseGiraffe(Server.PostHandler.postApp)
+    app.UseGiraffe(Server.Handlers.Index.app)
 
 [<EntryPoint>]
 let main _ =

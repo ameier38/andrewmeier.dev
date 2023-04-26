@@ -1,0 +1,15 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .htmx-indicator {
+        @apply invisible;
+    }
+    .htmx-request .htmx-indicator {
+        @apply visible;
+    }
+    .htmx-request.htmx-indicator {
+        @apply visible;
+    }
+}
