@@ -13,7 +13,7 @@ group Tests
     source https://api.nuget.org/v3/index.json
     nuget canopy
     nuget Microsoft.NET.Test.Sdk
-    nuget Selenium.WebDriver.ChromeDriver 107.0.5304.6200
+    nuget Selenium.WebDriver.ChromeDriver 112.0.5615.4900
     nuget xunit
     nuget xunit.runner.visualstudio
 

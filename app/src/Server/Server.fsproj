@@ -2,15 +2,16 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="src\Infrastructure.fs" />
     <Compile Include="src\ViewEngine.fs" />
-    <Compile Include="src\Types.fs" />
     <Compile Include="src\Config.fs" />
     <Compile Include="src\NotionClient.fs" />
     <Compile Include="src\Components.fs" />
     <Compile Include="src\Views\Articles.fs" />
+    <Compile Include="src\Views\Projects.fs" />
     <Compile Include="src\Views\Index.fs" />
     <Compile Include="src\Handlers\Core.fs" />
     <Compile Include="src\Handlers\Articles.fs" />

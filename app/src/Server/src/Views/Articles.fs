@@ -8,76 +8,114 @@ open type Htmx
 open type Alpine
 
 let private articleSummary (page:PageProperties) =
-    div [
+    let url = $"/articles/{page.permalink}"
+    article [
         _id page.permalink
-        _class "relative border-b-2 border-gray-200 p-2 cursor-pointer hover:bg-gray-100"
-        // i.e., when we click this div, make a GET request to /<post-id>
-        _hxGet $"/articles/{page.id}"
-        // i.e., take the response from the above GET request and replace the element with id 'page'
-        _hxTarget "#page"
+        _class "md:grid md:grid-cols-4 md:items-baseline"
         _children [
+            time [
+                _class "hidden md:block flex items-center text-sm text-gray-400"
+                _datetime (page.createdAt.ToString("yyyy-mm-dd"))
+                _children (page.createdAt.ToString("MMMM d, yyyy"))
+            ]
             div [
-                _class "flex justify-between"
+                _class "md:col-span-3 flex flex-col items-start"
                 _children [
-                    h3 [
-                        _class "text-lg font-medium text-gray-800 mb-2"
-                        _children page.title
+                    time [
+                        _class "md:hidden border-l border-gray-300 pl-3 mb-3 flex items-center text-sm text-gray-400"
+                        _datetime (page.createdAt.ToString("yyyy-mm-dd"))
+                        _children (page.createdAt.ToString("MMMM d, yyyy"))
                     ]
-                    p [
-                        _class "text-sm text-gray-500 leading-7"
-                        _children (page.createdAt.ToString("MM/dd/yyyy"))
+                    a [
+                        _href url
+                        _hxGet url
+                        _hxTarget "#page"
+                        _class "w-full p-4 sm:rounded-2xl hover:bg-gray-100"
+                        _children [
+                            h2 [
+                                _class "text-base font-semibold tracking-tight text-gray-800"
+                                _children page.title
+                            ]
+                            p [
+                                _class "mt-2 text-sm text-gray-600"
+                                _children page.summary
+                            ]
+                            div [
+                                _class "mt-4 flex flex-wrap gap-2"
+                                _children (page.tags |> Seq.map Tag.primary)
+                            ]
+                            div [
+                                _class "mt-4 flex items-start space-x-1 text-sm font-medium text-emerald-500"
+                                _children [
+                                    raw "Read"
+                                    Icon.chevronRight
+                                ]
+                            ]
+                        ]
                     ]
                 ]
-            ]
-            p [
-                _class "text-sm text-gray-500"
-                _children page.summary
             ]
         ]
     ]
         
 let articlesPage (pages:PageProperties seq) =
     div [
-        _class "container mx-auto max-w-3xl"
-        _children (pages |> Seq.map articleSummary)
-    ]
-    
-let articlePage (detail:PageDetail) =
-        div [
-            _class "w-full"
-            _children [
-                div [
-                    _class "bg-no-repeat bg-center bg-cover bg-blend-overlay bg-gray-800 mb-2"
-                    _style $"background-image: url('{detail.properties.cover}')"
-                    _children [
-                        div [
-                            _class "container mx-auto max-w-3xl p-2"
-                            _children [
-                                h1 [
-                                    _id "title"
-                                    _class "text-3xl text-gray-200 font-bold mb-14"
-                                    _children detail.properties.title
-                                ]
-                                p [
-                                    let createdAt = detail.properties.createdAt.ToString("M/d/yyyy")
-                                    _class "text-gray-400"
-                                    _children $"Created: {createdAt}"
-                                ]
-                                p [
-                                    let updatedAt = detail.properties.updatedAt.ToString("M/d/yyyy")
-                                    _class "text-gray-400"
-                                    _children $"Updated: {updatedAt}"
-                                ]
+        _xInit "selectedNav = 'Articles'"
+        _class "mx-auto max-w-3xl"
+        _children [
+            header [
+                _class "max-w-2xl"
+                _children [
+                    h1 [
+                        _class "text-4xl text-gray-800 font-medium"
+                        _children "Andrew's Thoughts"
+                    ]
+                    p [
+                        _class "mt-6 text-base text-gray-600"
+                        _children "My thoughts on a variety of topics"
+                    ]
+                ]
+            ]
+            div [
+                _class "mt-16"
+                _children [
+                    div [
+                        _class "md:border-l md:border-gray-300 md:pl-6"
+                        _children [
+                            div [
+                                _class "max-w-3xl flex flex-col space-y-4"
+                                _children (pages |> Seq.map articleSummary)
                             ]
                         ]
                     ]
                 ]
-                div [
-                    _class "container mx-auto max-w-3xl px-2"
+            ]
+        ]
+    ]
+    
+let articlePage (detail:PageDetail) =
+        div [
+            _xInit "selectedNav = 'Articles'"
+            _class "mx-auto max-w-3xl"
+            _children [
+                article [
                     _children [
+                        header [
+                            _class "flex flex-col"
+                            _children [
+                                time [
+                                    _class "text-base text-gray-400 border-l border-gray-300 pl-2"
+                                    _datetime (detail.properties.createdAt.ToString("yyyy-mm-dd"))
+                                    _children (detail.properties.createdAt.ToString("MMMM d, yyyy"))
+                                ]
+                                h1 [
+                                    _class "mt-4 text-4xl font-bold tracking-tight text-gray-800"
+                                    _children detail.properties.title
+                                ]
+                            ]
+                        ]
                         div [
-                            _id "post"
-                            _class "prose max-w-none mb-8"
+                            _class "mt-8 prose max-w-none"
                             _xInit "Prism.highlightAllUnder($el)"
                             _children (Content.toHtml detail.content)
                         ]
@@ -86,4 +124,17 @@ let articlePage (detail:PageDetail) =
             ]
         ]
         
-    
+let notFoundPage =
+    div [
+        _class "flex flex-col items-center"
+        _children [
+            h1 [
+                _class "text-3xl text-gray-800"
+                _children "Oops! Could not find page."
+            ]
+            p [
+                _class "text-md text-gray-600"
+                _children "Something went wrong. Try refreshing the page."
+            ]
+        ]
+    ]

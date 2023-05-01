@@ -50,7 +50,7 @@ let indexPage (page:PageDetail) =
                                 _children page.properties.title
                             ]
                             div [
-                                _class "prose"
+                                _class "mt-6 prose"
                                 _children (Content.toHtml page.content)
                             ]
                         ]

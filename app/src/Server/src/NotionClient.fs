@@ -3,6 +3,7 @@
 open Microsoft.Extensions.Caching.Memory
 open Notion.Client
 open Server.Config
+open Serilog
 open System
 open System.Threading.Tasks
 open System.Collections.Generic
@@ -26,7 +27,6 @@ type PageDetail =
 type INotionClient =
     abstract List: unit -> Task<PageProperties[]>
     abstract GetByPermalink: permalink:string -> Task<PageDetail option>
-    abstract GetById: pageId:string -> Task<PageDetail option>
 
 type Props = IDictionary<string,PropertyValue>
 
@@ -135,11 +135,7 @@ type LiveNotionClient(config:NotionConfig, cache:IMemoryCache) =
             let! res = client.Databases.QueryAsync(config.DatabaseId, queryParams)
             match Seq.tryHead res.Results with
             | Some page ->
-                // The cache entry will take up 1/1000 entries.
-                // The entries limit is defined in Program.fs when adding the cache.
-                let cacheEntryOpts = MemoryCacheEntryOptions(Size=1L)
-                let pageId = cache.Set(permalink, page.Id, cacheEntryOpts)
-                return Some pageId
+                return Some page.Id
             | None ->
                 return None
     }
@@ -202,19 +198,32 @@ type LiveNotionClient(config:NotionConfig, cache:IMemoryCache) =
     }
     
     let getPageByPermalink (permalink:string) = task {
-        match! getPageId permalink with
-        | Some pageId ->
-            return! getPageById pageId
-        | None ->
-            return None
+        match cache.TryGetValue permalink with
+        | true, o ->
+            Log.Debug("Cache hit: {Permalink}", permalink)
+            let detail = unbox<PageDetail> o
+            return Some detail
+        | false, _ ->
+            Log.Debug("Cache miss: {Permalink}", permalink)
+            match! getPageId permalink with
+            | Some pageId ->
+                match! getPageById pageId with
+                | Some detail ->
+                    // The cache entry will take up 1/1000 entries.
+                    // The entries limit is defined in Program.fs when adding the cache.
+                    let cacheEntryOpts = MemoryCacheEntryOptions(Size=1L)
+                    let detail = cache.Set(permalink, detail, cacheEntryOpts)
+                    return Some detail
+                | None ->
+                    return None
+            | None ->
+                return None
     }
     
     interface INotionClient with
         member _.List() = listPages ()
         
         member _.GetByPermalink(permalink) = getPageByPermalink permalink
-        
-        member _.GetById(pageId) = getPageById pageId
 
 type MockNotionClient() =
     let post1 = 
@@ -239,10 +248,6 @@ type MockNotionClient() =
          tags = [| "F#" |]
          createdAt = DateTimeOffset(DateTime(2022, 3, 11))
          updatedAt = DateTimeOffset(DateTime(2022, 3, 11)) }
-    let lookupById = Map.ofList [
-        post1.id, post1
-        post2.id, post2
-    ]
     let lookupByPermalink = Map.ofList [
         post1.permalink, post1
         post2.permalink, post2
@@ -254,13 +259,6 @@ type MockNotionClient() =
         
         member _.GetByPermalink(permalink:string) = task {
             match lookupByPermalink |> Map.tryFind permalink with
-            | Some properties ->
-                return Some { properties = properties; content = [||] }
-            | None ->
-                return None
-        }
-        member _.GetById(pageId:string) = task {
-            match lookupById |> Map.tryFind pageId with
             | Some properties ->
                 return Some { properties = properties; content = [||] }
             | None ->

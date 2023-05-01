@@ -1,58 +1,51 @@
-﻿module Server.Handlers.Post
+﻿module Server.Handlers.Articles
 
-// open Giraffe
-// open Server.Config
-// open Server.PostClient
-// open Server.Components
-//
-// let private index : HttpHandler =
-//     fun next ctx -> task {
-//         let notionConfig = ctx.GetService<NotionConfig>()
-//         let client = ctx.GetService<IPostClient>()
-//         let! posts = client.List(notionConfig.BlogDatabaseId)
-//         let page =
-//             posts
-//             |> Array.filter (fun p -> p.permalink <> "about")
-//             |> Page.postList
-//         return! Core.render page [] "/" next ctx
-//     }
-//     
-// let private articleByIdHandler (pageId:System.Guid) : HttpHandler =
-//     fun next ctx -> task {
-//         let client = ctx.GetService<IPostClient>()
-//         let pageId = pageId.ToString("N")
-//         match! client.GetById(pageId) with
-//         | Some postDetail ->
-//             let metas = Page.postTwitterMetas postDetail.post
-//             let page = Page.postDetail postDetail
-//             let path = $"/{postDetail.post.permalink}"
-//             return! Core.render page metas path next ctx
-//         | None ->
-//             return! Core.render Page.notFound [] "/404" next ctx
-//     }
-//     
-// let private postByPermalinkHandler (permalink:string) : HttpHandler =
-//     fun next ctx -> task {
-//         let client = ctx.GetService<IPostClient>()
-//         match! client.GetByPermalink(permalink) with
-//         | Some postDetail ->
-//             let metas = Page.postTwitterMetas postDetail.post
-//             let page = Page.postDetail postDetail
-//             let path = $"/{permalink}"
-//             return! render page metas path next ctx
-//         | None ->
-//             return! render Page.notFound [] "/404" next ctx
-//     }
-//     
-// let private notFoundHandler: HttpHandler =
-//     render Page.notFound [] "/404"
-//     
-// let postApp : HttpHandler =
-//     choose [
-//         GET >=> choose [
-//             route "/" >=> indexHandler
-//             routef "/%O" postByIdHandler
-//             routef "/%s" postByPermalinkHandler
-//         ]
-//         notFoundHandler
-//     ]
+open Giraffe
+open Server.NotionClient
+open Server.Components
+
+module View = Server.Views.Articles
+
+let private getArticles: HttpHandler =
+    fun next ctx -> task {
+        let client = ctx.GetService<INotionClient>()
+        let! articles = client.List()
+        let response =
+            articles
+            |> Array.filter (fun p -> p.permalink <> "index")
+            |> View.articlesPage
+            |> Core.Response.create
+            |> Core.Response.withPush "/articles"
+        return! Core.render response next ctx
+    }
+    
+let private getArticleByPermalink (permalink:string) : HttpHandler =
+    fun next ctx -> task {
+        let client = ctx.GetService<INotionClient>()
+        match! client.GetByPermalink(permalink) with
+        | Some detail ->
+            let metas = TwitterMeta.fromPageProperties detail.properties
+            let response =
+                View.articlePage detail
+                |> Core.Response.create
+                |> Core.Response.withMeta metas
+                |> Core.Response.withPush $"/articles/{permalink}"
+            return! Core.render response next ctx
+        | None ->
+            let response = Core.Response.create View.notFoundPage
+            return! Core.render response next ctx
+    }
+    
+let private notFound: HttpHandler =
+    View.notFoundPage
+    |> Core.Response.create 
+    |> Core.render
+    
+let app : HttpHandler =
+    choose [
+        GET >=> choose [
+            routex "(/?)" >=> getArticles
+            routef "/%s" getArticleByPermalink
+        ]
+        notFound
+    ]

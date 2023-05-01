@@ -30,7 +30,11 @@ let registerTargets() =
         Task.WaitAny(watchCss, watchServer) |> ignore
         
     Target.create "Test" <| fun _ ->
-        DotNet.test id testsDir
+        DotNet.test
+            (fun opts ->
+                { opts with
+                    MSBuildParams = { MSBuild.CliArguments.Create() with DisableInternalBinLog = true } })
+            testsDir
         
     Target.create "BuildCss" <| fun _ ->
         let buildCss = tailwindcss serverDir [ "--input"; "./input.css"; "--output"; "./wwwroot/css/compiled.css"; "--minify" ]
@@ -43,7 +47,8 @@ let registerTargets() =
                 { opts with
                     OutputPath = Some $"{serverDir}/out"
                     Runtime = Some runtime
-                    SelfContained = Some false })
+                    SelfContained = Some false
+                    MSBuildParams = { MSBuild.CliArguments.Create() with DisableInternalBinLog = true } })
             serverDir
             
     Target.create "Default" <| fun _ ->

@@ -29,30 +29,30 @@ type Tests() =
     interface IClassFixture<Fixture>
     
     [<Fact>]
-    member _.``Navigating to home shows list of posts`` () =
-        url "https://localhost:5000"
+    member _.``Navigating to articles shows list of posts`` () =
+        url "https://localhost:5000/articles"
         describe "there should be two posts"
-        count "h3" 2
-        "#test h3" == "Test"
+        count "h2" 2
+        "#test h2" == "Test"
         
     [<Fact>]
     member _.``Clicking post should navigate to detail`` () =
-        url "https://localhost:5000"
+        url "https://localhost:5000/articles"
         describe "navigating to post"
-        click "#test"
-        on "https://localhost:5000/test"
+        click "#test h2"
+        on "https://localhost:5000/articles/test"
         describe "post title should be 'Test'"
         "h1" == "Test"
         
     [<Fact>]
     member _.``Permalink url should navigate to post`` () =
-        url "https://localhost:5000/another-test"
-        on "https://localhost:5000/another-test"
+        url "https://localhost:5000/articles/another-test"
+        on "https://localhost:5000/articles/another-test"
         describe "post title should be 'Another Test'"
         "h1" == "Another Test"
         
     [<Fact>]
     member _.``Non existent post should show not found`` () =
-        url "https://localhost:5000/blah"
+        url "https://localhost:5000/articles/blah"
         describe "should be on not found page"
-        "h1" == "Page not found"
+        "h1" == "Oops! Could not find page."

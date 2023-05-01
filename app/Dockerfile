@@ -1,5 +1,5 @@
-ARG RUNTIME_IMAGE_TAG=6.0
-FROM mcr.microsoft.com/dotnet/sdk:6.0 as builder
+ARG RUNTIME_IMAGE_TAG=6.0-bullseye-slim
+FROM mcr.microsoft.com/dotnet/sdk:6.0-bullseye-slim as builder
 
 WORKDIR /app
 
@@ -9,9 +9,10 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT 1
 # update packages
 RUN apt-get update && apt-get upgrade -y
 
-# install Node (needed to build Tailwind CSS)
-RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - \
-    && apt-get install -y nodejs
+# install tailwindcss CLI
+RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v3.3.1/tailwindcss-linux-x64 \
+    && chmod +x tailwindcss-linux-x64 \
+    && mv tailwindcss-linux-x64 /usr/local/bin/tailwindcss
 
 # restore tools
 COPY .config .config
@@ -19,16 +20,7 @@ RUN dotnet tool restore
 
 # install F# dependencies
 COPY paket.dependencies paket.lock ./
-RUN dotnet paket install
-RUN dotnet paket restore
-
-WORKDIR /app/src/Server
-
-# install JavaScript dependencies
-COPY src/Server/package.json src/Server/package-lock.json ./
-RUN npm install
-
-WORKDIR /app
+RUN dotnet paket install && dotnet paket restore
 
 # copy projects and build script
 COPY src src

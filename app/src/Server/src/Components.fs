@@ -4,6 +4,7 @@ open Notion.Client
 open Server.NotionClient
 open Server.ViewEngine
 open Serilog
+open System
 
 open type Html
 open type Svg
@@ -32,6 +33,30 @@ module Icon =
             <path d="M18.335 18.339H15.67v-4.177c0-.996-.02-2.278-1.39-2.278-1.389 0-1.601 1.084-1.601 2.205v4.25h-2.666V9.75h2.56v1.17h.035c.358-.674 1.228-1.387 2.528-1.387 2.7 0 3.2 1.778 3.2 4.091v4.715zM7.003 8.575a1.546 1.546 0 01-1.548-1.549 1.548 1.548 0 111.547 1.549zm1.336 9.764H5.666V9.75H8.34v8.589zM19.67 3H4.329C3.593 3 3 3.58 3 4.297v15.406C3 20.42 3.594 21 4.328 21h15.338C20.4 21 21 20.42 21 19.703V4.297C21 3.58 20.4 3 19.666 3h.003z"></path>
         </svg>
         """
+        
+    let chevronRight =
+        raw """
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+          <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+        </svg>
+        """
+        
+    let link =
+        raw """
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+          <path d="M12.232 4.232a2.5 2.5 0 013.536 3.536l-1.225 1.224a.75.75 0 001.061 1.06l1.224-1.224a4 4 0 00-5.656-5.656l-3 3a4 4 0 00.225 5.865.75.75 0 00.977-1.138 2.5 2.5 0 01-.142-3.667l3-3z" />
+          <path d="M11.603 7.963a.75.75 0 00-.977 1.138 2.5 2.5 0 01.142 3.667l-3 3a2.5 2.5 0 01-3.536-3.536l1.225-1.224a.75.75 0 00-1.061-1.06l-1.224 1.224a4 4 0 105.656 5.656l3-3a4 4 0 00-.225-5.865z" />
+        </svg>
+        """
+        
+type Tag =
+    static member primary(text:string, ?attrs:HtmlAttribute seq) =
+        let attrs = defaultArg attrs Seq.empty
+        span [
+            _class "inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10"
+            _children text
+            yield! attrs
+        ]
         
 module RichTextBase =
     let toHtml (text:RichTextBase) =
@@ -247,7 +272,7 @@ module Layout =
             _children text
         ]
         
-    let navigation =
+    let topNavigation =
         nav [
             _children [
                 ul [
@@ -256,6 +281,48 @@ module Layout =
                         navigationItem "About" "/"
                         navigationItem "Articles" "/articles"
                         navigationItem "Projects" "/projects"
+                    ]
+                ]
+            ]
+        ]
+        
+    let bottomNavigation =
+        div [
+            _class "border-t border-gray-200 py-16"
+            _children [
+                div [
+                    _class "mx-auto max-w-2xl lg:max-w-5xl flex flex-col sm:flex-row justify-between items-center"
+                    _children [
+                        div [
+                            _class "flex gap-6 text-sm font-medium text-gray-800"
+                            _children [
+                                a [
+                                    _class "hover:text-emerald-500"
+                                    _href "/"
+                                    _hxGet "/"
+                                    _hxTarget "#page"
+                                    _children "About"
+                                ]
+                                a [
+                                    _class "hover:text-emerald-500"
+                                    _href "/articles"
+                                    _hxGet "/articles"
+                                    _hxTarget "#page"
+                                    _children "Articles"
+                                ]
+                                a [
+                                    _class "hover:text-emerald-500"
+                                    _href "/projects"
+                                    _hxGet "/projects"
+                                    _hxTarget "#page"
+                                    _children "Projects"
+                                ]
+                            ]
+                        ]
+                        p [
+                            _class "text-sm text-gray-500"
+                            _children $"© {DateTime.Today.Year} Andrew Meier. All rights reserved."
+                        ]
                     ]
                 ]
             ]
@@ -300,18 +367,22 @@ module Layout =
                             _children [
                                 header [
                                     _class "h-16 pt-6 mx-auto flex justify-center"
-                                    _children navigation
+                                    _children topNavigation
                                 ]
-                                div [
-                                    _id "page"
+                                main [
                                     _class "mx-auto max-w-7xl mt-16 sm:px-8"
                                     _children [
                                         div [
-                                            _class "px-4"
+                                            _id "page"
+                                            _class "px-4 sm:px-8 lg:px-12"
                                             _children page
                                         ]
                                     ]
-                                ]    
+                                ]
+                                footer [
+                                    _class "mx-auto max-w-7xl mt-16 sm:px-8"
+                                    _children bottomNavigation
+                                ]
                             ]
                         ]
                         script [ _src "/scripts/prism.js"; _dataManual ]
