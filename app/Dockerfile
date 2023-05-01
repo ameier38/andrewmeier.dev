@@ -10,7 +10,7 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT 1
 RUN apt-get update && apt-get upgrade -y
 
 # install tailwindcss CLI
-RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v3.3.1/tailwindcss-linux-x64 \
+RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v3.3.2/tailwindcss-linux-x64 \
     && chmod +x tailwindcss-linux-x64 \
     && mv tailwindcss-linux-x64 /usr/local/bin/tailwindcss
 
