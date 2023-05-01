@@ -2,7 +2,7 @@ storage: none
 source https://api.nuget.org/v3/index.json
 
 nuget FSharp.Core
-nuget Microsoft.AspNetCore
+nuget Giraffe
 nuget Notion.Net
 nuget prometheus-net.AspNetCore
 nuget Serilog.AspNetCore
@@ -13,15 +13,13 @@ group Tests
     source https://api.nuget.org/v3/index.json
     nuget canopy
     nuget Microsoft.NET.Test.Sdk
-    nuget Selenium.WebDriver.ChromeDriver 104.0.5112.7900
+    nuget Selenium.WebDriver.ChromeDriver 112.0.5615.4900
     nuget xunit
     nuget xunit.runner.visualstudio
 
 group Build
     storage none
     source https://api.nuget.org/v3/index.json
-    nuget BlackFox.Fake.BuildTask
     nuget Fake.DotNet.Cli
     nuget Fake.IO.FileSystem
     nuget Fake.Core.Target
-    nuget Fake.JavaScript.Npm

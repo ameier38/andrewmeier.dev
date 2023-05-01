@@ -1,10 +1,36 @@
-﻿open Microsoft.AspNetCore.Builder
+﻿open Giraffe
+open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.DependencyInjection
 open Prometheus
 open Server.Config
-open Server.PostClient
+open Server.NotionClient
 open Serilog
 open Serilog.Events
+
+let configureServices (config:Config) (services:IServiceCollection) =
+    // Add a memory cache service so we can cache the permalink page ids
+    services.AddMemoryCache(fun opts -> opts.SizeLimit <- 1000L) |> ignore
+    // Add the Notion configuration which is a dependency of the Notion client
+    services.AddSingleton<NotionConfig>(config.NotionConfig) |> ignore
+    match config.AppEnv with
+    // When testing use the mock post client
+    | AppEnv.Dev -> services.AddSingleton<INotionClient,MockNotionClient>() |> ignore
+    // Otherwise use the live post client
+    | _ -> services.AddSingleton<INotionClient,LiveNotionClient>() |> ignore
+    services.AddHealthChecks() |> ignore
+    services.AddGiraffe() |> ignore
+    
+let configureApp (app:WebApplication) =
+    // Serve static files from wwwroot folder
+    app.UseStaticFiles() |> ignore
+    // User Serilog request logging for cleaner logs
+    app.UseSerilogRequestLogging() |> ignore
+    // Add health check endpoints
+    app.MapHealthChecks("/healthz") |> ignore
+    // Add Prometheus /metrics endpoint
+    app.MapMetrics() |> ignore
+    // Add application routes
+    app.UseGiraffe(Server.Handlers.Index.app)
 
 [<EntryPoint>]
 let main _ =
@@ -25,30 +51,10 @@ let main _ =
         try
             let builder = WebApplication.CreateBuilder()
             builder.Host.UseSerilog() |> ignore
-            // Add a memory cache service so we can cache the permalink page ids
-            builder.Services.AddMemoryCache(fun opts -> opts.SizeLimit <- 1000L) |> ignore
-            // Add the Notion configuration which is a dependency of the Notion client
-            builder.Services.AddSingleton<NotionConfig>(config.NotionConfig) |> ignore
-            // When testing use the mock post client
-            if config.AppEnv = AppEnv.Dev then
-                builder.Services.AddSingleton<IPostClient,MockPostClient>() |> ignore
-            // Otherwise use the live post client
-            else
-                builder.Services.AddSingleton<IPostClient,LivePostClient>() |> ignore
-            builder.Services.AddControllers() |> ignore
-            builder.Services.AddHealthChecks() |> ignore
+            configureServices config builder.Services
             
             let app = builder.Build()
-            // Serve static files from wwwroot folder
-            app.UseStaticFiles() |> ignore
-            // User Serilog request logging for cleaner logs
-            app.UseSerilogRequestLogging() |> ignore
-            // Add controller endpoints
-            app.MapControllers() |> ignore
-            // Add health check endpoints
-            app.MapHealthChecks("/healthz") |> ignore
-            // Add Prometheus /metrics endpoint
-            app.MapMetrics() |> ignore
+            configureApp app
             // Run the server on the specified host and port
             app.Run(config.ServerConfig.Url)
             0
