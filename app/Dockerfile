@@ -6,9 +6,6 @@ WORKDIR /app
 # prevent sending metrics to microsoft
 ENV DOTNET_CLI_TELEMETRY_OPTOUT 1
 
-# update packages
-RUN apt-get update && apt-get upgrade -y
-
 # install tailwindcss CLI
 RUN curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/v3.3.2/tailwindcss-linux-x64 \
     && chmod +x tailwindcss-linux-x64 \
