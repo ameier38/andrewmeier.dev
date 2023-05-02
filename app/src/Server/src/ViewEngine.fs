@@ -104,6 +104,7 @@ type Html() =
     static member h1 (attrs:HtmlAttribute seq) = Element ("h1", attrs)
     static member h2 (attrs:HtmlAttribute seq) = Element ("h2", attrs)
     static member h3 (attrs:HtmlAttribute seq) = Element ("h3", attrs)
+    static member h4 (attrs:HtmlAttribute seq) = Element ("h4", attrs)
     static member div (attrs:HtmlAttribute seq) = Element ("div", attrs)
     static member p (attrs:HtmlAttribute seq) = Element ("p", attrs)
     static member p (text:string) = Element ("p", [ Children [ TextElement text ] ])
@@ -171,6 +172,7 @@ type Htmx() =
     static member _hxTrigger (v:string) = KeyValue ("hx-trigger", v)
     static member _hxTarget (v:string) = KeyValue ("hx-target", v)
     static member _hxTarget (v:string option) = match v with Some v -> KeyValue ("hx-target", v) | None -> EmptyAttribute
+    static member _hxIndicator (v:string) = KeyValue ("hx-indicator", v)
     static member _hxSwap (v:string) = KeyValue ("hx-swap", v)
     static member _hxSwapOOB (v:string) = KeyValue ("hx-swap-oob", v)
     

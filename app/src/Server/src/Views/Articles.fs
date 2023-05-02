@@ -30,6 +30,7 @@ let private articleSummary (page:PageProperties) =
                         _href url
                         _hxGet url
                         _hxTarget "#page"
+                        _hxIndicator "#page-loading"
                         _class "w-full p-4 sm:rounded-2xl hover:bg-gray-100"
                         _children [
                             h2 [
@@ -60,14 +61,14 @@ let private articleSummary (page:PageProperties) =
         
 let articlesPage (pages:PageProperties seq) =
     div [
-        _xInit "selectedNav = 'Articles'"
+        _xInit "selectedNav = 'Articles'; window.scrollTo({top: 0, behavior: 'instant'})"
         _class "mx-auto max-w-3xl"
         _children [
             header [
                 _class "max-w-2xl"
                 _children [
                     h1 [
-                        _class "text-4xl text-gray-800 font-medium"
+                        _class "text-4xl text-gray-900 font-medium"
                         _children "Andrew's Thoughts"
                     ]
                     p [
@@ -95,7 +96,7 @@ let articlesPage (pages:PageProperties seq) =
     
 let articlePage (detail:PageDetail) =
         div [
-            _xInit "selectedNav = 'Articles'"
+            _xInit "selectedNav = 'Articles'; window.scrollTo({top: 0, behavior: 'instant'})"
             _class "mx-auto max-w-3xl"
             _children [
                 article [
@@ -109,7 +110,7 @@ let articlePage (detail:PageDetail) =
                                     _children (detail.properties.createdAt.ToString("MMMM d, yyyy"))
                                 ]
                                 h1 [
-                                    _class "mt-4 text-4xl font-bold tracking-tight text-gray-800"
+                                    _class "mt-4 text-4xl font-bold tracking-tight text-gray-900"
                                     _children detail.properties.title
                                 ]
                             ]

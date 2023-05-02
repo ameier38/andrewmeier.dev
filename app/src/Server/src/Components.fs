@@ -96,19 +96,19 @@ module Block =
     let rec toHtml (block:IBlock) =
         match block with
         | :? HeadingOneBlock as b ->
-            h1 [
+            h2 [
                 _class "mt-8"
                 _id (b.Id.Replace("-", ""))
                 _children (b.Heading_1.RichText |> Seq.map RichTextBase.toHtml |> Seq.toList)
             ]
         | :? HeadingTwoBlock as b ->
-            h2 [
+            h3 [
                 _class "mt-6"
                 _id (b.Id.Replace("-", ""))
                 _children (b.Heading_2.RichText |> Seq.map RichTextBase.toHtml |> Seq.toList)
             ]
         | :? HeadingThreeBlock as b ->
-            h3 [
+            h4 [
                 _class "mt-4"
                 _id (b.Id.Replace("-", ""))
                 _children (b.Heading_3.RichText |> Seq.map RichTextBase.toHtml |> Seq.toList)
@@ -269,6 +269,7 @@ module Layout =
             _class "relative block px-3 py-2 hover:text-emerald-600 hover:cursor-pointer"
             _hxGet href
             _hxTarget "#page"
+            _hxIndicator "#page-loading"
             _children text
         ]
         
@@ -288,35 +289,17 @@ module Layout =
         
     let bottomNavigation =
         div [
-            _class "border-t border-gray-200 py-16"
+            _class "border-t border-gray-200 py-8"
             _children [
                 div [
-                    _class "mx-auto max-w-2xl lg:max-w-5xl flex flex-col sm:flex-row justify-between items-center"
+                    _class "flex flex-col sm:flex-row justify-between items-center"
                     _children [
                         div [
                             _class "flex gap-6 text-sm font-medium text-gray-800"
                             _children [
-                                a [
-                                    _class "hover:text-emerald-500"
-                                    _href "/"
-                                    _hxGet "/"
-                                    _hxTarget "#page"
-                                    _children "About"
-                                ]
-                                a [
-                                    _class "hover:text-emerald-500"
-                                    _href "/articles"
-                                    _hxGet "/articles"
-                                    _hxTarget "#page"
-                                    _children "Articles"
-                                ]
-                                a [
-                                    _class "hover:text-emerald-500"
-                                    _href "/projects"
-                                    _hxGet "/projects"
-                                    _hxTarget "#page"
-                                    _children "Projects"
-                                ]
+                                navigationItem "About" "/"
+                                navigationItem "Articles" "/articles"
+                                navigationItem "Projects" "/projects"
                             ]
                         ]
                         p [
@@ -355,33 +338,29 @@ module Layout =
                     _class "bg-gray-100"
                     _children [
                         div [
-                            _class "fixed inset-0 flex justify-center sm:px-8"
+                            _class "w-full max-w-5xl mx-auto bg-gray-50 ring-1 ring-gray-200"
                             _children [
                                 div [
-                                    _class "w-full max-w-7xl bg-gray-50 ring-1 ring-gray-200"
+                                    _id "page-loading"
+                                    _class "htmx-loader h-2 bg-emerald-300 animate-pulse"
                                 ]
-                            ]
-                        ]
-                        div [
-                            _class "relative"
-                            _children [
-                                header [
-                                    _class "h-16 pt-6 mx-auto flex justify-center"
-                                    _children topNavigation
-                                ]
-                                main [
-                                    _class "mx-auto max-w-7xl mt-16 sm:px-8"
+                                div [
+                                    _class "px-4 sm:px-8 lg:px-12"
                                     _children [
-                                        div [
+                                        header [
+                                            _class "h-16 pt-6 mx-auto flex justify-center z-10"
+                                            _children topNavigation
+                                        ]
+                                        main [
                                             _id "page"
-                                            _class "px-4 sm:px-8 lg:px-12"
+                                            _class "-mt-16 pt-32 min-h-screen"
                                             _children page
                                         ]
+                                        footer [
+                                            _class "mt-8"
+                                            _children bottomNavigation
+                                        ]
                                     ]
-                                ]
-                                footer [
-                                    _class "mx-auto max-w-7xl mt-16 sm:px-8"
-                                    _children bottomNavigation
                                 ]
                             ]
                         ]

@@ -4,18 +4,26 @@ import * as pulumi from '@pulumi/pulumi'
 import * as path from 'path'
 import * as config from '../config'
 
-const repoLifeCyclePolicyArgs : awsx.ecr.LifecyclePolicyArgs = {
-    rules: [
-        {
-            selection: 'any',
-            maximumNumberOfImages: 1
-        }
-    ]
-}
-
 const blog = new awsx.ecr.Repository('blog', {
-    lifeCyclePolicyArgs: repoLifeCyclePolicyArgs,
+    lifecyclePolicy: {
+        rules: [{
+            tagStatus: 'any',
+            maximumNumberOfImages: 1
+        }]
+    }
 })
+
+const blogImage = new awsx.ecr.Image('blog', {
+    repositoryUrl: blog.url,
+    path: path.join(config.rootDir, 'app'),
+    args: {
+        RUNTIME_IMAGE_TAG: '6.0-alpine-arm64v8',
+        RUNTIME_ID: 'linux-arm64'
+    },
+    extraOptions: ['--quiet']
+})
+
+export const blogImageUri = blogImage.imageUri
 
 const blogCredentials = aws.ecr.getCredentialsOutput({ registryId: blog.repository.registryId })
 
@@ -31,12 +39,3 @@ export const blogDockerconfigjson =
                 }
             })
         })
-
-export const blogImageName = blog.buildAndPushImage({ 
-    context: path.join(config.rootDir, 'app'),
-    args: {
-        RUNTIME_IMAGE_TAG: '6.0-alpine-arm64v8',
-        RUNTIME_ID: 'linux-arm64'
-    },
-    extraOptions: ['--quiet']
-})

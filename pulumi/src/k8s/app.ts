@@ -46,7 +46,7 @@ const deployment = new k8s.apps.v1.Deployment(identifier, {
                 }],
                 containers: [{
                     name: 'app',
-                    image: repository.blogImageName,
+                    image: repository.blogImageUri,
                     imagePullPolicy: 'IfNotPresent',
                     env: [
                         { name: 'SECRETS_DIR', value: '/var/secrets' },
