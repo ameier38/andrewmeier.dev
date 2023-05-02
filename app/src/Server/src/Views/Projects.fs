@@ -52,7 +52,7 @@ let projectsPage =
                 _class "max-w-2xl"
                 _children [
                     h1 [
-                        _class "text-4xl text-gray-800 font-medium"
+                        _class "text-4xl text-gray-900 font-medium"
                         _children "Projects I Am Working On"
                     ]
                     p [

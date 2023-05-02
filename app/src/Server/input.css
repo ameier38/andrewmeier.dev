@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 @layer components {
-    .htmx-indicator {
+    .htmx-loader {
         @apply invisible;
     }
-    .htmx-request .htmx-indicator {
+    .htmx-request .htmx-loader {
         @apply visible;
     }
-    .htmx-request.htmx-indicator {
+    .htmx-request.htmx-loader {
         @apply visible;
     }
 }

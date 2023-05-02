@@ -123,19 +123,23 @@ type LiveNotionClient(config:NotionConfig, cache:IMemoryCache) =
     let clientOpts = ClientOptions(AuthToken=config.Token)
     let client = NotionClientFactory.Create(clientOpts)
     
-    // Get the page id from the permalink and cache the result
     let getPageId (permalink:string) = task {
-        match cache.TryGetValue(permalink) with
+        let cacheKey = $"permalink:{permalink}"
+        match cache.TryGetValue cacheKey with
         | true, value ->
+            Log.Debug("Cache hit: {Key}", cacheKey)
             let pageId = unbox<string> value
             return Some pageId
-        | _ ->
+        | false, _ ->
+            Log.Debug("Cache miss: {Key}", cacheKey)
             let filter = RichTextFilter("permalink", permalink)
             let queryParams = DatabasesQueryParameters(Filter=filter)
             let! res = client.Databases.QueryAsync(config.DatabaseId, queryParams)
             match Seq.tryHead res.Results with
             | Some page ->
-                return Some page.Id
+                let cacheEntryOpts = MemoryCacheEntryOptions(Size=1L)
+                let pageId = cache.Set(cacheKey, page.Id, cacheEntryOpts)
+                return Some pageId
             | None ->
                 return None
     }
@@ -187,37 +191,32 @@ type LiveNotionClient(config:NotionConfig, cache:IMemoryCache) =
     }
     
     let getPageById (pageId:string) = task {
-        match! getPublishedPage pageId with
-        | Some page ->
-            let properties = PageProperties.fromDto page
-            let! blocks = listBlocks pageId
-            let detail = { properties = properties; content = blocks  }
-            return Some detail
-        | None ->
-            return None
-    }
-    
-    let getPageByPermalink (permalink:string) = task {
-        match cache.TryGetValue permalink with
+        let cacheKey = $"pageId:{pageId}"
+        match cache.TryGetValue cacheKey with
         | true, o ->
-            Log.Debug("Cache hit: {Permalink}", permalink)
+            Log.Debug("Cache hit: {Key}", cacheKey)
             let detail = unbox<PageDetail> o
             return Some detail
         | false, _ ->
-            Log.Debug("Cache miss: {Permalink}", permalink)
-            match! getPageId permalink with
-            | Some pageId ->
-                match! getPageById pageId with
-                | Some detail ->
-                    // The cache entry will take up 1/1000 entries.
-                    // The entries limit is defined in Program.fs when adding the cache.
-                    let cacheEntryOpts = MemoryCacheEntryOptions(Size=1L)
-                    let detail = cache.Set(permalink, detail, cacheEntryOpts)
-                    return Some detail
-                | None ->
-                    return None
+            Log.Debug("Cache miss: {Key}", cacheKey)
+            match! getPublishedPage pageId with
+            | Some page ->
+                let properties = PageProperties.fromDto page
+                let! blocks = listBlocks pageId
+                let detail = { properties = properties; content = blocks  }
+                let cacheEntryOpts = MemoryCacheEntryOptions(Size=1L)
+                let detail = cache.Set(cacheKey, detail, cacheEntryOpts)
+                return Some detail
             | None ->
                 return None
+    }
+    
+    let getPageByPermalink (permalink:string) = task {
+        match! getPageId permalink with
+        | Some pageId ->
+            return! getPageById pageId
+        | None ->
+            return None
     }
     
     interface INotionClient with

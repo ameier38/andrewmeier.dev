@@ -17,7 +17,7 @@ let indexPage (page:PageDetail) =
                         _class "flex flex-col items-center"
                         _children [
                             img [
-                                _class "max-w-xs rounded-full mb-4"
+                                _class "w-72 aspect-square rounded-full mb-4"
                                 _src page.properties.icon
                             ]
                             div [
@@ -46,7 +46,7 @@ let indexPage (page:PageDetail) =
                         _class "px-2 md:order-first"
                         _children [
                             h1 [
-                                _class "text-2xl text-gray-800 font-medium"
+                                _class "text-2xl text-gray-900 font-medium"
                                 _children page.properties.title
                             ]
                             div [

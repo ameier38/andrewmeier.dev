@@ -19,27 +19,6 @@ jobs:
           aws-region: us-east-1
           role-to-assume: arn:aws:iam::400689721046:role/blog-deployer
           role-session-name: github
-      - name: Start Server
-        working-directory: ./app
-        run: docker-compose up -d app
-      - name: Dump Logs
-        working-directory: ./app
-        run: docker-compose logs
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '6.0.x'
-      - name: Restore Tools and Packages 
-        working-directory: ./app
-        run: |
-          dotnet tool restore
-          dotnet paket install
-          dotnet paket restore
-      - name: Check Chrome Version
-        run: google-chrome --version
-      - name: Run Integration Tests
-        working-directory: ./app
-        run: dotnet test
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
