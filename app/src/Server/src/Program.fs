@@ -30,7 +30,7 @@ let configureApp (app:WebApplication) =
     // Add Prometheus /metrics endpoint
     app.MapMetrics() |> ignore
     // Add application routes
-    app.UseGiraffe(Server.Handlers.Index.app)
+    app.UseGiraffe(Server.Handlers.app)
 
 [<EntryPoint>]
 let main _ =
