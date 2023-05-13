@@ -116,7 +116,7 @@ let postPage (detail:PageDetail) =
                             ]
                         ]
                         div [
-                            _class "mt-8 prose max-w-none"
+                            _class "mt-8 prose prose-code:before:hidden prose-code:after:hidden max-w-none"
                             _xInit "Prism.highlightAllUnder($el)"
                             _children (Content.toHtml detail.content)
                         ]

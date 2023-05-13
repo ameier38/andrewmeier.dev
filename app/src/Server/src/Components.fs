@@ -376,7 +376,7 @@ module Layout =
                                 ]
                             ]
                         ]
-                        script [ _src "/scripts/prism.js"; _data "manual" ]
+                        script [ _src "/scripts/prism.1.29.0.js"; _data "manual" ]
                         script [ _src "/scripts/htmx.1.8.6.min.js" ]
                         script [ _src "/scripts/alpinejs.3.12.0.min.js" ]
                     ]

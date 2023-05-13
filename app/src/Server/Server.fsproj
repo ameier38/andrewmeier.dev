@@ -12,10 +12,7 @@
     <Compile Include="src\Views.fs" />
     <Compile Include="src\Handlers.fs" />
     <Compile Include="src\Program.fs" />
-    <Content Include="input.css">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
+    <Content Include="input.css" />
     <Content Include="tailwind.config.js" />
     <Content Include="paket.references" />
   </ItemGroup>
