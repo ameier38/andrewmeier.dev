@@ -10,6 +10,6 @@ Built using:
 - [F#](https://fsharp.org/), [Giraffe](https://github.com/giraffe-fsharp/Giraffe): Web server that generates HTML using F#. 
 - [Notion .NET](https://github.com/notion-dotnet/notion-sdk-net): Blog posts are written using Notion and then fetched by the server using the Notion API.
 - [htmx](https://htmx.org/): Client framework which allows you to make requests directly from HTML instead of JavaScript.
-- [hyperscript](https://hyperscript.org/): Client scripting language which makes it easy to build dynamic user interfaces.
+- [Alpine.js](https://alpinejs.dev/): Lightweight JavaScript framework that can be added directly in HTML.
 - [Tailwind CSS](https://tailwindcss.com/): CSS styles.
 - [Pulumi](https://www.pulumi.com/): Deployment. Currently running on a Raspberry Pi in my apartment.

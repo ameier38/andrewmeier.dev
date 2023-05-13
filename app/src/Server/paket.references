@@ -1,4 +1,8 @@
 FSharp.Core
+FSharp.ViewEngine
+FSharp.ViewEngine.Html
+FSharp.ViewEngine.Htmx
+FSharp.ViewEngine.Alpine
 Giraffe
 Notion.Net
 prometheus-net.AspNetCore

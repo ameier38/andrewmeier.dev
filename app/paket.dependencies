@@ -2,6 +2,10 @@ storage: none
 source https://api.nuget.org/v3/index.json
 
 nuget FSharp.Core
+nuget FSharp.ViewEngine
+nuget FSharp.ViewEngine.Html
+nuget FSharp.ViewEngine.Htmx
+nuget FSharp.ViewEngine.Alpine
 nuget Giraffe
 nuget Notion.Net
 nuget prometheus-net.AspNetCore

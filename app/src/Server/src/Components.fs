@@ -1,13 +1,11 @@
 ﻿module Server.Components
 
+open FSharp.ViewEngine
 open Notion.Client
 open Server.NotionClient
-open Server.ViewEngine
 open Serilog
-open System
 
 open type Html
-open type Svg
 open type Html
 open type Htmx
 open type Alpine
@@ -50,7 +48,7 @@ module Icon =
         """
         
 type Tag =
-    static member primary(text:string, ?attrs:HtmlAttribute seq) =
+    static member primary(text:string, ?attrs:Attribute seq) =
         let attrs = defaultArg attrs Seq.empty
         span [
             _class "inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10"
@@ -184,7 +182,7 @@ module Block =
             ]
         | other ->
             Log.Warning("Unsupported block {Block}", other)
-            empty
+            Element.Noop
             
 module Content =
     let toHtml (blocks:IBlock[]) =
@@ -262,6 +260,22 @@ module TwitterMeta =
                 ]
         ]
         
+module Page =
+    let notFound =
+        div [
+            _class "flex flex-col items-center"
+            _children [
+                h1 [
+                    _class "text-3xl text-gray-800"
+                    _children "Oops! Could not find page."
+                ]
+                p [
+                    _class "mt-2 text-md text-gray-600"
+                    _children "Something went wrong. Try refreshing the page."
+                ]
+            ]
+        ]
+    
 module Layout =
     let private navigationItem (text:string) (href:string) =
         a [
@@ -279,9 +293,9 @@ module Layout =
                 ul [
                     _class "flex rounded-full bg-white/90 ring-1 ring-gray-900/5 shadow-lg shadow-gray-800/5 px-3 text-sm font-medium text-gray-800"
                     _children [
-                        navigationItem "About" "/"
-                        navigationItem "Articles" "/articles"
+                        navigationItem "Posts" "/"
                         navigationItem "Projects" "/projects"
+                        navigationItem "About" "/about"
                     ]
                 ]
             ]
@@ -297,40 +311,38 @@ module Layout =
                         div [
                             _class "flex gap-6 text-sm font-medium text-gray-800"
                             _children [
-                                navigationItem "About" "/"
-                                navigationItem "Articles" "/articles"
+                                navigationItem "Posts" "/"
                                 navigationItem "Projects" "/projects"
+                                navigationItem "About" "/about"
                             ]
                         ]
                         p [
                             _class "text-sm text-gray-500"
-                            _children $"© {DateTime.Today.Year} Andrew Meier. All rights reserved."
+                            _children $"© {System.DateTime.Today.Year} Andrew Meier. All rights reserved."
                         ]
                     ]
                 ]
             ]
         ]
         
-    let main (extraMeta:HtmlElement seq) (page:HtmlElement) =
+    let main (extraMeta:Element seq) (page:Element) =
         html [
             _children [
                 head [
-                    _children [
-                        title "Andrew Meier"
-                        meta [ _charset "utf-8" ]
-                        meta [
-                            _name "viewport"
-                            _content "width=device-width, initial-scale=1.0"
-                        ]
-                        for el in extraMeta do el
-                        link [
-                            _href "/css/compiled.css"
-                            _rel "stylesheet"
-                        ]
-                        link [
-                            _href "/css/prism.css"
-                            _rel "stylesheet"
-                        ]
+                    title "Andrew Meier"
+                    meta [ _charset "utf-8" ]
+                    meta [
+                        _name "viewport"
+                        _content "width=device-width, initial-scale=1.0"
+                    ]
+                    for el in extraMeta do el
+                    link [
+                        _href "/css/compiled.css"
+                        _rel "stylesheet"
+                    ]
+                    link [
+                        _href "/css/prism.css"
+                        _rel "stylesheet"
                     ]
                 ]
                 body [
@@ -364,7 +376,7 @@ module Layout =
                                 ]
                             ]
                         ]
-                        script [ _src "/scripts/prism.js"; _dataManual ]
+                        script [ _src "/scripts/prism.1.29.0.js"; _data "manual" ]
                         script [ _src "/scripts/htmx.1.8.6.min.js" ]
                         script [ _src "/scripts/alpinejs.3.12.0.min.js" ]
                     ]
