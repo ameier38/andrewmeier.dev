@@ -4,7 +4,6 @@ open FSharp.ViewEngine
 open Notion.Client
 open Server.NotionClient
 open Serilog
-open System.Text.RegularExpressions
 
 open type Html
 open type Html
@@ -262,10 +261,6 @@ module TwitterMeta =
         ]
         
 module Page =
-    let primary (content:Element) =
-        div [
-            _class ""
-        ]
     let notFound =
         div [
             _class "flex flex-col items-center"
