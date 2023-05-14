@@ -4,7 +4,7 @@ Server for [andrewmeier.dev](https://andrewmeier.dev).
 ## Setup
 1. Install [.NET SDK](https://dotnet.microsoft.com/download).
 2. Install [TailwindCSS CLI](https://github.com/tailwindlabs/tailwindcss/releases/tag/v3.2.4).
-3. Install development certificates.
+3. Install development certificates (for https locally).
    ```shell
    dotnet dev-certs https --trust
    ```
@@ -15,7 +15,6 @@ Server for [andrewmeier.dev](https://andrewmeier.dev).
 5. Install packages.
    ```shell
    dotnet paket install
-   dotnet paket restore
    ```
 
 ## Usage
@@ -25,7 +24,7 @@ List build targets.
 ```
 ```
 The following targets are available:
-   BuildTailwind
+   BuildCss
    Publish
    Test
    Watch
