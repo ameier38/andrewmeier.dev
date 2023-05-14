@@ -26,6 +26,7 @@ type PageDetail =
     
 type INotionClient =
     abstract List: unit -> Task<PageProperties[]>
+    abstract GetById: permalink:string -> Task<PageDetail option>
     abstract GetByPermalink: permalink:string -> Task<PageDetail option>
 
 type Props = IDictionary<string,PropertyValue>
@@ -221,7 +222,7 @@ type LiveNotionClient(config:NotionConfig, cache:IMemoryCache) =
     
     interface INotionClient with
         member _.List() = listPages ()
-        
+        member _.GetById(pageId) = getPageById pageId
         member _.GetByPermalink(permalink) = getPageByPermalink permalink
 
 type MockNotionClient() =
@@ -247,6 +248,10 @@ type MockNotionClient() =
          tags = [| "F#" |]
          createdAt = DateTimeOffset(DateTime(2022, 3, 11))
          updatedAt = DateTimeOffset(DateTime(2022, 3, 11)) }
+    let lookupById = Map.ofList [
+        post1.id, post1
+        post2.id, post2
+    ]
     let lookupByPermalink = Map.ofList [
         post1.permalink, post1
         post2.permalink, post2
@@ -255,7 +260,13 @@ type MockNotionClient() =
         member _.List() = task {
             return [| post1; post2 |]
         }
-        
+        member _.GetById(pageId:string) = task {
+            match lookupById |> Map.tryFind pageId with
+            | Some properties ->
+                return Some { properties = properties; content = [||] }
+            | None ->
+                return None
+        }
         member _.GetByPermalink(permalink:string) = task {
             match lookupByPermalink |> Map.tryFind permalink with
             | Some properties ->

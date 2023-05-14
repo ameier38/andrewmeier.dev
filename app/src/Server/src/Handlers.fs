@@ -55,6 +55,24 @@ let private getPosts: HttpHandler =
         return! Response.render response next ctx
     }
     
+let private getPostById (pageId:System.Guid) : HttpHandler =
+    fun next ctx -> task {
+        let client = ctx.GetService<INotionClient>()
+        let pageIdStr = pageId.ToString("N")
+        match! client.GetById(pageIdStr) with
+        | Some detail ->
+            let metas = TwitterMeta.fromPageProperties detail.properties
+            let response =
+                postPage detail
+                |> Response.create
+                |> Response.withMeta metas
+                |> Response.withPush $"/{pageIdStr}"
+            return! Response.render response next ctx
+        | None ->
+            let response = Response.create Page.notFound
+            return! Response.render response next ctx
+    }
+    
 let private getPostByPermalink (permalink:string) : HttpHandler =
     fun next ctx -> task {
         let client = ctx.GetService<INotionClient>()
@@ -96,9 +114,12 @@ let notFound : HttpHandler =
     
 let app:HttpHandler =
     choose [
-        routex "(/?)" >=> GET >=> getPosts
-        route "/about" >=> GET >=> getAbout
-        route "/projects" >=> GET >=> getProjects
-        routef "/%s" getPostByPermalink
+        GET >=> choose [
+            routex "(/?)" >=> getPosts
+            route "/about" >=> getAbout
+            route "/projects" >=> getProjects
+            routef "/%O" getPostById
+            routef "/%s" getPostByPermalink
+        ]
         notFound
     ]

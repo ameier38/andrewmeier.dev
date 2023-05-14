@@ -62,7 +62,7 @@ let private postSummary (page:PageProperties) =
 let postsPage (pages:PageProperties seq) =
     div [
         _xInit "selectedNav = 'Posts'; window.scrollTo({top: 0, behavior: 'instant'})"
-        _class "mx-auto max-w-3xl"
+        _class "pt-28 mx-auto max-w-3xl"
         _children [
             header [
                 _class "max-w-2xl"
@@ -95,35 +95,42 @@ let postsPage (pages:PageProperties seq) =
     ]
     
 let postPage (detail:PageDetail) =
-        div [
-            _xInit "selectedNav = 'Posts'; window.scrollTo({top: 0, behavior: 'instant'})"
-            _class "mx-auto max-w-3xl"
-            _children [
-                article [
-                    _children [
-                        header [
-                            _class "flex flex-col"
-                            _children [
-                                time [
-                                    _class "text-base text-gray-400 border-l border-gray-300 pl-2"
-                                    _datetime (detail.properties.createdAt.ToString("yyyy-mm-dd"))
-                                    _children (detail.properties.createdAt.ToString("MMMM d, yyyy"))
-                                ]
-                                h1 [
-                                    _class "mt-4 text-4xl font-bold tracking-tight text-gray-900"
-                                    _children detail.properties.title
-                                ]
+    let cover = detail.properties.cover
+    div [
+        _xInit "selectedNav = 'Posts'; window.scrollTo({top: 0, behavior: 'instant'})"
+        _children [
+            div [
+                _class "bg-cover bg-no-repeat bg-blend-overlay bg-gray-800"
+                _style $"background-image: url('{cover}')"
+                _children [
+                    div [
+                        _class "pt-28 pb-20 mx-auto max-w-3xl flex flex-col justify-end items-start text-gray-50"
+                        _children [
+                            time [
+                                _class "text-base text-gray-50 border-l border-gray-300 pl-2"
+                                _datetime (detail.properties.createdAt.ToString("yyyy-mm-dd"))
+                                _children (detail.properties.createdAt.ToString("MMMM d, yyyy"))
                             ]
-                        ]
-                        div [
-                            _class "mt-8 prose prose-code:before:hidden prose-code:after:hidden max-w-none"
-                            _xInit "Prism.highlightAllUnder($el)"
-                            _children (Content.toHtml detail.content)
+                            h1 [
+                                _class "mt-4 text-4xl font-bold tracking-tight text-gray-50"
+                                _children detail.properties.title
+                            ]
                         ]
                     ]
                 ]
             ]
+            article [
+                _class "mx-auto max-w-3xl"
+                _children [
+                    div [
+                        _class "mt-8 prose prose-code:before:hidden prose-code:after:hidden max-w-none"
+                        _xInit "Prism.highlightAllUnder($el)"
+                        _children (Content.toHtml detail.content)
+                    ]
+                ]
+            ]
         ]
+    ]
         
 let projectCard (image:string) (title:string) (summary:string) (url:string) =
     li [
@@ -165,7 +172,7 @@ let projectCard (image:string) (title:string) (summary:string) (url:string) =
 let projectsPage =
     div [
         _xInit "selectedNav = 'Projects'; window.scrollTo({top: 0, behavior: 'instant'})"
-        _class "mx-auto max-w-3xl"
+        _class "pt-28 mx-auto max-w-3xl"
         _children [
             header [
                 _class "max-w-2xl"
@@ -192,6 +199,7 @@ let projectsPage =
 let aboutPage (page:PageDetail) =
     div [
         _xInit "selectedNav = 'About'; window.scrollTo({top: 0, behavior: 'instant'})"
+        _class "pt-24 mx-auto max-w-3xl"
         _children [
             div [
                 _class "grid gap-4 grid-cols-1 md:grid-cols-2"
