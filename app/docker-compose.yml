@@ -12,7 +12,7 @@ services:
       ASPNETCORE_Kestrel__Certificates__Default__Password: changeit
       SERVER_URL: 'https://0.0.0.0:5000'
       APP_ENV: dev
-      NOTION_BLOG_DATABASE_ID:
+      NOTION_DATABASE_ID:
       NOTION_TOKEN:
     ports:
       - 5000:5000
