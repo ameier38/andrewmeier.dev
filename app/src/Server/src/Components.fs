@@ -310,7 +310,7 @@ module Layout =
                     _class "flex flex-col sm:flex-row justify-between items-center"
                     _children [
                         div [
-                            _class "flex gap-6 text-sm font-medium text-gray-800"
+                            _class "flex gap-4 text-sm font-medium text-gray-800"
                             _children [
                                 navigationItem "Posts" "/"
                                 navigationItem "Projects" "/projects"
@@ -351,21 +351,21 @@ module Layout =
                     _class "bg-gray-100"
                     _children [
                         div [
-                            _class "relative w-full max-w-5xl mx-auto bg-gray-50 ring-1 ring-gray-200"
+                            _class "fixed top-0 left-0 right-0 z-10 max-w-5xl mx-auto"
                             _children [
                                 div [
-                                    _class "fixed top-0 w-full z-10"
-                                    _children [
-                                        div [
-                                            _id "page-loading"
-                                            _class "htmx-loader h-2 bg-emerald-300 animate-pulse"
-                                        ]
-                                        topNavigation
-                                    ]
+                                    _id "page-loading"
+                                    _class "htmx-loader h-2 bg-emerald-300 animate-pulse"
                                 ]
+                                topNavigation
+                            ]
+                        ]
+                        div [
+                            _class "max-w-5xl mx-auto bg-gray-50 ring-1 ring-gray-200"
+                            _children [
                                 main [
                                     _id "page"
-                                    _class "min-h-screen overflow-auto"
+                                    _class "min-h-screen"
                                     _children page
                                 ]
                                 footer [

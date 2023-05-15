@@ -62,7 +62,7 @@ let private postSummary (page:PageProperties) =
 let postsPage (pages:PageProperties seq) =
     div [
         _xInit "selectedNav = 'Posts'; window.scrollTo({top: 0, behavior: 'instant'})"
-        _class "pt-28 mx-auto max-w-3xl"
+        _class "pt-28 mx-auto max-w-3xl px-4 sm:px-8 lg:px-12"
         _children [
             header [
                 _class "max-w-2xl"
@@ -100,11 +100,11 @@ let postPage (detail:PageDetail) =
         _xInit "selectedNav = 'Posts'; window.scrollTo({top: 0, behavior: 'instant'})"
         _children [
             div [
-                _class "bg-cover bg-no-repeat bg-blend-overlay bg-gray-800"
+                _class "bg-cover bg-no-repeat bg-center bg-blend-overlay bg-gray-800"
                 _style $"background-image: url('{cover}')"
                 _children [
                     div [
-                        _class "pt-28 pb-20 mx-auto max-w-3xl flex flex-col justify-end items-start text-gray-50"
+                        _class "pt-28 pb-20 px-4 mx-auto max-w-3xl flex flex-col justify-end items-start text-gray-50"
                         _children [
                             time [
                                 _class "text-base text-gray-50 border-l border-gray-300 pl-2"
@@ -120,7 +120,7 @@ let postPage (detail:PageDetail) =
                 ]
             ]
             article [
-                _class "mx-auto max-w-3xl"
+                _class "mx-auto max-w-3xl px-4"
                 _children [
                     div [
                         _class "mt-8 prose prose-code:before:hidden prose-code:after:hidden max-w-none"
@@ -172,7 +172,7 @@ let projectCard (image:string) (title:string) (summary:string) (url:string) =
 let projectsPage =
     div [
         _xInit "selectedNav = 'Projects'; window.scrollTo({top: 0, behavior: 'instant'})"
-        _class "pt-28 mx-auto max-w-3xl"
+        _class "pt-28 mx-auto max-w-3xl px-4"
         _children [
             header [
                 _class "max-w-2xl"
@@ -199,7 +199,7 @@ let projectsPage =
 let aboutPage (page:PageDetail) =
     div [
         _xInit "selectedNav = 'About'; window.scrollTo({top: 0, behavior: 'instant'})"
-        _class "pt-24 mx-auto max-w-3xl"
+        _class "pt-24 mx-auto max-w-3xl px-4"
         _children [
             div [
                 _class "grid gap-4 grid-cols-1 md:grid-cols-2"
