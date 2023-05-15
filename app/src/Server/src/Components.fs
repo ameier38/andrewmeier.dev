@@ -289,6 +289,7 @@ module Layout =
         
     let topNavigation =
         nav [
+            _class "pt-4 mx-auto flex justify-center items-center"
             _children [
                 ul [
                     _class "flex rounded-full bg-white/90 ring-1 ring-gray-900/5 shadow-lg shadow-gray-800/5 px-3 text-sm font-medium text-gray-800"
@@ -350,29 +351,26 @@ module Layout =
                     _class "bg-gray-100"
                     _children [
                         div [
-                            _class "w-full max-w-5xl mx-auto bg-gray-50 ring-1 ring-gray-200"
+                            _class "relative w-full max-w-5xl mx-auto bg-gray-50 ring-1 ring-gray-200"
                             _children [
                                 div [
-                                    _id "page-loading"
-                                    _class "htmx-loader h-2 bg-emerald-300 animate-pulse"
-                                ]
-                                div [
-                                    _class "px-4 sm:px-8 lg:px-12"
+                                    _class "fixed top-0 w-full z-10"
                                     _children [
-                                        header [
-                                            _class "h-16 pt-6 mx-auto flex justify-center z-10"
-                                            _children topNavigation
+                                        div [
+                                            _id "page-loading"
+                                            _class "htmx-loader h-2 bg-emerald-300 animate-pulse"
                                         ]
-                                        main [
-                                            _id "page"
-                                            _class "-mt-16 pt-32 min-h-screen"
-                                            _children page
-                                        ]
-                                        footer [
-                                            _class "mt-8"
-                                            _children bottomNavigation
-                                        ]
+                                        topNavigation
                                     ]
+                                ]
+                                main [
+                                    _id "page"
+                                    _class "min-h-screen overflow-auto"
+                                    _children page
+                                ]
+                                footer [
+                                    _class "mt-8 px-4 sm:px-8 lg:px-12"
+                                    _children bottomNavigation
                                 ]
                             ]
                         ]
