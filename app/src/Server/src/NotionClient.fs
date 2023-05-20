@@ -120,7 +120,7 @@ module PageProperties =
           createdAt = props |> Props.getDate "createdAt" DateTimeOffset.UtcNow
           updatedAt = props |> Props.getDate "updatedAt" DateTimeOffset.UtcNow }
         
-type LiveNotionClient(config:NotionConfig, cache:IMemoryCache) =
+type LiveNotionClient(appEnv:AppEnv, config:NotionConfig, cache:IMemoryCache) =
     let clientOpts = ClientOptions(AuthToken=config.Token)
     let client = NotionClientFactory.Create(clientOpts)
     
@@ -148,18 +148,25 @@ type LiveNotionClient(config:NotionConfig, cache:IMemoryCache) =
     let getPublishedPage (pageId:string) = task {
         let! page = client.Pages.RetrieveAsync(pageId)
         let status = page.Properties |> Props.getStatus "Status" ""
-        if status = "Published" then
-            return Some page
-        else
-            return None
+        let page =
+            match appEnv, status with
+            | AppEnv.Prod, "Published" -> Some page
+            | AppEnv.Dev, ("Published" | "In progress") -> Some page
+            | _ -> None
+        return page
     }
     
     let listPublishedPages () = task {
         let mutable hasMore = true
         let mutable cursor = null
         let pages = ResizeArray()
-        // Filter for pages where the 'status' select field is 'Published'
-        let filter = StatusFilter("Status", "Published")
+        let filter =
+            let publishedFilter = StatusFilter("Status", "Published") :> Filter
+            match appEnv with
+            | AppEnv.Prod -> publishedFilter
+            | AppEnv.Dev ->
+                let inProgressFilter = StatusFilter("Status", "In progress") :> Filter
+                CompoundFilter(``or``=List([publishedFilter; inProgressFilter])) :> Filter
         let queryParams = DatabasesQueryParameters(StartCursor=cursor, Filter=filter)
         while hasMore do
             let! res = client.Databases.QueryAsync(config.DatabaseId, queryParams)
@@ -169,13 +176,29 @@ type LiveNotionClient(config:NotionConfig, cache:IMemoryCache) =
         return pages
     }
     
-    let listBlocks (blockId:string): Task<IBlock[]> = task {
+    let rec listBlocks (blockId:string): Task<IBlock[]> = task {
         let blocks = ResizeArray<IBlock>()
         let mutable hasMore = true
         let mutable cursor = null
         while hasMore do
             let parameters = BlocksRetrieveChildrenParameters(StartCursor=cursor)
             let! res = client.Blocks.RetrieveChildrenAsync(blockId, parameters)
+            for block in res.Results do
+                if block.HasChildren then
+                    let! children = listBlocks block.Id
+                    match block with
+                    | :? BulletedListItemBlock as b ->
+                        let convertedChildren = children |> Seq.map (fun c -> c :?> INonColumnBlock)
+                        b.BulletedListItem.Children <- convertedChildren
+                    | :? NumberedListItemBlock as b ->
+                        let convertedChildren = children |> Seq.map (fun c -> c :?> INonColumnBlock)
+                        b.NumberedListItem.Children <- convertedChildren
+                    | other -> Log.Warning("Block {Block} children not supported yet", other)
+                else
+                    match block with
+                    | :? BulletedListItemBlock as b -> b.BulletedListItem.Children <- Seq.empty
+                    | :? NumberedListItemBlock as b -> b.NumberedListItem.Children <- Seq.empty
+                    | other -> Log.Warning("Block {Block} children not supported yet", other)
             hasMore <- res.HasMore
             cursor <- res.NextCursor
             blocks.AddRange(res.Results)
@@ -192,24 +215,14 @@ type LiveNotionClient(config:NotionConfig, cache:IMemoryCache) =
     }
     
     let getPageById (pageId:string) = task {
-        let cacheKey = $"pageId:{pageId}"
-        match cache.TryGetValue cacheKey with
-        | true, o ->
-            Log.Debug("Cache hit: {Key}", cacheKey)
-            let detail = unbox<PageDetail> o
+        match! getPublishedPage pageId with
+        | Some page ->
+            let properties = PageProperties.fromDto page
+            let! blocks = listBlocks pageId
+            let detail = { properties = properties; content = blocks  }
             return Some detail
-        | false, _ ->
-            Log.Debug("Cache miss: {Key}", cacheKey)
-            match! getPublishedPage pageId with
-            | Some page ->
-                let properties = PageProperties.fromDto page
-                let! blocks = listBlocks pageId
-                let detail = { properties = properties; content = blocks  }
-                let cacheEntryOpts = MemoryCacheEntryOptions(Size=1L)
-                let detail = cache.Set(cacheKey, detail, cacheEntryOpts)
-                return Some detail
-            | None ->
-                return None
+        | None ->
+            return None
     }
     
     let getPageByPermalink (permalink:string) = task {
