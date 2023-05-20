@@ -10,13 +10,12 @@ open Serilog.Events
 let configureServices (config:Config) (services:IServiceCollection) =
     // Add a memory cache service so we can cache the permalink page ids
     services.AddMemoryCache(fun opts -> opts.SizeLimit <- 1000L) |> ignore
+    // Add AppEnv which is dependency of the Notion client
+    services.AddSingleton(config.AppEnv) |> ignore
     // Add the Notion configuration which is a dependency of the Notion client
-    services.AddSingleton<NotionConfig>(config.NotionConfig) |> ignore
-    match config.AppEnv with
-    // When testing use the mock post client
-    | AppEnv.Dev -> services.AddSingleton<INotionClient,MockNotionClient>() |> ignore
-    // Otherwise use the live post client
-    | _ -> services.AddSingleton<INotionClient,LiveNotionClient>() |> ignore
+    services.AddSingleton(config.NotionConfig) |> ignore
+    // Add the Notion client
+    services.AddSingleton<INotionClient,LiveNotionClient>() |> ignore
     services.AddHealthChecks() |> ignore
     services.AddGiraffe() |> ignore
     

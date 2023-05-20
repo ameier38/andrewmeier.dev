@@ -125,6 +125,8 @@ module Block =
                 _children [
                     for text in b.BulletedListItem.RichText do
                         RichTextBase.toHtml text
+                    for child in b.BulletedListItem.Children do
+                        toHtml child
                 ]
             ]
         | :? NumberedListItemBlock as b ->
@@ -132,6 +134,8 @@ module Block =
                 _children [
                     for text in b.NumberedListItem.RichText do
                         RichTextBase.toHtml text
+                    for child in b.NumberedListItem.Children do
+                        toHtml child
                 ]
             ]
         | :? CodeBlock as b ->
@@ -219,6 +223,8 @@ module Content =
                 if numberedListItems.Count > 0 then flushNumberedListItems()
                 if bulletedListItems.Count > 0 then flushBulletedListItems()
                 elements.Add(Block.toHtml block)
+        if numberedListItems.Count > 0 then flushNumberedListItems()
+        if bulletedListItems.Count > 0 then flushBulletedListItems()
         List.ofSeq elements
         
 module TwitterMeta =
