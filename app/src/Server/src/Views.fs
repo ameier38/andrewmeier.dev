@@ -191,6 +191,7 @@ let projectsPage =
                 _class "mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12"
                 _children [
                     projectCard "/images/meiermade.svg" "Meier Made, LLC" "Consulting services" "https://meiermade.com" 
+                    projectCard "/images/fsharp-view-engine.svg" "FSharp.ViewEngine" "F# view engine library" "https://github.com/ameier38/FSharp.ViewEngine" 
                 ]
             ]
         ]
